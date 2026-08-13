@@ -2,8 +2,13 @@
   "slug": "pixel-pong-exe",
   "order": 30,
   "title": "PIXEL PONG.EXE",
-  "description": "하루 만에 만든 아케이드 퐁 변형. 공이 벽에 닿을 때마다 규칙이 하나씩 바뀝니다. 최고 기록은 아직 개발자 본인이 갖고 있습니다 — 깨 보세요.",
-  "tags": ["GODOT 4", "2D", "ARCADE", "1-DAY JAM"],
+  "description": "하루 만에 만든 아케이드 퐁 변형.\n공이 벽에 닿을 때마다 규칙이 하나씩 바뀝니다.",
+  "tags": [
+    "GODOT 4",
+    "2D",
+    "ARCADE",
+    "1-DAY JAM"
+  ],
   "coverScene": "pong",
   "playPath": null
 }
