@@ -10,6 +10,13 @@ var APP_BUILDERS: Dictionary = {
 	"browser": func() -> Control: return BrowserApp.new(),
 	"trash": func() -> Control: return TrashApp.new(),
 }
+const ICON_TEXTURES := {
+	"explorer": "res://assets/img/icons/folder.png",
+	"messenger": "res://assets/img/icons/messenger.png",
+	"mail": "res://assets/img/icons/mail.png",
+	"browser": "res://assets/img/icons/browser.png",
+	"trash": "res://assets/img/icons/trash.png",
+}
 
 var wm: WindowManager
 var _taskbar_box: HBoxContainer
@@ -51,6 +58,8 @@ func _build_icons() -> void:
 		b.text = ContentDB.ui("app_" + id)
 		b.flat = true
 		b.add_theme_color_override("font_color", Color.WHITE)
+		if ICON_TEXTURES.has(id) and ResourceLoader.exists(ICON_TEXTURES[id]):
+			b.icon = load(ICON_TEXTURES[id])
 		b.pressed.connect(wm.open_app.bind(id))
 		_icons.add_child(b)
 	add_child(_icons)

@@ -109,7 +109,20 @@ func open_file(node_id: String) -> void:
 		_viewer.text = "파일이 손상되어 열 수 없습니다."
 		return
 	if n["type"] == "image":
-		_viewer.text = "[사진: %s]" % n["name"]  # Task 12에서 TextureRect 표시로 확장
+		_viewer.text = ""
+		# 뷰어 위에 TextureRect를 임시 표시
+		for c in get_children():
+			if c is TextureRect:
+				c.queue_free()
+		var tr := TextureRect.new()
+		tr.texture = load(n["image"])
+		tr.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		tr.set_anchors_preset(Control.PRESET_FULL_RECT)
+		tr.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		add_child(tr)
+		tr.gui_input.connect(func(e):
+			if e is InputEventMouseButton and e.pressed:
+				tr.queue_free())
 	else:
 		var d := ContentDB.doc(n["cid"])
 		_viewer.text = String(d["title"]) + "\n\n" + String(d["body"])
