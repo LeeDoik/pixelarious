@@ -55,5 +55,10 @@ func _on_titlebar_input(e: InputEvent) -> void:
 		focused.emit(win_id)
 	elif e is InputEventMouseMotion and _dragging:
 		var p := get_global_mouse_position() - _drag_off
+		var parent_origin := Vector2.ZERO
+		var pc := get_parent()
+		if pc is Control:
+			parent_origin = (pc as Control).global_position
+		var local := p - parent_origin
 		var bounds := get_parent_area_size() - size
-		global_position = p.clamp(Vector2.ZERO, Vector2(maxf(bounds.x, 0), maxf(bounds.y, 0)))
+		position = local.clamp(Vector2.ZERO, Vector2(maxf(bounds.x, 0), maxf(bounds.y, 0)))
