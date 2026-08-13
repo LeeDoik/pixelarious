@@ -36,3 +36,5 @@ func choose(idx: int) -> void:
 	for f in c.get("set", []):
 		_state.set_flag(f)
 	_cur = c["next"]
+	for f in current().get("set", []):
+		_state.set_flag(f)

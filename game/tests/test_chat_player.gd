@@ -12,3 +12,12 @@ func test_linear_advance_and_choice_sets_flag() -> void:
 	assert_int(cp.current()["choices"].size()).is_equal(2)
 	cp.choose(0)  # met_seulgi 플래그
 	assert_bool(GameState.has_flag("met_seulgi")).is_true()
+
+func test_choose_applies_target_node_set() -> void:
+	var thread := {"start": "a", "nodes": {
+		"a": {"from": "seulgi", "text": "q", "choices": [{"text": "x", "next": "b"}]},
+		"b": {"from": "seulgi", "text": "t", "set": ["target_flag"]}
+	}}
+	var cp := CP.new(thread, GameState)
+	cp.choose(0)
+	assert_bool(GameState.has_flag("target_flag")).is_true()

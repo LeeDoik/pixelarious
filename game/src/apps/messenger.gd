@@ -7,6 +7,7 @@ var _hints: HintEngine
 var _chat_box: VBoxContainer
 var _choice_box: HBoxContainer
 var _scroll: ScrollContainer
+var _logs_marked := false
 
 func _ready() -> void:
 	var tabs := TabContainer.new()
@@ -30,16 +31,20 @@ func _ready() -> void:
 		logs.append_text("[%s] %s\n" % [lg["date"], lg["with"]])
 		for line in lg["lines"]:
 			logs.append_text("  %s: %s\n" % [line["from"], line["text"]])
-		GameState.mark_read("chatlog:" + String(lg["date"]))
 	tabs.add_child(logs)
 	add_child(tabs)
+	tabs.tab_changed.connect(func(idx: int):
+		if tabs.get_tab_control(idx) == logs and not _logs_marked:
+			_logs_marked = true
+			for lg2 in ContentDB.chat_logs():
+				GameState.mark_read("chatlog:" + String(lg2["date"])))
 	# 스크립트 재생
 	_cp = ChatPlayer.new(ContentDB.chat_thread(), GameState)
 	_hints = HintEngine.new(func() -> int: return Time.get_ticks_msec())
 	_hints.hint_ready.connect(_on_hint)
 	GameState.flag_changed.connect(func(_n):
 		_hints.set_gate(_current_gate())
-		_try_continue())
+		call_deferred("_try_continue"))
 	_hints.set_gate(_current_gate())
 	_show_current()
 	var timer := Timer.new()
