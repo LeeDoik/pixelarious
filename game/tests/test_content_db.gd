@@ -38,3 +38,8 @@ func test_validator_catches_missing_doc() -> void:
 		"puzzles": {}, "records": {"records": []}, "strings": {"dev_allow_partial_records": true}
 	})
 	assert_array(errors).is_not_empty()
+
+func test_validator_rejects_missing_sections() -> void:
+	var db: Node = auto_free(CDB.new())
+	var errors: Array = db.validate({"fs": {"nodes": []}})
+	assert_array(errors).is_not_empty()

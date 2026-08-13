@@ -8,21 +8,52 @@ func _ready() -> void:
 	if not errors.is_empty():
 		push_error("ContentDB validation failed: " + str(errors))
 
-func load_all(base: String = "res://content") -> Array:
+func load_all(base: String = "res://content") -> Array[String]:
 	var raw := {}
 	for key in ["fs", "docs", "chat", "mail", "web", "puzzles", "records", "strings"]:
 		var path := "%s/%s.json" % [base, key]
 		var parsed = JSON.parse_string(FileAccess.get_file_as_string(path))
 		if parsed == null:
-			return ["cannot parse " + path]
+			var e: Array[String] = ["cannot parse " + path]
+			return e
 		raw[key] = parsed
 	var errors := validate(raw)
 	if errors.is_empty():
 		_d = raw
 	return errors
 
-func validate(raw: Dictionary) -> Array:
-	var errors: Array = []
+func validate(raw: Dictionary) -> Array[String]:
+	var errors: Array[String] = []
+	# 구조 사전 검사: 최상위 키 존재 + 타입 확인 (없으면 아래 깊은 검사가 크래시함)
+	var required_types := {
+		"fs": TYPE_DICTIONARY,
+		"docs": TYPE_DICTIONARY,
+		"chat": TYPE_DICTIONARY,
+		"mail": TYPE_ARRAY,
+		"web": TYPE_DICTIONARY,
+		"puzzles": TYPE_DICTIONARY,
+		"records": TYPE_DICTIONARY,
+		"strings": TYPE_DICTIONARY,
+	}
+	for key in required_types:
+		if not raw.has(key) or typeof(raw[key]) != required_types[key]:
+			errors.append("section missing or wrong type: %s" % key)
+	if raw.has("fs") and typeof(raw["fs"]) == TYPE_DICTIONARY:
+		if not raw["fs"].has("nodes") or typeof(raw["fs"]["nodes"]) != TYPE_ARRAY:
+			errors.append("section missing or wrong type: fs.nodes")
+	if raw.has("web") and typeof(raw["web"]) == TYPE_DICTIONARY:
+		if not raw["web"].has("pages") or typeof(raw["web"]["pages"]) != TYPE_DICTIONARY:
+			errors.append("section missing or wrong type: web.pages")
+	if raw.has("chat") and typeof(raw["chat"]) == TYPE_DICTIONARY:
+		if not raw["chat"].has("start"):
+			errors.append("section missing or wrong type: chat.start")
+		if not raw["chat"].has("nodes") or typeof(raw["chat"]["nodes"]) != TYPE_DICTIONARY:
+			errors.append("section missing or wrong type: chat.nodes")
+	if raw.has("records") and typeof(raw["records"]) == TYPE_DICTIONARY:
+		if not raw["records"].has("records") or typeof(raw["records"]["records"]) != TYPE_ARRAY:
+			errors.append("section missing or wrong type: records.records")
+	if not errors.is_empty():
+		return errors
 	var docs: Dictionary = raw["docs"]
 	var web_pages: Dictionary = raw["web"]["pages"]
 	var known_cids := {}
@@ -72,8 +103,8 @@ func validate(raw: Dictionary) -> Array:
 		errors.append("records must be exactly 9, got %d" % recs.size())
 	return errors
 
-func fs_children(parent_id: String) -> Array:
-	var out: Array = []
+func fs_children(parent_id: String) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
 	for n in _d["fs"]["nodes"]:
 		if n.get("parent") == parent_id:
 			out.append(n)
@@ -85,7 +116,7 @@ func fs_node(id: String) -> Dictionary:
 			return n
 	return {}
 
-func trash_items() -> Array:
+func trash_items() -> Array[Dictionary]:
 	return fs_children("trash")
 
 func doc(cid: String) -> Dictionary:
@@ -97,8 +128,10 @@ func chat_thread() -> Dictionary:
 func chat_logs() -> Array:
 	return _d["chat"]["logs"]
 
-func mails() -> Array:
-	return _d["mail"]
+func mails() -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	out.assign(_d["mail"])
+	return out
 
 func web_bookmarks() -> Array:
 	return _d["web"]["bookmarks"]
