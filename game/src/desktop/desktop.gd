@@ -8,7 +8,7 @@ var APP_BUILDERS: Dictionary = {
 	"messenger": func() -> Control: return Messenger.new(),
 	"mail": func() -> Control: return MailApp.new(),
 	"browser": func() -> Control: return BrowserApp.new(),
-	"trash": func(): return Label.new(),
+	"trash": func() -> Control: return TrashApp.new(),
 }
 
 var wm: WindowManager
@@ -32,6 +32,11 @@ func _ready() -> void:
 	_build_crt()
 	GameState.act_changed.connect(func(_a): _clock.text = clock_text())
 	_clock.text = clock_text()
+	GameState.flag_changed.connect(func(n):
+		if n == "ending_start":
+			var e := EndingScene.new()
+			add_child(e)
+			e.play(true))
 
 func _register_apps() -> void:
 	for id in APP_BUILDERS:
