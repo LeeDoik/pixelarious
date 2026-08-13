@@ -4,7 +4,7 @@ extends Control
 const ACT_CLOCK := {1: "21:47", 2: "23:30", 3: "01:12"}
 # 앱 빌더 레지스트리 — Task 7~11이 여기에 앱을 추가한다
 var APP_BUILDERS: Dictionary = {
-	"explorer": func(): return Label.new(),
+	"explorer": func() -> Control: return Explorer.new(),
 	"messenger": func(): return Label.new(),
 	"mail": func(): return Label.new(),
 	"trash": func(): return Label.new(),
