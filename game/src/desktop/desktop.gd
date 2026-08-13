@@ -7,6 +7,7 @@ var APP_BUILDERS: Dictionary = {
 	"explorer": func() -> Control: return Explorer.new(),
 	"messenger": func() -> Control: return Messenger.new(),
 	"mail": func() -> Control: return MailApp.new(),
+	"browser": func() -> Control: return BrowserApp.new(),
 	"trash": func(): return Label.new(),
 }
 
