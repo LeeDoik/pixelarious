@@ -6,7 +6,7 @@ const ACT_CLOCK := {1: "21:47", 2: "23:30", 3: "01:12"}
 var APP_BUILDERS: Dictionary = {
 	"explorer": func() -> Control: return Explorer.new(),
 	"messenger": func() -> Control: return Messenger.new(),
-	"mail": func(): return Label.new(),
+	"mail": func() -> Control: return MailApp.new(),
 	"trash": func(): return Label.new(),
 }
 
