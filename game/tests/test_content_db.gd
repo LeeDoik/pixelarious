@@ -39,6 +39,10 @@ func test_validator_catches_missing_doc() -> void:
 	})
 	assert_array(errors).is_not_empty()
 
+func test_exactly_nine_records_enforced() -> void:
+	var db := _make()
+	assert_int(db.records().size()).is_equal(9)
+
 func test_validator_rejects_missing_sections() -> void:
 	var db: Node = auto_free(CDB.new())
 	var errors: Array = db.validate({"fs": {"nodes": []}})

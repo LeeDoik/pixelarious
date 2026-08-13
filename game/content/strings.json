@@ -1,1 +1,8 @@
-{"dev_allow_partial_records": true, "app_explorer": "내 문서", "app_messenger": "단짝", "app_mail": "누리메일", "app_browser": "누리서퍼", "app_trash": "휴지통", "os_name": "누리OS 2002"}
+{
+  "app_explorer": "내 문서",
+  "app_messenger": "단짝",
+  "app_mail": "누리메일",
+  "app_browser": "누리서퍼",
+  "app_trash": "휴지통",
+  "os_name": "누리OS 2002"
+}

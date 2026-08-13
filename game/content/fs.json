@@ -1,7 +1,42 @@
 {"nodes": [
   {"id": "mydocs", "parent": "root", "name": "내 문서", "type": "folder"},
-  {"id": "f_essay", "parent": "mydocs", "name": "낙방 수기.txt", "type": "doc", "cid": "doc:essay_2001", "record": true},
+
+  {"id": "photos", "parent": "mydocs", "name": "사진", "type": "folder"},
+  {"id": "saebit", "parent": "mydocs", "name": "새빛수련회", "type": "folder"},
   {"id": "locked", "parent": "mydocs", "name": "성진이만", "type": "folder", "locked_by": "puzzle1"},
+
+  {"id": "f_essay", "parent": "mydocs", "name": "낙방 수기.txt", "type": "doc", "cid": "doc:essay_2001", "record": true},
+  {"id": "f_resume", "parent": "mydocs", "name": "이력서_한성진.txt", "type": "doc", "cid": "doc:resume"},
+  {"id": "f_resume2", "parent": "mydocs", "name": "자기소개서_최종_진짜최종.txt", "type": "doc", "cid": "doc:resume_final"},
+  {"id": "f_study", "parent": "mydocs", "name": "스터디 메모.txt", "type": "doc", "cid": "doc:study_memo"},
+  {"id": "f_plan", "parent": "mydocs", "name": "2002년 계획.txt", "type": "doc", "cid": "doc:plan_2002"},
+  {"id": "f_jesa", "parent": "mydocs", "name": "어머니 제사 준비.txt", "type": "doc", "cid": "doc:jesa_memo"},
+  {"id": "f_bomi", "parent": "mydocs", "name": "봄이 일지.txt", "type": "doc", "cid": "doc:bomi_log"},
+  {"id": "f_budget", "parent": "mydocs", "name": "생활비 정리.txt", "type": "doc", "cid": "doc:budget_2002"},
+  {"id": "f_bookmarks", "parent": "mydocs", "name": "즐겨찾기 백업.txt", "type": "doc", "cid": "doc:bookmarks_memo"},
+
+  {"id": "p_family", "parent": "photos", "name": "가족사진_2001설.jpg", "type": "image", "cid": "img:family_photo", "image": "res://assets/img/photos/family_photo.png", "record": true},
+  {"id": "p_bomi", "parent": "photos", "name": "봄이_첫날.jpg", "type": "image", "cid": "img:bomi_day1", "image": "res://assets/img/photos/bomi_2002.png"},
+  {"id": "p_desk", "parent": "photos", "name": "내 방_새벽.jpg", "type": "image", "cid": "img:desk_2002", "image": "res://assets/img/photos/desk_2002.png"},
+  {"id": "p_retreat", "parent": "photos", "name": "수련회_단체_0804.jpg", "type": "image", "cid": "img:retreat_2002", "image": "res://assets/img/photos/retreat_2002.png"},
+  {"id": "p_window", "parent": "photos", "name": "창밖_1029.jpg", "type": "image", "cid": "img:window_night", "image": "res://assets/img/photos/window_night.png"},
+
+  {"id": "s_doc1", "parent": "saebit", "name": "필사_1_빛과그릇.txt", "type": "doc", "cid": "doc:doctrine_1"},
+  {"id": "s_doc2", "parent": "saebit", "name": "필사_2_새빛력.txt", "type": "doc", "cid": "doc:doctrine_2", "record": true},
+  {"id": "s_doc3", "parent": "saebit", "name": "필사_3_비움.txt", "type": "doc", "cid": "doc:doctrine_3"},
+  {"id": "s_review", "parent": "saebit", "name": "수련회 후기_초안.txt", "type": "doc", "cid": "doc:retreat_review"},
+  {"id": "s_notes", "parent": "saebit", "name": "수첩 옮겨적기.txt", "type": "doc", "cid": "doc:retreat_notes"},
+  {"id": "s_vow", "parent": "saebit", "name": "서원문.txt", "type": "doc", "cid": "doc:vow"},
+
+  {"id": "l_ledger", "parent": "locked", "name": "입금내역.txt", "type": "doc", "cid": "doc:donation_ledger", "record": true},
+  {"id": "l_quit", "parent": "locked", "name": "탈퇴하려면.txt", "type": "doc", "cid": "doc:quit_plan"},
+  {"id": "l_evidence", "parent": "locked", "name": "기억나는대로.txt", "type": "doc", "cid": "doc:evidence_memo"},
+  {"id": "l_debt", "parent": "locked", "name": "빚 정리.txt", "type": "doc", "cid": "doc:debt_note"},
+  {"id": "l_letter", "parent": "locked", "name": "슬기에게(부치지못함).txt", "type": "doc", "cid": "doc:letter_unsent"},
+
   {"id": "t1", "parent": "trash", "name": "backup_1102.txt", "type": "doc", "cid": "doc:diary_final", "record": true},
-  {"id": "t2", "parent": "trash", "name": "backup_0930.txt", "type": "doc", "cid": "doc:corrupt", "corrupt": true}
+  {"id": "t2", "parent": "trash", "name": "backup_0930.txt", "type": "doc", "cid": "doc:corrupt_0930", "corrupt": true},
+  {"id": "t3", "parent": "trash", "name": "backup_1015.txt", "type": "doc", "cid": "doc:corrupt_1015", "corrupt": true},
+  {"id": "t4", "parent": "trash", "name": "필사_4_초안.txt", "type": "doc", "cid": "doc:corrupt_doctrine4", "corrupt": true},
+  {"id": "t5", "parent": "trash", "name": "danjjak_temp.dat", "type": "doc", "cid": "doc:corrupt_temp", "corrupt": true}
 ]}

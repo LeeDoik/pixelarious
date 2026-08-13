@@ -1,1 +1,11 @@
-{"records": ["doc:essay_2001", "doc:diary_final"]}
+{"records": [
+  "doc:essay_2001",
+  "img:family_photo",
+  "doc:donation_ledger",
+  "chatlog:2002-10-05",
+  "doc:doctrine_2",
+  "mail:m_demand_3",
+  "web:cafe_gate",
+  "web:myhome_secret",
+  "doc:diary_final"
+]}

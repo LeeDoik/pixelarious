@@ -62,10 +62,15 @@ func validate(raw: Dictionary) -> Array[String]:
 	for url in web_pages.keys():
 		if web_pages[url].has("cid"):
 			known_cids[web_pages[url]["cid"]] = true
-	# fs가 참조하는 cid 존재 확인 (image 유형은 파일 경로라 제외)
+	# 메신저 로그는 chatlog:<date> 로 mark_read 된다 (Messenger 지난 대화 탭)
+	for lg in raw["chat"].get("logs", []):
+		known_cids["chatlog:" + String(lg.get("date", ""))] = true
+	# fs가 참조하는 cid 존재 확인 (image 유형은 파일 경로라 doc 존재 검사에서 제외)
 	for n in raw["fs"]["nodes"]:
 		if n.get("type") == "doc" and not n.get("corrupt", false) and not docs.has(n.get("cid", "")):
 			errors.append("fs node %s references missing doc %s" % [n["id"], n.get("cid", "?")])
+		if n.get("type") == "image" and n.has("cid"):
+			known_cids[n["cid"]] = true
 	# mail 첨부 cid
 	for m in raw["mail"]:
 		if m.has("attachment") and not docs.has(m["attachment"].get("cid", "")):
