@@ -1,0 +1,10 @@
+{
+  "slug": "system-check",
+  "order": 90,
+  "title": "SYSTEM CHECK",
+  "subtitle": "동작 확인용 카트리지",
+  "description": "NEO_KIDO 배포 파이프라인이 정상 작동하는지 확인하는 진단 카트리지입니다. 실제 게임이 꽂히면 이 카트리지는 빠집니다.",
+  "tags": ["SYSTEM", "WEB"],
+  "coverScene": "system",
+  "playPath": "/games/system-check/index.html"
+}

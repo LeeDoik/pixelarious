@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SYSTEM CHECK</title>
+<style>
+  body{margin:0;background:#0C0A1C;color:#FFF1E8;font-family:'Courier New',monospace;
+       display:flex;align-items:center;justify-content:center;min-height:100vh}
+  pre{font-size:16px;line-height:1.8;margin:0}
+  .ok{color:#29ADFF}
+  .gold{color:#FFEC27}
+</style>
+</head>
+<body>
+<pre id="log">NEO_KIDO SYSTEM CHECK
+---------------------
+VIDEO ........ <span class="ok">OK</span>
+AUDIO ........ <span class="ok">OK</span>
+INPUT ........ press any key
+<span class="gold">█</span></pre>
+<script>
+  addEventListener('keydown', function (e) {
+    document.getElementById('log').innerHTML =
+      'NEO_KIDO SYSTEM CHECK\n---------------------\nVIDEO ........ <span class="ok">OK</span>\nAUDIO ........ <span class="ok">OK</span>\nINPUT ........ <span class="ok">OK</span> [' + e.key + ']\n\nALL SYSTEMS GO. INSERT REAL GAME.\n<span class="gold">█</span>';
+  });
+</script>
+</body>
+</html>

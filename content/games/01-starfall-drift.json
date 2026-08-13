@@ -1,0 +1,9 @@
+{
+  "slug": "starfall-drift",
+  "order": 10,
+  "title": "STARFALL DRIFT",
+  "description": "중력을 뒤집으며 별 사이를 활강하는 우주 플랫포머. 한 번의 점프로 궤도를 갈아타고, 떨어지는 별을 따라 스테이지 끝까지 표류하세요.",
+  "tags": ["GODOT 4", "2D", "PLATFORMER", "WEB"],
+  "coverScene": "starfall",
+  "playPath": null
+}
