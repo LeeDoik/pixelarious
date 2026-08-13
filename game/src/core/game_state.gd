@@ -65,6 +65,9 @@ func try_answer(puzzle_id: String, input: String) -> bool:
 
 func save_game() -> void:
 	var f := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
+	if f == null:
+		push_warning("save_game: cannot open %s (%s)" % [SAVE_PATH, error_string(FileAccess.get_open_error())])
+		return
 	f.store_string(JSON.stringify({"flags": _flags, "read": _read}))
 	f.close()
 
