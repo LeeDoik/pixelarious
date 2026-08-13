@@ -50,3 +50,13 @@ func test_save_and_load_roundtrip() -> void:
 	assert_int(gs2.records_count()).is_equal(1)
 	gs2.reset()
 	assert_bool(gs2.has_save()).is_false()
+
+func test_load_game_emits_act_changed() -> void:
+	var gs := _make()
+	gs.set_flag("puzzle1_solved")
+	gs.save_game()
+	var gs2 := _make()
+	var acts: Array = []
+	gs2.act_changed.connect(func(a): acts.append(a))
+	assert_bool(gs2.load_game()).is_true()
+	assert_array(acts).is_equal([2])

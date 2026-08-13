@@ -82,10 +82,12 @@ func load_game() -> bool:
 		return false
 	_flags = data.get("flags", {})
 	_read = data.get("read", {})
+	act_changed.emit(current_act())
 	return true
 
 func reset() -> void:
 	_flags = {}
 	_read = {}
+	act_changed.emit(current_act())
 	if has_save():
 		DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE_PATH))
