@@ -22,6 +22,7 @@ func _ready() -> void:
 	var bg := ColorRect.new()
 	bg.color = Color.BLACK
 	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
+	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(bg)
 	_label = RichTextLabel.new()
 	_label.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -29,6 +30,7 @@ func _ready() -> void:
 	_label.offset_top = 24
 	_label.add_theme_color_override("default_color", Color("9adfc0"))
 	_label.add_theme_font_override("normal_font", load("res://assets/fonts/Galmuri11.ttf"))
+	_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_label)
 	_next_line()
 
