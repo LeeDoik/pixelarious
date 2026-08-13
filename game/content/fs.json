@@ -1,0 +1,7 @@
+{"nodes": [
+  {"id": "mydocs", "parent": "root", "name": "내 문서", "type": "folder"},
+  {"id": "f_essay", "parent": "mydocs", "name": "낙방 수기.txt", "type": "doc", "cid": "doc:essay_2001", "record": true},
+  {"id": "locked", "parent": "mydocs", "name": "성진이만", "type": "folder", "locked_by": "puzzle1"},
+  {"id": "t1", "parent": "trash", "name": "backup_1102.txt", "type": "doc", "cid": "doc:diary_final", "record": true},
+  {"id": "t2", "parent": "trash", "name": "backup_0930.txt", "type": "doc", "cid": "doc:corrupt", "corrupt": true}
+]}

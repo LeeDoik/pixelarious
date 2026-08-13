@@ -1,0 +1,6 @@
+{"bookmarks": [{"title": "새빛수련회 카페", "url": "cafe.nurinet.co.kr/saebit"}],
+ "pages": {
+   "cafe.nurinet.co.kr/saebit": {"title": "카페를 찾을 수 없습니다", "body": "폐쇄된 카페입니다."},
+   "cafe.nurinet.co.kr/saebit/gate": {"title": "(캐시) 새빛수련회", "body": "샘플", "requires": "puzzle3", "cid": "web:cafe_gate"},
+   "myhome.nurinet.co.kr/sj2002": {"title": "성진의 마이홈", "body": "2002.03.16 봄이 온 날 — 우리 봄이 데려온 날!", "cid": "web:myhome_bomi"}
+ }}

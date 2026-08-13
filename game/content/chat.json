@@ -1,0 +1,11 @@
+{"start": "n1",
+ "nodes": {
+   "n1": {"from": "seulgi", "text": "…오빠? 오빠 컴퓨터 켜져 있는 거 보여", "next": "n2", "delay_ms": 1200},
+   "n2": {"from": "seulgi", "text": "지금 집이야?", "choices": [
+     {"text": "누구세요? 저는 이 컴퓨터를 주웠는데요", "next": "n3", "set": ["met_seulgi"]},
+     {"text": "(대답하지 않는다)", "next": "n3b"}]},
+   "n3": {"from": "seulgi", "text": "…주웠다고요? 그거 저희 오빠 컴퓨터예요.", "next": "end"},
+   "n3b": {"from": "seulgi", "text": "…거기 있는 거 알아요.", "next": "n3"},
+   "end": {"from": "sys", "text": "샘플 끝 — Task 13에서 본편 교체"}
+ },
+ "logs": [{"date": "2002-11-02", "with": "민규", "lines": [{"from": "민규", "text": "야 너 요즘 왜 그래"}]}]}
