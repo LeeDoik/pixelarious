@@ -15,11 +15,12 @@ export interface Game {
 
 const GAMES_DIR = path.join(process.cwd(), 'content', 'games')
 
-function validate(raw: Record<string, unknown>, file: string): Game {
+export function validate(raw: Record<string, unknown>, file: string): Game {
   const fail = (msg: string): never => {
     throw new Error(`${file}: ${msg}`)
   }
-  if (typeof raw.slug !== 'string' || !/^[a-z0-9-]+$/.test(raw.slug)) fail('slug must be kebab-case')
+  if (typeof raw.slug !== 'string' || !/^[a-z0-9]+(-[a-z0-9]+)*$/.test(raw.slug))
+    fail('slug must be kebab-case')
   if (typeof raw.order !== 'number') fail('order must be a number')
   if (typeof raw.title !== 'string' || raw.title.length === 0) fail('title required')
   if (raw.subtitle !== undefined && typeof raw.subtitle !== 'string') fail('subtitle must be a string')

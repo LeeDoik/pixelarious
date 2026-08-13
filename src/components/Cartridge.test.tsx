@@ -33,6 +33,13 @@ describe('Cartridge', () => {
     expect(strip.getAttribute('aria-expanded')).toBe('true')
   })
 
+  it('toggles with the keyboard (Space)', () => {
+    render(<Cartridge game={base} index={0} />)
+    const strip = screen.getByRole('button')
+    fireEvent.keyDown(strip, { key: ' ' })
+    expect(strip.getAttribute('aria-expanded')).toBe('true')
+  })
+
   it('shows NOT INSERTED instead of a dead link when playPath is null', () => {
     render(<Cartridge game={base} index={0} />)
     expect(screen.getByText('NOT INSERTED')).toBeDefined()
