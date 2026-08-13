@@ -26,8 +26,17 @@ func _ready() -> void:
 	_pw_row = HBoxContainer.new()
 	_pw_row.visible = false
 	_pw_edit = LineEdit.new()
+	_pw_edit.max_length = 24
 	_pw_edit.placeholder_text = "첨부파일 암호 (영문/숫자)"
 	_pw_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_pw_edit.text_changed.connect(func(t: String):
+		var filtered := ""
+		for ch in t:
+			if ch.to_lower() in "abcdefghijklmnopqrstuvwxyz0123456789":
+				filtered += ch
+		if filtered != t:
+			_pw_edit.text = filtered
+			_pw_edit.caret_column = filtered.length())
 	var ok := Button.new()
 	ok.text = "열기"
 	ok.pressed.connect(func(): submit_password(_pw_edit.text))
