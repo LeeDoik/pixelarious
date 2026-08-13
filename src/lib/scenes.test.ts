@@ -56,4 +56,22 @@ describe('drawScene', () => {
     drawScene(b.canvas, 'cave', 'night')
     expect(a.calls).toEqual(b.calls)
   })
+
+  it('lastlogin renders a distinct cover from system (no more shared cover art)', () => {
+    for (const palette of ['night', 'dmg'] as Palette[]) {
+      const sys = fakeCanvas()
+      const ll = fakeCanvas()
+      drawScene(sys.canvas, 'system', palette)
+      drawScene(ll.canvas, 'lastlogin', palette)
+      expect(ll.calls, palette).not.toEqual(sys.calls)
+    }
+  })
+
+  it('lastlogin is deterministic (same seed, same output)', () => {
+    const a = fakeCanvas()
+    const b = fakeCanvas()
+    drawScene(a.canvas, 'lastlogin', 'night')
+    drawScene(b.canvas, 'lastlogin', 'night')
+    expect(a.calls).toEqual(b.calls)
+  })
 })
