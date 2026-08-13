@@ -1,0 +1,26 @@
+; Engine configuration file.
+config_version=5
+
+[application]
+config/name="LAST LOGIN"
+run/main_scene="res://src/boot/boot.tscn"
+config/features=PackedStringArray("4.3")
+config/icon="res://icon.svg"
+
+[autoload]
+ContentDB="*res://src/core/content_db.gd"
+GameState="*res://src/core/game_state.gd"
+AudioDirector="*res://src/core/audio_director.gd"
+
+[editor_plugins]
+enabled=PackedStringArray("res://addons/gdUnit4/plugin.cfg")
+
+[display]
+window/size/viewport_width=1024
+window/size/viewport_height=768
+window/stretch/mode="canvas_items"
+window/stretch/aspect="keep"
+
+[rendering]
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
