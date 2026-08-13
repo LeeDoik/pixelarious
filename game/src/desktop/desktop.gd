@@ -78,6 +78,7 @@ func _build_taskbar() -> void:
 
 func _refresh_taskbar(ids: Array) -> void:
 	for c in _taskbar_box.get_children():
+		_taskbar_box.remove_child(c)
 		c.queue_free()
 	for id in ids:
 		var b := Button.new()
