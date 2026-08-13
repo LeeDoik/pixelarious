@@ -62,6 +62,7 @@ func _refresh() -> void:
 func _on_activate(i: int) -> void:
 	var id: String = _list.get_item_metadata(i)
 	if id == "..":
+		_clear_pending_lock()
 		_cwd = ContentDB.fs_node(_cwd).get("parent", "root")
 		_refresh()
 		return
@@ -97,7 +98,12 @@ func submit_password(text: String) -> bool:
 	_viewer.text = "비밀번호가 올바르지 않습니다."
 	return false
 
+func _clear_pending_lock() -> void:
+	_pending_locked = ""
+	_pw_row.visible = false
+
 func open_file(node_id: String) -> void:
+	_clear_pending_lock()
 	var n := ContentDB.fs_node(node_id)
 	if n.get("corrupt", false):
 		_viewer.text = "파일이 손상되어 열 수 없습니다."
