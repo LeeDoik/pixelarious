@@ -37,23 +37,23 @@ export function Cartridge({ game, index }: { game: Game; index: number }) {
       </div>
       <div className="cart-detail">
         <div className="cart-detail-inner">
-          <div>
-            <p className="desc">{game.description}</p>
+          <p className="desc">{game.description}</p>
+          <div className="cart-detail-foot">
             <ul className="tags">
               {game.tags.map((t) => (
                 <li key={t}>{t}</li>
               ))}
             </ul>
+            {game.playPath ? (
+              <Link className="btn" href={`/play/${game.slug}`}>
+                ▶ PLAY
+              </Link>
+            ) : (
+              <span className="btn not-inserted" aria-disabled="true">
+                NOT INSERTED
+              </span>
+            )}
           </div>
-          {game.playPath ? (
-            <Link className="btn" href={`/play/${game.slug}`}>
-              ▶ PLAY
-            </Link>
-          ) : (
-            <span className="btn not-inserted" aria-disabled="true">
-              NOT INSERTED
-            </span>
-          )}
         </div>
       </div>
     </article>
