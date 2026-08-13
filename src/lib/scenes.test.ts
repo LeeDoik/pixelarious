@@ -38,6 +38,17 @@ describe('drawScene', () => {
     }
   })
 
+  it('night palette uses only NIGHT colors', () => {
+    const allowed = new Set(['#141127', '#0C0A1C', '#1D2B53', '#FFF1E8', '#8E99D9', '#FF77A8', '#29ADFF', '#FFEC27'])
+    for (const scene of COVER_SCENES) {
+      const { canvas, calls } = fakeCanvas()
+      drawScene(canvas, scene, 'night')
+      for (const [color] of calls) {
+        expect(allowed.has(color), `${scene} used ${color}`).toBe(true)
+      }
+    }
+  })
+
   it('is deterministic (same seed, same output)', () => {
     const a = fakeCanvas()
     const b = fakeCanvas()

@@ -11,6 +11,7 @@ describe('CoverCanvas', () => {
     const canvas = container.querySelector('canvas.cover')
     expect(canvas).not.toBeNull()
     expect(canvas?.getAttribute('width')).toBe('100')
+    expect(canvas?.getAttribute('height')).toBe('42')
     expect(canvas?.getAttribute('aria-hidden')).toBe('true')
   })
 })
