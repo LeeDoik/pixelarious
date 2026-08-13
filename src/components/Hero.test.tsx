@@ -10,13 +10,19 @@ afterEach(() => {
 describe('Hero', () => {
   it('types out NEO_KIDO over time', () => {
     vi.useFakeTimers()
-    render(<Hero />)
+    const { container } = render(<Hero />)
     const h1 = screen.getByRole('heading', { level: 1 })
     expect(h1.textContent).not.toContain('NEO_KIDO')
     act(() => {
       vi.advanceTimersByTime(600 + 95 * 8 + 300)
     })
     expect(h1.textContent).toContain('NEO_KIDO')
+    // Assert done-state visuals
+    const underscoreSpan = h1.querySelector('span.u')
+    expect(underscoreSpan).not.toBeNull()
+    expect(underscoreSpan?.textContent).toBe('_')
+    const scrollHint = container.querySelector('.scroll-hint')
+    expect(scrollHint?.classList.contains('show')).toBe(true)
   })
 
   it('shows the full name immediately when reduced motion is preferred', () => {
@@ -30,7 +36,14 @@ describe('Hero', () => {
       removeEventListener: vi.fn(),
       dispatchEvent: vi.fn(),
     } as unknown as MediaQueryList)
-    render(<Hero />)
-    expect(screen.getByRole('heading', { level: 1 }).textContent).toContain('NEO_KIDO')
+    const { container } = render(<Hero />)
+    const h1 = screen.getByRole('heading', { level: 1 })
+    expect(h1.textContent).toContain('NEO_KIDO')
+    // Assert done-state visuals
+    const underscoreSpan = h1.querySelector('span.u')
+    expect(underscoreSpan).not.toBeNull()
+    expect(underscoreSpan?.textContent).toBe('_')
+    const scrollHint = container.querySelector('.scroll-hint')
+    expect(scrollHint?.classList.contains('show')).toBe(true)
   })
 })
