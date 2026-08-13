@@ -13,7 +13,7 @@ export interface Game {
   playPath: string | null
 }
 
-const GAMES_DIR = path.join(process.cwd(), 'content', 'games')
+export const GAMES_DIR = path.join(process.cwd(), 'content', 'games')
 
 export function validate(raw: Record<string, unknown>, file: string): Game {
   const fail = (msg: string): never => {

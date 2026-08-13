@@ -26,6 +26,11 @@ describe('Cartridge', () => {
     expect(strip.getAttribute('aria-expanded')).toBe('false')
   })
 
+  it('starts open when defaultOpen is set (editor preview)', () => {
+    render(<Cartridge game={base} index={0} defaultOpen />)
+    expect(screen.getByRole('button').getAttribute('aria-expanded')).toBe('true')
+  })
+
   it('toggles with the keyboard (Enter)', () => {
     render(<Cartridge game={base} index={0} />)
     const strip = screen.getByRole('button')

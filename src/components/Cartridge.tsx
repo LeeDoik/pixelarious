@@ -5,8 +5,16 @@ import Link from 'next/link'
 import type { Game } from '@/lib/games'
 import { CoverCanvas } from './CoverCanvas'
 
-export function Cartridge({ game, index }: { game: Game; index: number }) {
-  const [open, setOpen] = useState(false)
+export function Cartridge({
+  game,
+  index,
+  defaultOpen = false,
+}: {
+  game: Game
+  index: number
+  defaultOpen?: boolean
+}) {
+  const [open, setOpen] = useState(defaultOpen)
   const toggle = () => setOpen((o) => !o)
 
   return (

@@ -1,0 +1,146 @@
+.page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 28px 20px 80px;
+}
+
+.head {
+  font-family: var(--font-display);
+  font-size: clamp(15px, 2.6vw, 22px);
+  letter-spacing: 2px;
+  margin: 0 0 8px;
+}
+.head .deco {
+  color: var(--accent);
+}
+.sub {
+  color: var(--dim);
+  margin: 0 0 28px;
+}
+
+.picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 28px;
+}
+.pick {
+  font-family: var(--font-display);
+  font-size: 10px;
+  letter-spacing: 1px;
+  padding: 11px 14px;
+  color: var(--text);
+  background: var(--surface);
+  border: 3px solid var(--dim);
+  box-shadow: 4px 4px 0 var(--shadow);
+  cursor: pointer;
+}
+.pick:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 5px 5px 0 var(--shadow);
+}
+.pick:focus-visible {
+  outline: 3px dashed var(--accent);
+  outline-offset: 4px;
+}
+.pickOn {
+  border-color: var(--frame);
+  color: var(--gold);
+}
+.dot {
+  color: var(--accent);
+}
+
+.cols {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 32px;
+  align-items: start;
+}
+@media (max-width: 900px) {
+  .cols {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.panel {
+  border: 4px solid var(--frame);
+  background: var(--surface);
+  box-shadow: 8px 8px 0 var(--shadow);
+  padding: 22px;
+}
+.panelTitle {
+  font-family: var(--font-display);
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: var(--gold);
+  margin: 0 0 18px;
+}
+
+.field {
+  display: block;
+  margin-bottom: 18px;
+}
+.label {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 9px;
+  letter-spacing: 1px;
+  color: var(--dim);
+  margin-bottom: 8px;
+}
+.input,
+.textarea,
+.select {
+  width: 100%;
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.7;
+  color: var(--text);
+  background: var(--bg);
+  border: 3px solid var(--dim);
+  padding: 10px 12px;
+  border-radius: 0;
+}
+.input:focus,
+.textarea:focus,
+.select:focus {
+  outline: none;
+  border-color: var(--gold);
+}
+.textarea {
+  min-height: 190px;
+  resize: vertical;
+}
+.hint {
+  color: var(--dim);
+  font-size: 14px;
+  margin: 8px 0 0;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  margin-top: 24px;
+}
+.status {
+  font-size: 15px;
+  color: var(--dim);
+}
+.ok {
+  color: var(--accent2);
+}
+.err {
+  color: var(--accent);
+}
+.dirty {
+  color: var(--gold);
+}
+
+.previewNote {
+  color: var(--dim);
+  font-size: 14px;
+  margin: 18px 0 0;
+}

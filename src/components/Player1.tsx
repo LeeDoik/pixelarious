@@ -5,7 +5,7 @@ const LINKS: { label: string; href: string }[] = [
   // { label: 'ITCH.IO', href: 'https://<계정>.itch.io' },
 ]
 
-const BADGES = ['ENGINE: GODOT 4', 'NEXT: UNITY 3D', 'LOCATION: SEOUL']
+const BADGES = ['ENGINE: GODOT 4', 'NEXT: UNITY 3D']
 
 export function Player1() {
   return (
