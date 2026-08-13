@@ -209,3 +209,11 @@ footer .coin{font-family:var(--font-display); font-size:10px; letter-spacing:2px
 }
 .btn.not-inserted:hover{transform:none; box-shadow:5px 5px 0 var(--shadow)}
 .btn.not-inserted:active{transform:none; box-shadow:5px 5px 0 var(--shadow)}
+
+/* play page shell */
+.play-shell{position:fixed; inset:0; display:flex; flex-direction:column; background:var(--bg-deep)}
+.play-bar{display:flex; align-items:center; gap:18px; padding:10px 14px;
+  background:var(--bg); border-bottom:3px solid var(--frame)}
+.btn-small{font-size:10px; padding:9px 12px; box-shadow:4px 4px 0 var(--shadow)}
+.play-title{font-family:var(--font-display); font-size:12px; letter-spacing:1px; color:var(--text)}
+.play-frame{flex:1; border:0; width:100%; background:#000}

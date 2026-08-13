@@ -24,4 +24,9 @@ describe('games registry', () => {
   it('returns undefined for unknown slug', () => {
     expect(getGame('no-such-game')).toBeUndefined()
   })
+
+  it('playable games (the future generateStaticParams source) all have real files', () => {
+    const playable = getGames().filter((g) => g.playPath !== null)
+    expect(playable.map((g) => g.slug)).toEqual(['system-check'])
+  })
 })
