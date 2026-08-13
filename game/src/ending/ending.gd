@@ -13,6 +13,8 @@ const HIDDEN := [
 	"[알 수 없음]: 그 컴퓨터, 어디서 나셨어요?",
 ]
 
+var line_delay := 1.4
+
 static func should_show_hidden() -> bool:
 	return ContentDB.records().size() > 0 \
 		and GameState.records_count() == ContentDB.records().size()
@@ -35,16 +37,10 @@ func play(hidden: bool) -> void:
 	tw.tween_callback(func(): _type_lines(label, EPILOGUE, hidden))
 
 func _type_lines(label: RichTextLabel, lines: Array, then_hidden: bool) -> void:
-	var i := 0
-	var next: Callable
-	next = func():
-		if i < lines.size():
-			label.append_text(lines[i] + "\n")
-			i += 1
-			get_tree().create_timer(1.4).timeout.connect(next)
-		elif then_hidden and should_show_hidden():
-			get_tree().create_timer(2.0).timeout.connect(
-				func():
-					AudioDirector.play_sfx("msg")
-					_type_lines(label, HIDDEN, false))
-	next.call()
+	for line in lines:
+		label.append_text(String(line) + "\n")
+		await get_tree().create_timer(line_delay).timeout
+	if then_hidden and should_show_hidden():
+		await get_tree().create_timer(2.0).timeout
+		AudioDirector.play_sfx("msg")
+		_type_lines(label, HIDDEN, false)

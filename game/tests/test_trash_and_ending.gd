@@ -23,3 +23,17 @@ func test_hidden_ending_gate_counts_records() -> void:
 		GameState.mark_read(cid)
 	# 샘플 콘텐츠는 기록물 2개 — 9개 규칙은 Task 13 콘텐츠 완성 후 유효
 	assert_int(GameState.records_count()).is_equal(ContentDB.records().size())
+
+func test_epilogue_types_all_lines_and_hidden_when_gated() -> void:
+	var e: CanvasLayer = auto_free(EndingScene.new())
+	add_child(e)
+	e.line_delay = 0.01
+	var label := RichTextLabel.new()
+	e.add_child(label)
+	for cid in ContentDB.records():
+		GameState.mark_read(cid)
+	await e._type_lines(label, e.EPILOGUE, true)
+	await get_tree().create_timer(2.2).timeout
+	var text := label.get_parsed_text()
+	assert_str(text).contains("LAST LOGIN")
+	assert_str(text).contains("어디서 나셨어요")
