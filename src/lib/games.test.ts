@@ -38,7 +38,7 @@ describe('games registry', () => {
 
   it('playable set is exactly the expected slugs', () => {
     const playable = getGames().filter((g) => g.playPath !== null)
-    expect(playable.map((g) => g.slug)).toEqual(['system-check'])
+    expect(playable.map((g) => g.slug)).toEqual(['last-login', 'system-check'])
   })
 
   it('rejects a slug with a double hyphen', () => {

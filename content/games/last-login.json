@@ -1,0 +1,15 @@
+{
+  "slug": "last-login",
+  "order": 40,
+  "title": "LAST LOGIN",
+  "subtitle": "마지막 접속",
+  "description": "2003년 겨울, 재활용 수거장에서 주워온 컴퓨터.\n전원을 켜자 3개월 전에 멈춘 한 사람의 삶이 부팅된다.",
+  "tags": [
+    "GODOT 4",
+    "2D",
+    "ADVENTURE",
+    "MOUSE REQUIRED"
+  ],
+  "coverScene": "system",
+  "playPath": "/games/last-login/index.html"
+}
