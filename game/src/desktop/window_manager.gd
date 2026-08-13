@@ -1,0 +1,51 @@
+class_name WindowManager
+extends Control
+## 창 레지스트리와 z-order. 자식 = 열린 OSWindow들 (마지막 자식이 최상위).
+
+signal windows_changed(open_ids: Array)
+signal app_focused(id: String)
+
+const OS_WINDOW := preload("res://src/desktop/os_window.tscn")
+
+var _apps: Dictionary = {}     # id -> {title, builder}
+var _windows: Dictionary = {}  # id -> OSWindow
+var _cascade := 0
+
+func register_app(id: String, title: String, builder: Callable) -> void:
+	_apps[id] = {"title": title, "builder": builder}
+
+func open_app(id: String) -> void:
+	if _windows.has(id):
+		focus_app(id)
+		return
+	var app: Dictionary = _apps[id]
+	var w: OSWindow = OS_WINDOW.instantiate()
+	add_child(w)
+	w.setup(id, app["title"], Vector2(640, 480))
+	w.set_content(app["builder"].call())
+	w.position = Vector2(60, 40) + Vector2(28, 28) * (_cascade % 8)
+	_cascade += 1
+	w.request_close.connect(close_app)
+	w.focused.connect(focus_app)
+	_windows[id] = w
+	windows_changed.emit(open_ids())
+	app_focused.emit(id)
+
+func close_app(id: String) -> void:
+	if not _windows.has(id):
+		return
+	_windows[id].queue_free()
+	_windows.erase(id)
+	windows_changed.emit(open_ids())
+
+func focus_app(id: String) -> void:
+	if not _windows.has(id):
+		return
+	move_child(_windows[id], get_child_count() - 1)
+	app_focused.emit(id)
+
+func is_open(id: String) -> bool:
+	return _windows.has(id)
+
+func open_ids() -> Array:
+	return _windows.keys()
