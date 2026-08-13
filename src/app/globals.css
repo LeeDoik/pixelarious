@@ -201,3 +201,11 @@ footer .coin{font-family:var(--font-display); font-size:10px; letter-spacing:2px
   .scroll-hint .arr{animation:none}
   .hero h1 .cursor{animation:none}
 }
+
+/* not-inserted state — 죽은 링크 대신 표시 (스펙 §4.3) */
+.btn.not-inserted{
+  background:var(--surface); color:var(--dim); border-color:var(--dim);
+  box-shadow:5px 5px 0 var(--shadow); cursor:default;
+}
+.btn.not-inserted:hover{transform:none; box-shadow:5px 5px 0 var(--shadow)}
+.btn.not-inserted:active{transform:none; box-shadow:5px 5px 0 var(--shadow)}
