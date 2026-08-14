@@ -122,3 +122,26 @@ func test_taskbar_click_raises_background_window() -> void:
 	assert_bool(wm.is_minimized("memo")).is_false()
 	var top := wm.get_child(wm.get_child_count() - 1)
 	assert_str(top.win_id).is_equal("memo")
+
+func test_window_resize_grows_and_respects_min_size() -> void:
+	var wm := _make()
+	wm.size = Vector2(1024, 732)
+	wm.open_app("memo")
+	var w: OSWindow = wm.get_child(wm.get_child_count() - 1)
+	var before := w.size
+	w._resize_zone = 6  # 우하단 모서리
+	w._apply_resize(Vector2(40, 30))
+	assert_bool(w.size.x > before.x and w.size.y > before.y).is_true()
+	w._apply_resize(Vector2(-10000, -10000))
+	assert_bool(w.size.x >= w.MIN_WIN_SIZE.x and w.size.y >= w.MIN_WIN_SIZE.y).is_true()
+
+func test_window_resize_left_edge_moves_and_resizes() -> void:
+	var wm := _make()
+	wm.size = Vector2(1024, 732)
+	wm.open_app("memo")
+	var w: OSWindow = wm.get_child(wm.get_child_count() - 1)
+	var right_edge := w.position.x + w.size.x
+	w._resize_zone = 1  # 왼쪽 가장자리
+	w._apply_resize(Vector2(-20, 0))
+	assert_float(w.position.x + w.size.x).is_equal_approx(right_edge, 0.5)  # 오른쪽 변은 고정
+	assert_bool(w.position.x < 60.0).is_true()

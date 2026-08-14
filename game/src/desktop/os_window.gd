@@ -6,13 +6,18 @@ signal request_close(id: String)
 signal request_minimize(id: String)
 signal focused(id: String)
 
+const RESIZE_MARGIN := 6.0
+const MIN_WIN_SIZE := Vector2(360, 260)
+
 var win_id := ""
 var _dragging := false
+var _resizing := false
+var _resize_zone := 0  # 비트마스크: 1=왼쪽 2=오른쪽 4=아래
 var _titlebar: Panel
 
 func setup(id: String, title: String, win_size: Vector2, icon_path: String = "") -> void:
 	win_id = id
-	custom_minimum_size = win_size
+	custom_minimum_size = MIN_WIN_SIZE
 	size = win_size
 	_titlebar = Panel.new()
 	_titlebar.add_theme_stylebox_override("panel", NuriTheme.titlebar_style(true))
@@ -45,9 +50,59 @@ func setup(id: String, title: String, win_size: Vector2, icon_path: String = "")
 	mn.pressed.connect(func(): request_minimize.emit(win_id))
 	_titlebar.add_child(mn)
 	add_child(_titlebar)
-	gui_input.connect(func(e):
-		if e is InputEventMouseButton and e.pressed:
-			focused.emit(win_id))
+	gui_input.connect(_on_body_input)
+
+func _on_body_input(e: InputEvent) -> void:
+	# 창 본체: 클릭 = 포커스, 가장자리 드래그 = 리사이즈 (상단은 타이틀바 = 이동)
+	if e is InputEventMouseButton and e.button_index == MOUSE_BUTTON_LEFT:
+		if e.pressed:
+			focused.emit(win_id)
+			_resize_zone = _zone_at(e.position)
+			_resizing = _resize_zone != 0
+		else:
+			_resizing = false
+	elif e is InputEventMouseMotion:
+		if _resizing:
+			if not (e.button_mask & MOUSE_BUTTON_MASK_LEFT):
+				_resizing = false
+				return
+			_apply_resize(e.relative)
+		else:
+			_update_resize_cursor(_zone_at(e.position))
+
+func _zone_at(p: Vector2) -> int:
+	var z := 0
+	if p.x <= RESIZE_MARGIN:
+		z |= 1
+	elif p.x >= size.x - RESIZE_MARGIN:
+		z |= 2
+	if p.y >= size.y - RESIZE_MARGIN:
+		z |= 4
+	return z
+
+func _update_resize_cursor(z: int) -> void:
+	match z:
+		1, 2:
+			mouse_default_cursor_shape = Control.CURSOR_HSIZE
+		4:
+			mouse_default_cursor_shape = Control.CURSOR_VSIZE
+		5:
+			mouse_default_cursor_shape = Control.CURSOR_BDIAGSIZE
+		6:
+			mouse_default_cursor_shape = Control.CURSOR_FDIAGSIZE
+		_:
+			mouse_default_cursor_shape = Control.CURSOR_ARROW
+
+func _apply_resize(rel: Vector2) -> void:
+	var area := get_parent_area_size()
+	if _resize_zone & 2:
+		size.x = clampf(size.x + rel.x, MIN_WIN_SIZE.x, maxf(area.x - position.x, MIN_WIN_SIZE.x))
+	if _resize_zone & 4:
+		size.y = clampf(size.y + rel.y, MIN_WIN_SIZE.y, maxf(area.y - position.y, MIN_WIN_SIZE.y))
+	if _resize_zone & 1:
+		var new_x := clampf(position.x + rel.x, 0.0, position.x + size.x - MIN_WIN_SIZE.x)
+		size.x += position.x - new_x
+		position.x = new_x
 
 func set_active(active: bool) -> void:
 	if is_instance_valid(_titlebar):
