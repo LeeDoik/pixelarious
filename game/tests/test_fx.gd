@@ -22,6 +22,16 @@ func test_warp_toggle_persists() -> void:
 	data = JSON.parse_string(FileAccess.get_file_as_string("user://settings.json"))
 	assert_bool(bool(data["warp"])).is_true()
 
+func test_warp_point_identity_at_center() -> void:
+	var center := Vector2(512, 384)
+	assert_bool(Fx.warp_point(center).is_equal_approx(center)).is_true()
+
+func test_warp_point_pushes_corner_outward() -> void:
+	# 좌상단 근처 클릭은 코너 방향(더 작은 좌표)으로 보정되어야 한다
+	var p := Vector2(50, 50)
+	var w := Fx.warp_point(p)
+	assert_bool(w.x < p.x and w.y < p.y).is_true()
+
 func test_menu_toggles() -> void:
 	assert_bool(Fx.is_menu_open()).is_false()
 	Fx.toggle_menu()

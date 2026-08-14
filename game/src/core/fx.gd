@@ -3,6 +3,8 @@ extends CanvasLayer
 ## 볼륨·왜곡 설정은 user://settings.json에 저장되어 재방문 시 유지된다.
 
 const SETTINGS_PATH := "user://settings.json"
+const WARP_K := 0.03           # 곡면 강도 (셰이더 uniform과 입력 보정이 공유)
+const INJECTED_DEVICE := 4242  # 재주입 이벤트 식별용 센티널
 
 var _warp: ColorRect
 var _menu: Panel
@@ -19,6 +21,29 @@ func _input(e: InputEvent) -> void:
 	if e is InputEventKey and e.pressed and not e.echo and e.keycode == KEY_ESCAPE:
 		toggle_menu()
 		get_viewport().set_input_as_handled()
+		return
+	# 곡면이 켜져 있으면 마우스 좌표를 셰이더와 같은 공식으로 보정해 재주입 —
+	# "화면에 보이는 위치"와 "클릭되는 위치"가 일치하게 된다.
+	# (설정 메뉴는 왜곡 없이 그려지므로 메뉴가 열려 있을 땐 보정하지 않는다)
+	if not _warp.visible or _menu.visible:
+		return
+	if e is InputEventMouse and e.device != INJECTED_DEVICE:
+		var w := e.duplicate() as InputEventMouse
+		w.device = INJECTED_DEVICE
+		w.position = warp_point(e.position)
+		w.global_position = w.position
+		if w is InputEventMouseMotion:
+			var src := e as InputEventMouseMotion
+			(w as InputEventMouseMotion).relative = warp_point(src.position) - warp_point(src.position - src.relative)
+		get_viewport().set_input_as_handled()
+		get_viewport().push_input(w, true)
+
+func warp_point(p: Vector2) -> Vector2:
+	## 화면 좌표 p에 표시되는 콘텐츠의 실제(비왜곡) 캔버스 좌표
+	var size := get_viewport().get_visible_rect().size
+	var c := (p / size) * 2.0 - Vector2.ONE
+	c = c * (1.0 + WARP_K * c.length_squared())
+	return (c + Vector2.ONE) * 0.5 * size
 
 # --- CRT 곡면 왜곡 ---
 
@@ -31,22 +56,24 @@ func _build_warp() -> void:
 	sh.code = """
 shader_type canvas_item;
 uniform sampler2D screen_tex : hint_screen_texture, filter_linear;
+uniform float strength = 0.03;
 
 void fragment() {
 	vec2 c = SCREEN_UV * 2.0 - 1.0;
 	float r2 = dot(c, c);
-	vec2 warped = c * (1.0 + 0.05 * r2);
+	vec2 warped = c * (1.0 + strength * r2);
 	vec2 uv = (warped + 1.0) * 0.5;
 	if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) {
 		COLOR = vec4(0.0, 0.0, 0.0, 1.0);
 	} else {
 		vec3 col = texture(screen_tex, uv).rgb;
-		col *= 1.0 - 0.12 * r2;  // 가장자리로 갈수록 살짝 어둡게 (곡면 질감)
+		col *= 1.0 - 0.08 * r2;  // 가장자리로 갈수록 살짝 어둡게 (곡면 질감)
 		COLOR = vec4(col, 1.0);
 	}
 }
 """
 	mat.shader = sh
+	mat.set_shader_parameter("strength", WARP_K)
 	_warp.material = mat
 	add_child(_warp)
 
