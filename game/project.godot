@@ -11,6 +11,7 @@ config/icon="res://icon.svg"
 ContentDB="*res://src/core/content_db.gd"
 GameState="*res://src/core/game_state.gd"
 AudioDirector="*res://src/core/audio_director.gd"
+Fx="*res://src/core/fx.gd"
 
 [editor_plugins]
 enabled=PackedStringArray("res://addons/gdUnit4/plugin.cfg")
