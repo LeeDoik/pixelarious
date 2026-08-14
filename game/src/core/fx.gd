@@ -18,6 +18,9 @@ func _ready() -> void:
 	_load_settings()
 
 func _input(e: InputEvent) -> void:
+	# 키 입력 효과음 (홀드 반복은 제외 — 실제 누름 한 번당 한 번)
+	if e is InputEventKey and e.pressed and not e.echo:
+		AudioDirector.play_sfx("key")
 	if e is InputEventKey and e.pressed and not e.echo and e.keycode == KEY_ESCAPE:
 		toggle_menu()
 		get_viewport().set_input_as_handled()

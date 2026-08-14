@@ -8,14 +8,18 @@ const SFX := {
 const LAYERS := ["res://assets/sfx/amb_fan.wav", "res://assets/sfx/amb_hum.wav", "res://assets/sfx/amb_drone.wav"]
 
 var _layer_players: Array[AudioStreamPlayer] = []
-var _click_variants: Array[String] = []
+var _variant_pools: Dictionary = {}  # 이름 -> 경로 배열 (매번 랜덤 재생)
 
 func _ready() -> void:
-	# 실제 녹음을 분할한 클릭 변주들 — 클릭마다 랜덤 재생 (없으면 신디사이징 click.wav 폴백)
-	var i := 1
-	while ResourceLoader.exists("res://assets/sfx/click_%d.wav" % i):
-		_click_variants.append("res://assets/sfx/click_%d.wav" % i)
-		i += 1
+	# 실제 녹음을 분할한 변주 풀 — 재생마다 랜덤 선택 (풀이 비면 SFX 폴백)
+	for prefix in ["click", "key"]:
+		var pool: Array[String] = []
+		var i := 1
+		while ResourceLoader.exists("res://assets/sfx/%s_%d.wav" % [prefix, i]):
+			pool.append("res://assets/sfx/%s_%d.wav" % [prefix, i])
+			i += 1
+		if not pool.is_empty():
+			_variant_pools[prefix] = pool
 	for path in LAYERS:
 		var p := AudioStreamPlayer.new()
 		if ResourceLoader.exists(path):
@@ -44,8 +48,9 @@ func active_layers() -> int:
 
 func play_sfx(name: String) -> void:
 	var path: String
-	if name == "click" and not _click_variants.is_empty():
-		path = _click_variants[randi() % _click_variants.size()]
+	if _variant_pools.has(name):
+		var pool: Array = _variant_pools[name]
+		path = pool[randi() % pool.size()]
 	elif SFX.has(name) and ResourceLoader.exists(SFX[name]):
 		path = SFX[name]
 	else:
@@ -56,5 +61,5 @@ func play_sfx(name: String) -> void:
 	p.finished.connect(p.queue_free)
 	p.play()
 
-func click_variant_count() -> int:
-	return _click_variants.size()
+func variant_count(name: String) -> int:
+	return (_variant_pools[name] as Array).size() if _variant_pools.has(name) else 0

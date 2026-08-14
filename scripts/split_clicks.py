@@ -1,10 +1,12 @@
-"""마우스 클릭 녹음(여러 번 클릭)을 개별 클릭 wav들로 분할.
-사용: python scripts/split_clicks.py
-입력: scripts/audio_src/mouse_clicks.wav (모노/스테레오, 16bit)
-출력: game/assets/sfx/click_1.wav ... click_N.wav (16bit 모노, 원본 샘플레이트, 피크 정규화)"""
+"""반복 입력 녹음(클릭·타이핑 등)을 개별 원샷 wav들로 분할.
+사용: python scripts/split_clicks.py [소스wav] [접두사]
+  기본:      scripts/audio_src/mouse_clicks.wav click  →  click_1.wav ...
+  키보드 예: python scripts/split_clicks.py scripts/audio_src/keyboard_clicks.wav key
+출력: game/assets/sfx/<접두사>_N.wav (16bit 모노, 원본 샘플레이트, 피크 정규화)"""
 import array, os, sys, wave
 
-SRC = os.path.join("scripts", "audio_src", "mouse_clicks.wav")
+SRC = sys.argv[1] if len(sys.argv) > 1 else os.path.join("scripts", "audio_src", "mouse_clicks.wav")
+PREFIX = sys.argv[2] if len(sys.argv) > 2 else "click"
 OUT_DIR = os.path.join("game", "assets", "sfx")
 SILENCE_MS = 60      # 이 이상 조용하면 클릭 경계
 PAD_BEFORE_MS = 8
@@ -14,7 +16,7 @@ FADE_MS = 3
 PEAK_TARGET = 0.45
 
 if not os.path.isfile(SRC):
-    print("no audio_src/mouse_clicks.wav, skipping")
+    print("no source wav (%s), skipping" % SRC)
     sys.exit(0)
 
 w = wave.open(SRC, "rb")
@@ -68,10 +70,10 @@ for gs, ge in groups:
         f = min(1.0, i / fade if fade else 1.0, (len(seg) - 1 - i) / fade if fade else 1.0)
         out.append(int(max(-32767, min(32767, v * gain * f))))
     count += 1
-    ow = wave.open(os.path.join(OUT_DIR, "click_%d.wav" % count), "wb")
+    ow = wave.open(os.path.join(OUT_DIR, "%s_%d.wav" % (PREFIX, count)), "wb")
     ow.setnchannels(1)
     ow.setsampwidth(2)
     ow.setframerate(rate)
     ow.writeframes(out.tobytes())
     ow.close()
-print("split into", count, "clicks")
+print("split into", count, "segments (%s_*)" % PREFIX)
