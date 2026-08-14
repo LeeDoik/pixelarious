@@ -7,7 +7,6 @@ signal focused(id: String)
 
 var win_id := ""
 var _dragging := false
-var _drag_off := Vector2.ZERO
 var _titlebar: Panel
 
 func setup(id: String, title: String, win_size: Vector2) -> void:
@@ -56,14 +55,11 @@ func set_content(c: Control) -> void:
 func _on_titlebar_input(e: InputEvent) -> void:
 	if e is InputEventMouseButton and e.button_index == MOUSE_BUTTON_LEFT:
 		_dragging = e.pressed
-		_drag_off = get_global_mouse_position() - global_position
 		focused.emit(win_id)
 	elif e is InputEventMouseMotion and _dragging:
-		var p := get_global_mouse_position() - _drag_off
-		var parent_origin := Vector2.ZERO
-		var pc := get_parent()
-		if pc is Control:
-			parent_origin = (pc as Control).global_position
-		var local := p - parent_origin
+		# 캔버스 밖에서 버튼을 놓아 릴리즈를 놓친 경우 드래그 자동 해제
+		if not (e.button_mask & MOUSE_BUTTON_MASK_LEFT):
+			_dragging = false
+			return
 		var bounds := get_parent_area_size() - size
-		position = local.clamp(Vector2.ZERO, Vector2(maxf(bounds.x, 0), maxf(bounds.y, 0)))
+		position = (position + e.relative).clamp(Vector2.ZERO, Vector2(maxf(bounds.x, 0), maxf(bounds.y, 0)))
