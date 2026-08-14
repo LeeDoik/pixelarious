@@ -23,13 +23,14 @@ func setup(id: String, title: String, win_size: Vector2, icon_path: String = "")
 	if icon_path != "" and ResourceLoader.exists(icon_path):
 		var ic := TextureRect.new()
 		ic.texture = load(icon_path)
-		ic.position = Vector2(6, 4)
-		ic.custom_minimum_size = Vector2(20, 20)
-		ic.size = Vector2(20, 20)
+		# expand_mode를 크기 지정보다 먼저 — 아니면 최소 크기가 텍스처 원본(32px)에 묶인다
 		ic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		ic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		ic.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		ic.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		ic.custom_minimum_size = Vector2(20, 20)
+		ic.position = Vector2(6, 4)
+		ic.size = Vector2(20, 20)
 		_titlebar.add_child(ic)
 		title_x = 32.0
 	var tl := Label.new()
@@ -47,6 +48,10 @@ func setup(id: String, title: String, win_size: Vector2, icon_path: String = "")
 	gui_input.connect(func(e):
 		if e is InputEventMouseButton and e.pressed:
 			focused.emit(win_id))
+
+func set_active(active: bool) -> void:
+	if is_instance_valid(_titlebar):
+		_titlebar.add_theme_stylebox_override("panel", NuriTheme.titlebar_style(active))
 
 func _titlebar_button(label: String, off_left: float, off_right: float) -> Button:
 	# 테마 기본 버튼(폰트 16 + 여백 6)의 최소 크기가 22px 틀을 넘지 않게 전용 소형 스타일 적용

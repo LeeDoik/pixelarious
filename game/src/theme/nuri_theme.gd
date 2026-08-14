@@ -25,10 +25,15 @@ static func build() -> Theme:
 	btn.set_border_width_all(2)
 	btn.set_content_margin_all(6)
 	t.set_stylebox("normal", "Button", btn)
-	var btn_down := btn.duplicate()
+	var btn_down: StyleBoxFlat = btn.duplicate()
 	btn_down.bg_color = FACE.darkened(0.12)
+	btn_down.content_margin_top = 7
+	btn_down.content_margin_bottom = 5  # 눌림 시 내용이 살짝 내려앉는 촉감
 	t.set_stylebox("pressed", "Button", btn_down)
-	t.set_stylebox("hover", "Button", btn.duplicate())
+	var btn_hover: StyleBoxFlat = btn.duplicate()
+	btn_hover.bg_color = FACE.lightened(0.08)
+	btn_hover.border_color = FACE_DARK.darkened(0.15)
+	t.set_stylebox("hover", "Button", btn_hover)
 	t.set_color("font_color", "Button", TEXT)
 	t.set_color("font_color", "Label", TEXT)
 	var line := StyleBoxFlat.new()
@@ -40,7 +45,21 @@ static func build() -> Theme:
 	t.set_color("font_color", "LineEdit", TEXT)
 	return t
 
-static func titlebar_style(active: bool) -> StyleBoxFlat:
-	var s := StyleBoxFlat.new()
-	s.bg_color = TITLE_A if active else TITLE_A.lerp(Color.GRAY, 0.5)
+static func titlebar_style(active: bool) -> StyleBox:
+	# 2000년대 초 OS의 수평 그라데이션 타이틀바 (비활성 창은 회색조)
+	var g := Gradient.new()
+	if active:
+		g.set_color(0, TITLE_A)
+		g.set_color(1, TITLE_B)
+	else:
+		g.set_color(0, TITLE_A.lerp(Color.GRAY, 0.55))
+		g.set_color(1, TITLE_B.lerp(Color.GRAY, 0.55))
+	var tex := GradientTexture2D.new()
+	tex.gradient = g
+	tex.fill_from = Vector2.ZERO
+	tex.fill_to = Vector2(1, 0)
+	tex.width = 256
+	tex.height = 28
+	var s := StyleBoxTexture.new()
+	s.texture = tex
 	return s

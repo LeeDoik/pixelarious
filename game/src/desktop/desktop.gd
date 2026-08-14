@@ -1,7 +1,6 @@
 extends Control
 ## 바탕화면: 배경색, 아이콘 그리드, 작업표시줄(열린 창 버튼 + 시계), CRT 오버레이
 
-const ACT_CLOCK := {1: "21:47", 2: "23:30", 3: "01:12"}
 # 앱 빌더 레지스트리 — Task 7~11이 여기에 앱을 추가한다
 var APP_BUILDERS: Dictionary = {
 	"explorer": func() -> Control: return Explorer.new(),
@@ -37,13 +36,20 @@ func _ready() -> void:
 	add_child(wm)
 	_build_taskbar()
 	_build_crt()
-	GameState.act_changed.connect(func(_a): _clock.text = clock_text())
 	_clock.text = clock_text()
+	var clock_timer := Timer.new()
+	clock_timer.wait_time = 5.0
+	clock_timer.autostart = true
+	clock_timer.timeout.connect(func(): _clock.text = clock_text())
+	add_child(clock_timer)
 	GameState.flag_changed.connect(func(n):
 		if n == "ending_start":
 			var e := EndingScene.new()
 			add_child(e)
 			e.play(true))
+	AudioDirector.play_sfx("startup")
+	# 신규 플레이어 유도: 슬기를 아직 만나지 않았다면 잠시 후 새 쪽지 알림
+	get_tree().create_timer(15.0).timeout.connect(_maybe_nudge)
 
 func _register_apps() -> void:
 	for id in APP_BUILDERS:
@@ -81,10 +87,10 @@ func _build_taskbar() -> void:
 	if ResourceLoader.exists("res://assets/img/icons/oslogo.png"):
 		var logo := TextureRect.new()
 		logo.texture = load("res://assets/img/icons/oslogo.png")
-		logo.custom_minimum_size = Vector2(24, 24)
 		logo.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		logo.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		logo.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		logo.custom_minimum_size = Vector2(24, 24)
 		logo.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		start.add_child(logo)
 	var start_label := Label.new()
@@ -125,10 +131,39 @@ func _refresh_taskbar(ids: Array) -> void:
 		_taskbar_box.add_child(b)
 
 func clock_text() -> String:
-	return clock_text_for_act(GameState.current_act())
+	# 접속 지역 실제 시각 (HH:MM)
+	return Time.get_time_string_from_system().substr(0, 5)
 
-func clock_text_for_act(act: int) -> String:
-	return ACT_CLOCK[act]
+func _maybe_nudge() -> void:
+	if not is_inside_tree():
+		return
+	if GameState.has_flag("met_seulgi") or wm.is_open("messenger"):
+		return
+	AudioDirector.play_sfx("msg")
+	var p := PanelContainer.new()
+	var l := Label.new()
+	l.text = "PC통신에 새 쪽지가 도착했습니다 — 클릭해서 확인"
+	p.add_child(l)
+	p.anchor_left = 1.0
+	p.anchor_right = 1.0
+	p.anchor_top = 1.0
+	p.anchor_bottom = 1.0
+	p.offset_left = -420.0
+	p.offset_right = -12.0
+	p.offset_top = -84.0
+	p.offset_bottom = -44.0
+	p.gui_input.connect(func(e):
+		if e is InputEventMouseButton and e.pressed:
+			wm.open_app("messenger")
+			p.queue_free())
+	add_child(p)
+	var tw := create_tween()
+	tw.tween_interval(6.0)
+	tw.tween_callback(func():
+		if is_instance_valid(p):
+			p.queue_free())
+	# 아직도 안 열었다면 45초 후 한 번 더
+	get_tree().create_timer(45.0).timeout.connect(_maybe_nudge)
 
 func _build_crt() -> void:
 	var crt := ColorRect.new()

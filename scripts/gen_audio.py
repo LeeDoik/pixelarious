@@ -30,11 +30,18 @@ def mix(*tracks):
     n = max(len(t) for t in tracks)
     return [sum(t[i] if i < len(t) else 0.0 for t in tracks) for i in range(n)]
 
+def delayed(samples, delay_s):
+    return [0.0] * int(SR * delay_s) + samples
+
 # SFX
 write("msg.wav", tone(880, 0.09) + tone(1320, 0.12))          # 메신저 알림 두 음
 write("unlock.wav", tone(523, 0.08) + tone(784, 0.16))
 write("click.wav", tone(2000, 0.03, 0.2))
 write("boot.wav", mix(tone(220, 0.8, 0.3), tone(331, 0.8, 0.2)))
+# 시동음: 상승 아르페지오 3음 (G4 → C5 → E5)
+write("startup.wav", mix(tone(392.0, 1.4, 0.22),
+                         delayed(tone(523.25, 1.1, 0.22), 0.15),
+                         delayed(tone(659.25, 0.9, 0.20), 0.30)))
 # 앰비언트 루프 (act 1/2/3 겹침용)
 write("amb_fan.wav", noise(6.0, 0.5))                          # 레이어 1: 팬
 write("amb_hum.wav", tone(120, 6.0, 0.06) )                    # 레이어 2: 형광등 험

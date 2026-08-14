@@ -8,11 +8,12 @@ func test_desktop_builds_icons_and_taskbar() -> void:
 	assert_object(d.wm).is_not_null()
 	assert_int(d.icon_count()).is_greater(3)
 
-func test_clock_follows_act() -> void:
+func test_clock_shows_local_time_format() -> void:
 	var d: Control = auto_free(DESKTOP.instantiate())
 	add_child(d)
-	assert_str(d.clock_text_for_act(1)).is_equal("21:47")
-	assert_str(d.clock_text_for_act(3)).is_equal("01:12")
+	var re := RegEx.new()
+	re.compile("^\\d{2}:\\d{2}$")
+	assert_bool(re.search(d.clock_text()) != null).is_true()
 
 func test_window_layer_does_not_block_desktop_icons() -> void:
 	# wm이 풀렉트 STOP이면 아래 형제인 아이콘들이 클릭 불가가 된다 (회귀 방지)

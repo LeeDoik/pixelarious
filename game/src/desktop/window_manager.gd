@@ -60,6 +60,7 @@ func open_window(id: String, title: String, content: Control, win_size: Vector2 
 	_titles[id] = title
 	windows_changed.emit(open_ids())
 	app_focused.emit(id)
+	_update_active_states()
 
 func close_app(id: String) -> void:
 	if not _windows.has(id):
@@ -68,6 +69,7 @@ func close_app(id: String) -> void:
 	_windows.erase(id)
 	_titles.erase(id)
 	windows_changed.emit(open_ids())
+	_update_active_states()
 
 func window_title(id: String) -> String:
 	return String(_titles.get(id, id))
@@ -79,6 +81,8 @@ func toggle_minimize(id: String) -> void:
 	w.visible = not w.visible
 	if w.visible:
 		focus_app(id)
+	else:
+		_update_active_states()
 
 func is_minimized(id: String) -> bool:
 	return _windows.has(id) and not _windows[id].visible
@@ -93,6 +97,7 @@ func taskbar_clicked(id: String) -> void:
 		focus_app(id)
 	elif get_child(get_child_count() - 1) == w:
 		w.visible = false
+		_update_active_states()
 	else:
 		focus_app(id)
 
@@ -101,6 +106,19 @@ func focus_app(id: String) -> void:
 		return
 	move_child(_windows[id], get_child_count() - 1)
 	app_focused.emit(id)
+	_update_active_states()
+
+func _update_active_states() -> void:
+	# 최상위의 보이는 창만 활성 타이틀바, 나머지는 비활성(회색조)
+	var top: OSWindow = null
+	for i in range(get_child_count() - 1, -1, -1):
+		var c := get_child(i)
+		if c is OSWindow and (c as OSWindow).visible and not c.is_queued_for_deletion():
+			top = c
+			break
+	for id in _windows:
+		var w: OSWindow = _windows[id]
+		w.set_active(w == top)
 
 func is_open(id: String) -> bool:
 	return _windows.has(id)

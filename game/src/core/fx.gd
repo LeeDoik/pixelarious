@@ -18,6 +18,16 @@ func _ready() -> void:
 	_build_warp()
 	_build_menu()
 	_load_settings()
+	_apply_cursor()
+
+func _apply_cursor() -> void:
+	# 2002풍 픽셀 커서 (scripts/gen_cursor.py 생성)
+	if ResourceLoader.exists("res://assets/img/cursor_arrow.png"):
+		var arrow := load("res://assets/img/cursor_arrow.png")
+		Input.set_custom_mouse_cursor(arrow, Input.CURSOR_ARROW, Vector2.ZERO)
+		Input.set_custom_mouse_cursor(arrow, Input.CURSOR_POINTING_HAND, Vector2.ZERO)
+	if ResourceLoader.exists("res://assets/img/cursor_ibeam.png"):
+		Input.set_custom_mouse_cursor(load("res://assets/img/cursor_ibeam.png"), Input.CURSOR_IBEAM, Vector2(5, 17))
 
 func _process(_delta: float) -> void:
 	# 브라우저가 자체적으로 전체화면을 해제한 직후의 ESC를 구분하기 위한 추적
