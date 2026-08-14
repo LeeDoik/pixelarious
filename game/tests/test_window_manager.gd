@@ -102,3 +102,23 @@ func test_titlebar_shows_app_icon_when_registered() -> void:
 		if c is TextureRect:
 			found = true
 	assert_bool(found).is_true()
+
+func test_minimize_restore_cycle() -> void:
+	var wm := _make()
+	wm.open_app("memo")
+	assert_bool(wm.is_minimized("memo")).is_false()
+	wm.toggle_minimize("memo")
+	assert_bool(wm.is_minimized("memo")).is_true()
+	wm.taskbar_clicked("memo")   # 최소화된 창 → 복원
+	assert_bool(wm.is_minimized("memo")).is_false()
+	wm.taskbar_clicked("memo")   # 최상위 활성 창 → 최소화
+	assert_bool(wm.is_minimized("memo")).is_true()
+
+func test_taskbar_click_raises_background_window() -> void:
+	var wm := _make()
+	wm.open_app("memo")
+	wm.open_app("mail")          # mail이 위
+	wm.taskbar_clicked("memo")   # 뒤에 있는 창 → 최소화가 아니라 앞으로
+	assert_bool(wm.is_minimized("memo")).is_false()
+	var top := wm.get_child(wm.get_child_count() - 1)
+	assert_str(top.win_id).is_equal("memo")

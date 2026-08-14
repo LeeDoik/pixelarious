@@ -23,7 +23,7 @@ func _input(e: InputEvent) -> void:
 		var local: Vector2 = (make_input_local(e) as InputEventMouseButton).position
 		for i in range(get_child_count() - 1, -1, -1):
 			var c := get_child(i)
-			if c is OSWindow and Rect2((c as OSWindow).position, (c as OSWindow).size).has_point(local):
+			if c is OSWindow and (c as OSWindow).visible and Rect2((c as OSWindow).position, (c as OSWindow).size).has_point(local):
 				focus_app((c as OSWindow).win_id)
 				break
 
@@ -54,6 +54,7 @@ func open_window(id: String, title: String, content: Control, win_size: Vector2 
 	w.position = Vector2(60, 40) + Vector2(28, 28) * (_cascade % 8)
 	_cascade += 1
 	w.request_close.connect(close_app)
+	w.request_minimize.connect(toggle_minimize)
 	w.focused.connect(focus_app)
 	_windows[id] = w
 	_titles[id] = title
@@ -70,6 +71,30 @@ func close_app(id: String) -> void:
 
 func window_title(id: String) -> String:
 	return String(_titles.get(id, id))
+
+func toggle_minimize(id: String) -> void:
+	if not _windows.has(id):
+		return
+	var w: OSWindow = _windows[id]
+	w.visible = not w.visible
+	if w.visible:
+		focus_app(id)
+
+func is_minimized(id: String) -> bool:
+	return _windows.has(id) and not _windows[id].visible
+
+func taskbar_clicked(id: String) -> void:
+	## 실제 OS처럼: 최소화된 창 → 복원, 최상위 활성 창 → 최소화, 그 외 → 앞으로
+	if not _windows.has(id):
+		return
+	var w: OSWindow = _windows[id]
+	if not w.visible:
+		w.visible = true
+		focus_app(id)
+	elif get_child(get_child_count() - 1) == w:
+		w.visible = false
+	else:
+		focus_app(id)
 
 func focus_app(id: String) -> void:
 	if not _windows.has(id):

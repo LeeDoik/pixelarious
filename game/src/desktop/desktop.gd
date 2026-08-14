@@ -121,7 +121,7 @@ func _refresh_taskbar(ids: Array) -> void:
 	for id in ids:
 		var b := Button.new()
 		b.text = wm.window_title(id)
-		b.pressed.connect(wm.focus_app.bind(id))
+		b.pressed.connect(wm.taskbar_clicked.bind(id))
 		_taskbar_box.add_child(b)
 
 func clock_text() -> String:

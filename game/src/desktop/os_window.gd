@@ -3,6 +3,7 @@ extends Panel
 ## 공통 창: 타이틀바(드래그·닫기) + 콘텐츠 슬롯
 
 signal request_close(id: String)
+signal request_minimize(id: String)
 signal focused(id: String)
 
 var win_id := ""
@@ -36,32 +37,39 @@ func setup(id: String, title: String, win_size: Vector2, icon_path: String = "")
 	tl.position = Vector2(title_x, 4)
 	tl.add_theme_color_override("font_color", Color.WHITE)
 	_titlebar.add_child(tl)
-	var x := Button.new()
-	x.text = "X"
-	x.anchor_left = 1.0
-	x.anchor_right = 1.0
-	x.offset_left = -26.0
-	x.offset_top = 3.0
-	x.offset_right = -4.0
-	x.offset_bottom = 25.0
-	# 테마 기본 버튼(폰트 16 + 여백 6)의 최소 크기가 22px 틀을 넘지 않게 전용 소형 스타일 적용
-	x.add_theme_font_size_override("font_size", 12)
-	var xsb := StyleBoxFlat.new()
-	xsb.bg_color = NuriTheme.FACE
-	xsb.border_color = NuriTheme.FACE_DARK
-	xsb.set_border_width_all(2)
-	xsb.set_content_margin_all(1)
-	x.add_theme_stylebox_override("normal", xsb)
-	var xsb_down: StyleBoxFlat = xsb.duplicate()
-	xsb_down.bg_color = NuriTheme.FACE.darkened(0.12)
-	x.add_theme_stylebox_override("pressed", xsb_down)
-	x.add_theme_stylebox_override("hover", xsb.duplicate())
+	var x := _titlebar_button("X", -26.0, -4.0)
 	x.pressed.connect(func(): request_close.emit(win_id))
 	_titlebar.add_child(x)
+	var mn := _titlebar_button("_", -50.0, -28.0)
+	mn.pressed.connect(func(): request_minimize.emit(win_id))
+	_titlebar.add_child(mn)
 	add_child(_titlebar)
 	gui_input.connect(func(e):
 		if e is InputEventMouseButton and e.pressed:
 			focused.emit(win_id))
+
+func _titlebar_button(label: String, off_left: float, off_right: float) -> Button:
+	# 테마 기본 버튼(폰트 16 + 여백 6)의 최소 크기가 22px 틀을 넘지 않게 전용 소형 스타일 적용
+	var b := Button.new()
+	b.text = label
+	b.anchor_left = 1.0
+	b.anchor_right = 1.0
+	b.offset_left = off_left
+	b.offset_top = 3.0
+	b.offset_right = off_right
+	b.offset_bottom = 25.0
+	b.add_theme_font_size_override("font_size", 12)
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = NuriTheme.FACE
+	sb.border_color = NuriTheme.FACE_DARK
+	sb.set_border_width_all(2)
+	sb.set_content_margin_all(1)
+	b.add_theme_stylebox_override("normal", sb)
+	var sb_down: StyleBoxFlat = sb.duplicate()
+	sb_down.bg_color = NuriTheme.FACE.darkened(0.12)
+	b.add_theme_stylebox_override("pressed", sb_down)
+	b.add_theme_stylebox_override("hover", sb.duplicate())
+	return b
 
 func set_content(c: Control) -> void:
 	var m := MarginContainer.new()
