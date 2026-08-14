@@ -22,6 +22,9 @@ func _input(e: InputEvent) -> void:
 		toggle_menu()
 		get_viewport().set_input_as_handled()
 		return
+	# 전역 클릭 효과음 (재주입 이벤트는 제외 — 이중 재생 방지)
+	if e is InputEventMouseButton and e.pressed and e.button_index == MOUSE_BUTTON_LEFT and e.device != INJECTED_DEVICE:
+		AudioDirector.play_sfx("click")
 	# 곡면이 켜져 있으면 마우스 좌표를 셰이더와 같은 공식으로 보정해 재주입 —
 	# "화면에 보이는 위치"와 "클릭되는 위치"가 일치하게 된다.
 	# (설정 메뉴는 왜곡 없이 그려지므로 메뉴가 열려 있을 땐 보정하지 않는다)
