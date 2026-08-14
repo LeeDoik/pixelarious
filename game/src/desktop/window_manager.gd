@@ -11,6 +11,10 @@ var _apps: Dictionary = {}     # id -> {title, builder}
 var _windows: Dictionary = {}  # id -> OSWindow
 var _cascade := 0
 
+func _init() -> void:
+	# 전체 화면을 덮는 배치용 레이어 — 히트테스트에서 빠져야 아래의 바탕화면 아이콘이 클릭된다
+	mouse_filter = Control.MOUSE_FILTER_IGNORE
+
 func register_app(id: String, title: String, builder: Callable) -> void:
 	_apps[id] = {"title": title, "builder": builder}
 
