@@ -8,6 +8,8 @@ var _chat_box: VBoxContainer
 var _choice_box: HBoxContainer
 var _scroll: ScrollContainer
 var _logs_marked := false
+var _auto_pending := false
+var _catching_up := false
 
 func _ready() -> void:
 	var tabs := TabContainer.new()
@@ -44,8 +46,10 @@ func _ready() -> void:
 	_hints.hint_ready.connect(_on_hint)
 	GameState.flag_changed.connect(func(_n):
 		_hints.set_gate(_current_gate())
-		call_deferred("_try_continue"))
+		if not _auto_pending:
+			call_deferred("_try_continue"))
 	_hints.set_gate(_current_gate())
+	_catching_up = GameState.has_flag("met_seulgi")
 	_show_current()
 	var timer := Timer.new()
 	timer.wait_time = 5.0
@@ -65,11 +69,19 @@ func _bubble(from: String, text: String) -> void:
 	l.text = ("슬기: " if from == "seulgi" else ("나: " if from == "player" else "")) + text
 	_chat_box.add_child(l)
 	await get_tree().process_frame
+	if not is_instance_valid(_scroll):
+		return
 	_scroll.scroll_vertical = int(_scroll.get_v_scroll_bar().max_value)
 
 func _show_current() -> void:
 	var n := _cp.current()
-	if n["from"] != "sys":
+	if n["from"] == "sys":
+		var sys_l := Label.new()
+		sys_l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		sys_l.modulate = Color(1, 1, 1, 0.55)
+		sys_l.text = n["text"]
+		_chat_box.add_child(sys_l)
+	else:
 		AudioDirector.play_sfx("msg")
 		_bubble(n["from"], n["text"])
 	for c in _choice_box.get_children():
@@ -81,7 +93,10 @@ func _show_current() -> void:
 			b.pressed.connect(_on_choice.bind(i))
 			_choice_box.add_child(b)
 	elif n.has("next"):
-		get_tree().create_timer(n.get("delay_ms", 900) / 1000.0).timeout.connect(_try_continue)
+		_auto_pending = true
+		get_tree().create_timer((n.get("delay_ms", 900) if not _catching_up else 50) / 1000.0).timeout.connect(func():
+			_auto_pending = false
+			_try_continue())
 
 func _on_choice(i: int) -> void:
 	_bubble("player", _cp.current()["choices"][i]["text"])
@@ -91,6 +106,8 @@ func _on_choice(i: int) -> void:
 func _try_continue() -> void:
 	if _cp.advance():
 		_show_current()
+	elif _cp.current().has("next"):
+		_catching_up = false
 
 func _on_hint(puzzle_id: String, level: int) -> void:
 	var hints: Array = ContentDB.puzzle(puzzle_id).get("hints", [])

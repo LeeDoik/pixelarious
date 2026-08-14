@@ -21,7 +21,7 @@ func test_hidden_ending_gate_counts_records() -> void:
 	assert_bool(EndingScene.should_show_hidden()).is_false()
 	for cid in ContentDB.records():
 		GameState.mark_read(cid)
-	# 샘플 콘텐츠는 기록물 2개 — 9개 규칙은 Task 13 콘텐츠 완성 후 유효
+	# 콘텐츠는 기록물 9개로 확정됨 (records.json)
 	assert_int(GameState.records_count()).is_equal(ContentDB.records().size())
 
 func test_epilogue_types_all_lines_and_hidden_when_gated() -> void:

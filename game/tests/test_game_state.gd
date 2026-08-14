@@ -60,3 +60,12 @@ func test_load_game_emits_act_changed() -> void:
 	gs2.act_changed.connect(func(a): acts.append(a))
 	assert_bool(gs2.load_game()).is_true()
 	assert_array(acts).is_equal([2])
+
+func test_ending_start_not_persisted() -> void:
+	var gs := _make()
+	gs.set_flag("final_diary_read")
+	gs.set_flag("ending_start")
+	var gs2 := _make()
+	assert_bool(gs2.load_game()).is_true()
+	assert_bool(gs2.has_flag("final_diary_read")).is_true()
+	assert_bool(gs2.has_flag("ending_start")).is_false()

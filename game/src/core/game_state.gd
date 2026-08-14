@@ -68,7 +68,9 @@ func save_game() -> void:
 	if f == null:
 		push_warning("save_game: cannot open %s (%s)" % [SAVE_PATH, error_string(FileAccess.get_open_error())])
 		return
-	f.store_string(JSON.stringify({"flags": _flags, "read": _read}))
+	var flags_to_save := _flags.duplicate()
+	flags_to_save.erase("ending_start")
+	f.store_string(JSON.stringify({"flags": flags_to_save, "read": _read}))
 	f.close()
 
 func has_save() -> bool:
