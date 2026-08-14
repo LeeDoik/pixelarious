@@ -1,4 +1,5 @@
 import { getGames } from '@/lib/games'
+import { getProfile } from '@/lib/profile'
 import { PaletteSwap } from '@/components/PaletteSwap'
 import { Hero } from '@/components/Hero'
 import { Cartridge } from '@/components/Cartridge'
@@ -25,7 +26,7 @@ export default function Home() {
             <EmptySlot index={games.length} />
           </div>
         </section>
-        <Player1 />
+        <Player1 profile={getProfile()} />
       </main>
       <Footer />
     </>

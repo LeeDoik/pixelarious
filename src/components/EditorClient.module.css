@@ -112,6 +112,40 @@
   min-height: 190px;
   resize: vertical;
 }
+.badgeArea {
+  composes: textarea;
+  min-height: 96px;
+}
+
+.linkRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr) auto;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.rowBtn,
+.addBtn {
+  font-family: var(--font-display);
+  font-size: 10px;
+  color: var(--text);
+  background: var(--bg);
+  border: 3px solid var(--dim);
+  padding: 9px 12px;
+  cursor: pointer;
+}
+.rowBtn:hover,
+.addBtn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.rowBtn:focus-visible,
+.addBtn:focus-visible {
+  outline: 3px dashed var(--accent);
+  outline-offset: 3px;
+}
+.addBtn {
+  margin-top: 4px;
+}
 .hint {
   color: var(--dim);
   font-size: 14px;

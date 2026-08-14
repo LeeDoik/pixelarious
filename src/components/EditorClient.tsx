@@ -2,18 +2,21 @@
 
 import { useState } from 'react'
 import type { Game } from '@/lib/games'
-import { COVER_SCENES, type CoverScene } from '@/lib/scenes'
+import type { Profile } from '@/lib/profile'
 import { Cartridge } from './Cartridge'
+import { Player1 } from './Player1'
 import { PaletteSwap } from './PaletteSwap'
+import { EditorGameForm, parseTags, toGameDraft, type GameDraft } from './EditorGameForm'
+import {
+  EditorProfileForm,
+  parseBadges,
+  toProfileDraft,
+  usableLinks,
+  type ProfileDraft,
+} from './EditorProfileForm'
 import styles from './EditorClient.module.css'
 
-interface Draft {
-  title: string
-  subtitle: string
-  description: string
-  tags: string
-  coverScene: CoverScene
-}
+type Target = { kind: 'game'; slug: string } | { kind: 'profile' }
 
 type Status =
   | { kind: 'idle' }
@@ -21,83 +24,103 @@ type Status =
   | { kind: 'ok'; message: string }
   | { kind: 'error'; message: string }
 
-function toDraft(game: Game): Draft {
-  return {
-    title: game.title,
-    subtitle: game.subtitle ?? '',
-    description: game.description,
-    tags: game.tags.join(', '),
-    coverScene: game.coverScene,
-  }
-}
+const changed = (a: unknown, b: unknown) => JSON.stringify(a) !== JSON.stringify(b)
 
-function draftsOf(games: Game[]): Record<string, Draft> {
-  return Object.fromEntries(games.map((g) => [g.slug, toDraft(g)]))
-}
-
-function parseTags(value: string): string[] {
-  return value
-    .split(',')
-    .map((tag) => tag.trim())
-    .filter(Boolean)
-}
-
-export function EditorClient({ games }: { games: Game[] }) {
-  const [savedDrafts, setSavedDrafts] = useState(() => draftsOf(games))
-  const [drafts, setDrafts] = useState(() => draftsOf(games))
-  const [slug, setSlug] = useState(games[0]?.slug ?? '')
+export function EditorClient({ games, profile }: { games: Game[]; profile: Profile }) {
+  const [savedGames, setSavedGames] = useState(() =>
+    Object.fromEntries(games.map((g) => [g.slug, toGameDraft(g)])),
+  )
+  const [gameDrafts, setGameDrafts] = useState(() =>
+    Object.fromEntries(games.map((g) => [g.slug, toGameDraft(g)])),
+  )
+  const [savedProfile, setSavedProfile] = useState(() => toProfileDraft(profile))
+  const [profileDraft, setProfileDraft] = useState(() => toProfileDraft(profile))
+  const [target, setTarget] = useState<Target>(
+    games[0] ? { kind: 'game', slug: games[0].slug } : { kind: 'profile' },
+  )
   const [status, setStatus] = useState<Status>({ kind: 'idle' })
 
-  const game = games.find((g) => g.slug === slug)
-  const draft = drafts[slug]
-  if (!game || !draft) {
-    return <p className={styles.page}>편집할 카트리지가 없습니다.</p>
-  }
-
-  const index = games.findIndex((g) => g.slug === slug)
-  const dirty = JSON.stringify(draft) !== JSON.stringify(savedDrafts[slug])
-
-  const edit = (patch: Partial<Draft>) => {
-    setDrafts((all) => ({ ...all, [slug]: { ...all[slug], ...patch } }))
+  const select = (next: Target) => {
+    setTarget(next)
     setStatus({ kind: 'idle' })
   }
 
-  const preview: Game = {
-    ...game,
-    title: draft.title.trim() || '(제목 없음)',
-    subtitle: draft.subtitle.trim() || undefined,
-    description: draft.description.trim() || '(설명 없음)',
-    tags: parseTags(draft.tags),
-    coverScene: draft.coverScene,
+  const editGame = (patch: Partial<GameDraft>) => {
+    if (target.kind !== 'game') return
+    const slug = target.slug
+    setGameDrafts((all) => ({ ...all, [slug]: { ...all[slug], ...patch } }))
+    setStatus({ kind: 'idle' })
   }
+
+  const editProfile = (patch: Partial<ProfileDraft>) => {
+    setProfileDraft((draft) => ({ ...draft, ...patch }))
+    setStatus({ kind: 'idle' })
+  }
+
+  const game = target.kind === 'game' ? games.find((g) => g.slug === target.slug) : undefined
+  const gameDraft = target.kind === 'game' ? gameDrafts[target.slug] : undefined
+
+  const dirty =
+    target.kind === 'profile'
+      ? changed(profileDraft, savedProfile)
+      : changed(gameDraft, savedGames[target.slug])
 
   async function save() {
     setStatus({ kind: 'saving' })
+    const body =
+      target.kind === 'profile'
+        ? {
+            target: 'profile',
+            patch: {
+              intro: profileDraft.intro,
+              links: usableLinks(profileDraft.links),
+              badges: parseBadges(profileDraft.badges),
+            },
+          }
+        : {
+            target: 'game',
+            slug: target.slug,
+            patch: {
+              title: gameDraft!.title.trim(),
+              subtitle: gameDraft!.subtitle,
+              description: gameDraft!.description,
+              tags: parseTags(gameDraft!.tags),
+              coverScene: gameDraft!.coverScene,
+            },
+          }
+
     try {
       const response = await fetch('/api/editor', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          slug,
-          patch: {
-            title: draft.title.trim(),
-            subtitle: draft.subtitle,
-            description: draft.description,
-            tags: parseTags(draft.tags),
-            coverScene: draft.coverScene,
-          },
-        }),
+        body: JSON.stringify(body),
       })
       const data = await response.json().catch(() => ({}))
       if (!response.ok) {
         setStatus({ kind: 'error', message: data.error ?? '저장하지 못했습니다.' })
         return
       }
-      setSavedDrafts((all) => ({ ...all, [slug]: { ...draft } }))
-      setStatus({ kind: 'ok', message: `${slug}.json에 저장했습니다.` })
+      if (target.kind === 'profile') {
+        setSavedProfile({ ...profileDraft })
+        setStatus({ kind: 'ok', message: 'profile.json에 저장했습니다.' })
+      } else {
+        const slug = target.slug
+        setSavedGames((all) => ({ ...all, [slug]: { ...gameDrafts[slug] } }))
+        setStatus({ kind: 'ok', message: `${slug}.json에 저장했습니다.` })
+      }
     } catch {
       setStatus({ kind: 'error', message: '개발 서버에 연결하지 못했습니다.' })
     }
+  }
+
+  const revert = () => {
+    if (target.kind === 'profile') {
+      setProfileDraft({ ...savedProfile })
+    } else {
+      const slug = target.slug
+      setGameDrafts((all) => ({ ...all, [slug]: { ...savedGames[slug] } }))
+    }
+    setStatus({ kind: 'idle' })
   }
 
   return (
@@ -105,104 +128,59 @@ export function EditorClient({ games }: { games: Game[] }) {
       <PaletteSwap />
 
       <h1 className={styles.head}>
-        <span className={styles.deco}>►</span> CARTRIDGE EDITOR
+        <span className={styles.deco}>►</span> SITE EDITOR
       </h1>
       <p className={styles.sub}>
-        배너에 들어가는 내용을 고치고 저장하면 <code>content/games</code>의 파일에 그대로 기록됩니다.
-        개발 서버에서만 열리는 편집기입니다.
+        배너와 PLAYER 1 소개에 들어가는 내용을 고치고 저장하면 <code>content</code> 폴더의 파일에
+        그대로 기록됩니다. 개발 서버에서만 열리는 편집기입니다.
       </p>
 
       <div className={styles.picker}>
-        {games.map((g) => {
-          const changed = JSON.stringify(drafts[g.slug]) !== JSON.stringify(savedDrafts[g.slug])
-          return (
-            <button
-              key={g.slug}
-              type="button"
-              className={g.slug === slug ? `${styles.pick} ${styles.pickOn}` : styles.pick}
-              onClick={() => {
-                setSlug(g.slug)
-                setStatus({ kind: 'idle' })
-              }}
-            >
-              {g.title}
-              {changed && <span className={styles.dot}> ●</span>}
-            </button>
-          )
-        })}
+        {games.map((g) => (
+          <button
+            key={g.slug}
+            type="button"
+            className={
+              target.kind === 'game' && target.slug === g.slug
+                ? `${styles.pick} ${styles.pickOn}`
+                : styles.pick
+            }
+            onClick={() => select({ kind: 'game', slug: g.slug })}
+          >
+            {g.title}
+            {changed(gameDrafts[g.slug], savedGames[g.slug]) && <span className={styles.dot}> ●</span>}
+          </button>
+        ))}
+        <button
+          type="button"
+          className={
+            target.kind === 'profile' ? `${styles.pick} ${styles.pickOn}` : styles.pick
+          }
+          onClick={() => select({ kind: 'profile' })}
+        >
+          PLAYER 1
+          {changed(profileDraft, savedProfile) && <span className={styles.dot}> ●</span>}
+        </button>
       </div>
 
       <div className={styles.cols}>
         <section className={styles.panel}>
           <h2 className={styles.panelTitle}>EDIT</h2>
 
-          <label className={styles.field}>
-            <span className={styles.label}>TITLE</span>
-            <input
-              className={styles.input}
-              value={draft.title}
-              onChange={(e) => edit({ title: e.target.value })}
-            />
-          </label>
-
-          <label className={styles.field}>
-            <span className={styles.label}>SUBTITLE (한글 부제 · 비우면 표시 안 함)</span>
-            <input
-              className={styles.input}
-              value={draft.subtitle}
-              onChange={(e) => edit({ subtitle: e.target.value })}
-            />
-          </label>
-
-          <label className={styles.field}>
-            <span className={styles.label}>DESCRIPTION</span>
-            <textarea
-              className={styles.textarea}
-              value={draft.description}
-              onChange={(e) => edit({ description: e.target.value })}
-            />
-            <p className={styles.hint}>
-              엔터로 줄을 나누면 배너에도 그대로 나옵니다. 빈 줄을 넣으면 문단이 갈라집니다.
-            </p>
-          </label>
-
-          <label className={styles.field}>
-            <span className={styles.label}>TAGS (쉼표로 구분)</span>
-            <input
-              className={styles.input}
-              value={draft.tags}
-              onChange={(e) => edit({ tags: e.target.value })}
-            />
-          </label>
-
-          <label className={styles.field}>
-            <span className={styles.label}>COVER</span>
-            <select
-              className={styles.select}
-              value={draft.coverScene}
-              onChange={(e) => edit({ coverScene: e.target.value as CoverScene })}
-            >
-              {COVER_SCENES.map((scene) => (
-                <option key={scene} value={scene}>
-                  {scene}
-                </option>
-              ))}
-            </select>
-          </label>
+          {target.kind === 'profile' ? (
+            <EditorProfileForm draft={profileDraft} onChange={editProfile} />
+          ) : gameDraft ? (
+            <EditorGameForm draft={gameDraft} onChange={editGame} />
+          ) : (
+            <p>편집할 카트리지가 없습니다.</p>
+          )}
 
           <div className={styles.actions}>
             <button className="btn" type="button" onClick={save} disabled={status.kind === 'saving'}>
               {status.kind === 'saving' ? 'SAVING…' : '저장'}
             </button>
             {dirty && (
-              <button
-                className="btn not-inserted"
-                type="button"
-                onClick={() => {
-                  setDrafts((all) => ({ ...all, [slug]: { ...savedDrafts[slug] } }))
-                  setStatus({ kind: 'idle' })
-                }}
-              >
+              <button className="btn not-inserted" type="button" onClick={revert}>
                 되돌리기
               </button>
             )}
@@ -218,11 +196,34 @@ export function EditorClient({ games }: { games: Game[] }) {
 
         <section className={styles.panel}>
           <h2 className={styles.panelTitle}>PREVIEW</h2>
-          <div className="carts">
-            <Cartridge game={preview} index={index} defaultOpen />
-          </div>
+
+          {target.kind === 'profile' ? (
+            <Player1
+              profile={{
+                intro: profileDraft.intro.trim() || '(소개 없음)',
+                links: usableLinks(profileDraft.links),
+                badges: parseBadges(profileDraft.badges),
+              }}
+            />
+          ) : game && gameDraft ? (
+            <div className="carts">
+              <Cartridge
+                game={{
+                  ...game,
+                  title: gameDraft.title.trim() || '(제목 없음)',
+                  subtitle: gameDraft.subtitle.trim() || undefined,
+                  description: gameDraft.description.trim() || '(설명 없음)',
+                  tags: parseTags(gameDraft.tags),
+                  coverScene: gameDraft.coverScene,
+                }}
+                index={games.findIndex((g) => g.slug === game.slug)}
+                defaultOpen
+              />
+            </div>
+          ) : null}
+
           <p className={styles.previewNote}>
-            실제 배너 그대로입니다. 팔레트를 바꿔 두 테마에서 모두 확인해 보세요.
+            실제 화면 그대로입니다. 팔레트를 바꿔 두 테마에서 모두 확인해 보세요.
           </p>
         </section>
       </div>
