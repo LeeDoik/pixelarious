@@ -31,6 +31,18 @@ func setup(id: String, title: String, win_size: Vector2) -> void:
 	x.offset_top = 3.0
 	x.offset_right = -4.0
 	x.offset_bottom = 25.0
+	# 테마 기본 버튼(폰트 16 + 여백 6)의 최소 크기가 22px 틀을 넘지 않게 전용 소형 스타일 적용
+	x.add_theme_font_size_override("font_size", 12)
+	var xsb := StyleBoxFlat.new()
+	xsb.bg_color = NuriTheme.FACE
+	xsb.border_color = NuriTheme.FACE_DARK
+	xsb.set_border_width_all(2)
+	xsb.set_content_margin_all(1)
+	x.add_theme_stylebox_override("normal", xsb)
+	var xsb_down: StyleBoxFlat = xsb.duplicate()
+	xsb_down.bg_color = NuriTheme.FACE.darkened(0.12)
+	x.add_theme_stylebox_override("pressed", xsb_down)
+	x.add_theme_stylebox_override("hover", xsb.duplicate())
 	x.pressed.connect(func(): request_close.emit(win_id))
 	_titlebar.add_child(x)
 	add_child(_titlebar)

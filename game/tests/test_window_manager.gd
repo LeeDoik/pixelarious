@@ -57,6 +57,20 @@ func test_click_on_overlap_raises_only_topmost() -> void:
 	var top := wm.get_child(wm.get_child_count() - 1)
 	assert_str(top.win_id).is_equal("mail")
 
+func test_close_button_fits_inside_titlebar() -> void:
+	# 테마 최소 크기(폰트+여백)가 X 버튼을 늘려 타이틀바 아래로 삐져나오면 안 된다
+	var wm := _make()
+	wm.open_app("memo")
+	var w: Control = wm.get_child(wm.get_child_count() - 1)
+	await get_tree().process_frame
+	var tb: Control = w.get_child(0)
+	var checked := false
+	for c in tb.get_children():
+		if c is Button:
+			checked = true
+			assert_bool(c.position.y + c.size.y <= tb.size.y + 0.5).is_true()
+	assert_bool(checked).is_true()
+
 func test_content_wrapper_does_not_block_titlebar_hits() -> void:
 	var wm := _make()
 	wm.open_app("memo")
