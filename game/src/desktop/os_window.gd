@@ -26,9 +26,12 @@ func setup(id: String, title: String, win_size: Vector2) -> void:
 	_titlebar.add_child(tl)
 	var x := Button.new()
 	x.text = "X"
-	x.set_anchors_preset(Control.PRESET_TOP_RIGHT)
-	x.position = Vector2(-26, 3)
-	x.size = Vector2(22, 22)
+	x.anchor_left = 1.0
+	x.anchor_right = 1.0
+	x.offset_left = -26.0
+	x.offset_top = 3.0
+	x.offset_right = -4.0
+	x.offset_bottom = 25.0
 	x.pressed.connect(func(): request_close.emit(win_id))
 	_titlebar.add_child(x)
 	add_child(_titlebar)
@@ -38,6 +41,8 @@ func setup(id: String, title: String, win_size: Vector2) -> void:
 
 func set_content(c: Control) -> void:
 	var m := MarginContainer.new()
+	# 풀렉트 래퍼가 타이틀바(아래 형제)의 히트테스트를 가리지 않도록 제외
+	m.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	m.set_anchors_preset(Control.PRESET_FULL_RECT)
 	m.add_theme_constant_override("margin_top", 32)
 	m.add_theme_constant_override("margin_left", 6)

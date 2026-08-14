@@ -32,3 +32,12 @@ func test_focus_moves_to_front() -> void:
 	wm.focus_app("memo")
 	var top := wm.get_child(wm.get_child_count() - 1)
 	assert_str(top.win_id).is_equal("memo")
+
+func test_content_wrapper_does_not_block_titlebar_hits() -> void:
+	var wm := _make()
+	wm.open_app("memo")
+	var w: Control = wm.get_child(wm.get_child_count() - 1)
+	# 콘텐츠 래퍼(마지막 자식, 풀렉트)가 히트테스트에서 빠져야 타이틀바 드래그/닫기가 동작한다
+	var wrapper: Control = w.get_child(w.get_child_count() - 1)
+	assert_bool(wrapper is MarginContainer).is_true()
+	assert_int(wrapper.mouse_filter).is_equal(Control.MOUSE_FILTER_IGNORE)
