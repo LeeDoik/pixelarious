@@ -89,3 +89,16 @@ func test_content_wrapper_does_not_block_titlebar_hits() -> void:
 	var wrapper: Control = w.get_child(w.get_child_count() - 1)
 	assert_bool(wrapper is MarginContainer).is_true()
 	assert_int(wrapper.mouse_filter).is_equal(Control.MOUSE_FILTER_IGNORE)
+
+func test_titlebar_shows_app_icon_when_registered() -> void:
+	var wm: Control = auto_free(WM.new())
+	add_child(wm)
+	wm.register_app("memo", "메모장", func() -> Control: return Label.new(), "res://assets/img/icons/folder.png")
+	wm.open_app("memo")
+	var w: Control = wm.get_child(wm.get_child_count() - 1)
+	var tb: Control = w.get_child(0)
+	var found := false
+	for c in tb.get_children():
+		if c is TextureRect:
+			found = true
+	assert_bool(found).is_true()

@@ -10,6 +10,8 @@ var _warp: ColorRect
 var _menu: Panel
 var _volume_slider: HSlider
 var _warp_check: CheckBox
+var _last_fs_ms := 0
+var _toast: Control
 
 func _ready() -> void:
 	layer = 90
@@ -17,13 +19,64 @@ func _ready() -> void:
 	_build_menu()
 	_load_settings()
 
+func _process(_delta: float) -> void:
+	# 브라우저가 자체적으로 전체화면을 해제한 직후의 ESC를 구분하기 위한 추적
+	if _is_fullscreen():
+		_last_fs_ms = Time.get_ticks_msec()
+
+# --- 전체화면 ---
+
+func _is_fullscreen() -> bool:
+	var m := DisplayServer.window_get_mode()
+	return m == DisplayServer.WINDOW_MODE_FULLSCREEN or m == DisplayServer.WINDOW_MODE_EXCLUSIVE_FULLSCREEN
+
+func is_fullscreen() -> bool:
+	return _is_fullscreen()
+
+func toggle_fullscreen() -> void:
+	if _is_fullscreen():
+		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED)
+	else:
+		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
+		_show_fullscreen_toast()
+
+func _show_fullscreen_toast() -> void:
+	if is_instance_valid(_toast):
+		_toast.queue_free()
+	var p := PanelContainer.new()
+	p.theme = NuriTheme.build()
+	p.anchor_left = 0.5
+	p.anchor_right = 0.5
+	p.offset_left = -280.0
+	p.offset_right = 280.0
+	p.offset_top = 20.0
+	p.offset_bottom = 58.0
+	p.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var l := Label.new()
+	l.text = "전체화면 모드 — ESC 키를 누르면 창 모드로 돌아갑니다"
+	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	p.add_child(l)
+	add_child(p)
+	_toast = p
+	var tw := create_tween()
+	tw.tween_interval(3.5)
+	tw.tween_property(p, "modulate:a", 0.0, 0.8)
+	tw.tween_callback(p.queue_free)
+
 func _input(e: InputEvent) -> void:
 	# 키 입력 효과음 (홀드 반복은 제외 — 실제 누름 한 번당 한 번)
 	if e is InputEventKey and e.pressed and not e.echo:
 		AudioDirector.play_sfx("key")
 	if e is InputEventKey and e.pressed and not e.echo and e.keycode == KEY_ESCAPE:
-		toggle_menu()
 		get_viewport().set_input_as_handled()
+		if _is_fullscreen():
+			# 전체화면에서는 ESC = 창 모드 복귀
+			DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED)
+		elif Time.get_ticks_msec() - _last_fs_ms < 600:
+			pass  # 브라우저가 방금 같은 ESC로 전체화면을 해제함 — 메뉴를 열지 않는다
+		else:
+			toggle_menu()
 		return
 	# 전역 클릭 효과음 (재주입 이벤트는 제외 — 이중 재생 방지)
 	if e is InputEventMouseButton and e.pressed and e.button_index == MOUSE_BUTTON_LEFT and e.device != INJECTED_DEVICE:

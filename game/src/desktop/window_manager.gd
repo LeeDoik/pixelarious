@@ -30,17 +30,17 @@ func _input(e: InputEvent) -> void:
 func _ready() -> void:
 	add_to_group("window_manager")
 
-func register_app(id: String, title: String, builder: Callable) -> void:
-	_apps[id] = {"title": title, "builder": builder}
+func register_app(id: String, title: String, builder: Callable, icon: String = "") -> void:
+	_apps[id] = {"title": title, "builder": builder, "icon": icon}
 
 func open_app(id: String) -> void:
 	if _windows.has(id):
 		focus_app(id)
 		return
 	var app: Dictionary = _apps[id]
-	open_window(id, app["title"], app["builder"].call())
+	open_window(id, app["title"], app["builder"].call(), Vector2(640, 480), app.get("icon", ""))
 
-func open_window(id: String, title: String, content: Control, win_size: Vector2 = Vector2(640, 480)) -> void:
+func open_window(id: String, title: String, content: Control, win_size: Vector2 = Vector2(640, 480), icon: String = "") -> void:
 	## 등록된 앱 외의 동적 창(사진 뷰어 등)도 이 경로로 연다
 	if _windows.has(id):
 		if content != null and not content.is_inside_tree():
@@ -49,7 +49,7 @@ func open_window(id: String, title: String, content: Control, win_size: Vector2 
 		return
 	var w: OSWindow = OS_WINDOW.instantiate()
 	add_child(w)
-	w.setup(id, title, win_size)
+	w.setup(id, title, win_size, icon)
 	w.set_content(content)
 	w.position = Vector2(60, 40) + Vector2(28, 28) * (_cascade % 8)
 	_cascade += 1

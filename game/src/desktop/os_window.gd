@@ -9,7 +9,7 @@ var win_id := ""
 var _dragging := false
 var _titlebar: Panel
 
-func setup(id: String, title: String, win_size: Vector2) -> void:
+func setup(id: String, title: String, win_size: Vector2, icon_path: String = "") -> void:
 	win_id = id
 	custom_minimum_size = win_size
 	size = win_size
@@ -18,9 +18,22 @@ func setup(id: String, title: String, win_size: Vector2) -> void:
 	_titlebar.custom_minimum_size = Vector2(0, 28)
 	_titlebar.set_anchors_preset(Control.PRESET_TOP_WIDE)
 	_titlebar.gui_input.connect(_on_titlebar_input)
+	var title_x := 8.0
+	if icon_path != "" and ResourceLoader.exists(icon_path):
+		var ic := TextureRect.new()
+		ic.texture = load(icon_path)
+		ic.position = Vector2(6, 4)
+		ic.custom_minimum_size = Vector2(20, 20)
+		ic.size = Vector2(20, 20)
+		ic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		ic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		ic.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		ic.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_titlebar.add_child(ic)
+		title_x = 32.0
 	var tl := Label.new()
 	tl.text = title
-	tl.position = Vector2(8, 4)
+	tl.position = Vector2(title_x, 4)
 	tl.add_theme_color_override("font_color", Color.WHITE)
 	_titlebar.add_child(tl)
 	var x := Button.new()

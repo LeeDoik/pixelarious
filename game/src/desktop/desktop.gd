@@ -47,7 +47,7 @@ func _ready() -> void:
 
 func _register_apps() -> void:
 	for id in APP_BUILDERS:
-		wm.register_app(id, ContentDB.ui("app_" + id), APP_BUILDERS[id])
+		wm.register_app(id, ContentDB.ui("app_" + id), APP_BUILDERS[id], ICON_TEXTURES.get(id, ""))
 
 func _build_icons() -> void:
 	_icons = VBoxContainer.new()
@@ -75,14 +75,37 @@ func _build_taskbar() -> void:
 	bar.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
 	bar.custom_minimum_size = Vector2(0, 36)
 	bar.offset_top = -36
-	var start := Label.new()
-	start.text = " " + ContentDB.ui("os_name")
-	start.add_theme_color_override("font_color", Color.WHITE)
-	start.position = Vector2(8, 8)
+	var start := HBoxContainer.new()
+	start.position = Vector2(8, 4)
+	start.add_theme_constant_override("separation", 6)
+	if ResourceLoader.exists("res://assets/img/icons/oslogo.png"):
+		var logo := TextureRect.new()
+		logo.texture = load("res://assets/img/icons/oslogo.png")
+		logo.custom_minimum_size = Vector2(24, 24)
+		logo.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		logo.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		logo.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		logo.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		start.add_child(logo)
+	var start_label := Label.new()
+	start_label.text = ContentDB.ui("os_name")
+	start_label.add_theme_color_override("font_color", Color.WHITE)
+	start.add_child(start_label)
 	bar.add_child(start)
 	_taskbar_box = HBoxContainer.new()
 	_taskbar_box.position = Vector2(180, 4)
 	bar.add_child(_taskbar_box)
+	var fs_btn := Button.new()
+	fs_btn.text = "전체화면"
+	fs_btn.add_theme_font_size_override("font_size", 12)
+	fs_btn.anchor_left = 1.0
+	fs_btn.anchor_right = 1.0
+	fs_btn.offset_left = -186.0
+	fs_btn.offset_right = -84.0
+	fs_btn.offset_top = 4.0
+	fs_btn.offset_bottom = 32.0
+	fs_btn.pressed.connect(func(): Fx.toggle_fullscreen())
+	bar.add_child(fs_btn)
 	_clock = Label.new()
 	_clock.set_anchors_preset(Control.PRESET_TOP_RIGHT)
 	_clock.position = Vector2(-70, 8)

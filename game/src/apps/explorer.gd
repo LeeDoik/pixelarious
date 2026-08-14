@@ -118,7 +118,7 @@ func open_file(node_id: String) -> void:
 			tr.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 			tr.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 			tr.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-			wm.open_window("photo:" + node_id, n["name"], tr, Vector2(560, 470))
+			wm.open_window("photo:" + node_id, n["name"], tr, Vector2(560, 470), "res://assets/img/icons/photo.png")
 	else:
 		var d := ContentDB.doc(n["cid"])
 		_viewer.text = String(d["title"]) + "\n\n" + String(d["body"])
