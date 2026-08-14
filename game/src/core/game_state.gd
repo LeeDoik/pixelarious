@@ -84,6 +84,7 @@ func load_game() -> bool:
 		return false
 	_flags = data.get("flags", {})
 	_read = data.get("read", {})
+	_flags.erase("ending_start")
 	act_changed.emit(current_act())
 	return true
 

@@ -104,6 +104,8 @@ func _on_choice(i: int) -> void:
 	_show_current()
 
 func _try_continue() -> void:
+	if _auto_pending:
+		return
 	if _cp.advance():
 		_show_current()
 	elif _cp.current().has("next"):
