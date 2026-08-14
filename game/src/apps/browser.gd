@@ -1,6 +1,6 @@
 class_name BrowserApp
 extends Control
-## 누리서퍼: 주소창(영숫자+./), 즐겨찾기 바, 페이지 뷰. 캐시 게이트 URL = 퍼즐3.
+## 누리넷(브라우저): 주소창(영숫자+./), 즐겨찾기 바, 페이지 뷰. 캐시 게이트 URL = 퍼즐3.
 
 var _addr: LineEdit
 var _view: RichTextLabel

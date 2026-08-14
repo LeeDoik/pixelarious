@@ -1,6 +1,6 @@
 class_name Messenger
 extends Control
-## 단짝: 대화 탭(스크립트 재생 + 선택지) / 지난 대화 탭. 힌트는 슬기 말풍선으로.
+## PC통신(메신저): 대화 탭(스크립트 재생 + 선택지) / 지난 대화 탭. 힌트는 슬기 말풍선으로.
 
 var _cp: ChatPlayer
 var _hints: HintEngine
