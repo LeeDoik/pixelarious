@@ -33,6 +33,30 @@ func test_focus_moves_to_front() -> void:
 	var top := wm.get_child(wm.get_child_count() - 1)
 	assert_str(top.win_id).is_equal("memo")
 
+func test_click_anywhere_inside_window_raises_it() -> void:
+	var wm := _make()
+	wm.open_app("memo")   # (60,40) 640x480
+	wm.open_app("mail")   # (88,68) — 위에 겹침
+	var e := InputEventMouseButton.new()
+	e.button_index = MOUSE_BUTTON_LEFT
+	e.pressed = true
+	e.position = Vector2(70, 50)   # memo 안, mail 밖
+	wm._input(e)
+	var top := wm.get_child(wm.get_child_count() - 1)
+	assert_str(top.win_id).is_equal("memo")
+
+func test_click_on_overlap_raises_only_topmost() -> void:
+	var wm := _make()
+	wm.open_app("memo")
+	wm.open_app("mail")   # mail이 위
+	var e := InputEventMouseButton.new()
+	e.button_index = MOUSE_BUTTON_LEFT
+	e.pressed = true
+	e.position = Vector2(200, 200)   # 두 창이 겹치는 지점
+	wm._input(e)
+	var top := wm.get_child(wm.get_child_count() - 1)
+	assert_str(top.win_id).is_equal("mail")
+
 func test_content_wrapper_does_not_block_titlebar_hits() -> void:
 	var wm := _make()
 	wm.open_app("memo")
