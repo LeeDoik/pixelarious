@@ -97,7 +97,7 @@ func _refresh_taskbar(ids: Array) -> void:
 		c.queue_free()
 	for id in ids:
 		var b := Button.new()
-		b.text = ContentDB.ui("app_" + id)
+		b.text = wm.window_title(id)
 		b.pressed.connect(wm.focus_app.bind(id))
 		_taskbar_box.add_child(b)
 

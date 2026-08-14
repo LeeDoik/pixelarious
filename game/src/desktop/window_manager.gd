@@ -9,6 +9,7 @@ const OS_WINDOW := preload("res://src/desktop/os_window.tscn")
 
 var _apps: Dictionary = {}     # id -> {title, builder}
 var _windows: Dictionary = {}  # id -> OSWindow
+var _titles: Dictionary = {}   # id -> 창 제목 (작업표시줄 표기)
 var _cascade := 0
 
 func _init() -> void:
@@ -26,6 +27,9 @@ func _input(e: InputEvent) -> void:
 				focus_app((c as OSWindow).win_id)
 				break
 
+func _ready() -> void:
+	add_to_group("window_manager")
+
 func register_app(id: String, title: String, builder: Callable) -> void:
 	_apps[id] = {"title": title, "builder": builder}
 
@@ -34,15 +38,25 @@ func open_app(id: String) -> void:
 		focus_app(id)
 		return
 	var app: Dictionary = _apps[id]
+	open_window(id, app["title"], app["builder"].call())
+
+func open_window(id: String, title: String, content: Control, win_size: Vector2 = Vector2(640, 480)) -> void:
+	## 등록된 앱 외의 동적 창(사진 뷰어 등)도 이 경로로 연다
+	if _windows.has(id):
+		if content != null and not content.is_inside_tree():
+			content.queue_free()
+		focus_app(id)
+		return
 	var w: OSWindow = OS_WINDOW.instantiate()
 	add_child(w)
-	w.setup(id, app["title"], Vector2(640, 480))
-	w.set_content(app["builder"].call())
+	w.setup(id, title, win_size)
+	w.set_content(content)
 	w.position = Vector2(60, 40) + Vector2(28, 28) * (_cascade % 8)
 	_cascade += 1
 	w.request_close.connect(close_app)
 	w.focused.connect(focus_app)
 	_windows[id] = w
+	_titles[id] = title
 	windows_changed.emit(open_ids())
 	app_focused.emit(id)
 
@@ -51,7 +65,11 @@ func close_app(id: String) -> void:
 		return
 	_windows[id].queue_free()
 	_windows.erase(id)
+	_titles.erase(id)
 	windows_changed.emit(open_ids())
+
+func window_title(id: String) -> String:
+	return String(_titles.get(id, id))
 
 func focus_app(id: String) -> void:
 	if not _windows.has(id):

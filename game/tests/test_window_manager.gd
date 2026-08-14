@@ -57,6 +57,16 @@ func test_click_on_overlap_raises_only_topmost() -> void:
 	var top := wm.get_child(wm.get_child_count() - 1)
 	assert_str(top.win_id).is_equal("mail")
 
+func test_open_window_dynamic_dedup_and_title() -> void:
+	var wm := _make()
+	wm.open_window("photo:p1", "가족사진.jpg", Label.new())
+	assert_bool(wm.is_open("photo:p1")).is_true()
+	assert_str(wm.window_title("photo:p1")).is_equal("가족사진.jpg")
+	wm.open_window("photo:p1", "가족사진.jpg", Label.new())  # 중복 열기 → 포커스만, 내용물은 정리됨
+	assert_int(wm.open_ids().size()).is_equal(1)
+	wm.close_app("photo:p1")
+	assert_bool(wm.is_open("photo:p1")).is_false()
+
 func test_close_button_fits_inside_titlebar() -> void:
 	# 테마 최소 크기(폰트+여백)가 X 버튼을 늘려 타이틀바 아래로 삐져나오면 안 된다
 	var wm := _make()
