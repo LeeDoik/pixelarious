@@ -71,6 +71,8 @@ func _finish() -> void:
 
 func _show_continue_menu() -> void:
 	var box := VBoxContainer.new()
+	# Boot는 테마 없이 도는 프리-OS 화면 — 한글 버튼 폰트를 테마로 공급 (웹엔 시스템 폴백 없음)
+	box.theme = NuriTheme.build()
 	box.set_anchors_preset(Control.PRESET_CENTER)
 	var cont := Button.new()
 	cont.text = "이어서 하기"

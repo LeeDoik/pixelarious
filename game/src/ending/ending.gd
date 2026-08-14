@@ -31,6 +31,9 @@ func play(hidden: bool) -> void:
 	label.offset_top = 200
 	label.offset_right = -120
 	label.add_theme_color_override("default_color", Color("cfe8dc"))
+	# CanvasLayer는 데스크톱 테마를 상속받지 못한다 — 한글 폰트 직접 지정 (웹엔 시스템 폴백 없음)
+	label.add_theme_font_override("normal_font", load("res://assets/fonts/Galmuri11.ttf"))
+	label.add_theme_font_size_override("normal_font_size", 20)
 	add_child(label)
 	var tw := create_tween()
 	tw.tween_property(bg, "modulate:a", 1.0, 2.0)

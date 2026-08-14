@@ -24,6 +24,18 @@ func test_hidden_ending_gate_counts_records() -> void:
 	# 콘텐츠는 기록물 9개로 확정됨 (records.json)
 	assert_int(GameState.records_count()).is_equal(ContentDB.records().size())
 
+func test_ending_label_has_korean_font() -> void:
+	# CanvasLayer는 테마 미상속 — 폰트 오버라이드 없으면 웹에서 한글이 두부로 렌더링된다 (회귀 방지)
+	var e: CanvasLayer = auto_free(EndingScene.new())
+	add_child(e)
+	e.play(false)
+	var found := false
+	for c in e.get_children():
+		if c is RichTextLabel:
+			found = true
+			assert_bool(c.has_theme_font_override("normal_font")).is_true()
+	assert_bool(found).is_true()
+
 func test_epilogue_types_all_lines_and_hidden_when_gated() -> void:
 	var e: CanvasLayer = auto_free(EndingScene.new())
 	add_child(e)
