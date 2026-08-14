@@ -8,7 +8,8 @@
     "GODOT 4",
     "2D",
     "ADVENTURE",
-    "MOUSE REQUIRED"
+    "MOUSE REQUIRED",
+    "PC"
   ],
   "coverScene": "lastlogin",
   "playPath": "/games/last-login/index.html"
