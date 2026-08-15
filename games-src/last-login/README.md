@@ -5,13 +5,13 @@ Godot 4.3+ Standard (GDScript). Editor binary lives outside the repo at
 
 ## Running tests (gdUnit4, headless)
 
-On a fresh checkout (or whenever `game/.godot/` is missing), prime the
+On a fresh checkout (or whenever `games-src/last-login/.godot/` is missing), prime the
 script-class cache first — without this, runtest fails with
 `Could not find type "GdUnitTestCIRunner"`:
 
-    & $GODOT --headless --editor --path game --quit
+    & $GODOT --headless --editor --path . --quit
 
-Then, from the `game/` directory:
+Then, from the `games-src/last-login/` directory:
 
     $env:GODOT_BIN = $GODOT
     cmd /c "addons\gdUnit4\runtest.cmd -a tests"

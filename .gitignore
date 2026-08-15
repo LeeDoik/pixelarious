@@ -7,5 +7,5 @@ out/
 *.tsbuildinfo
 next-env.d.ts
 
-game/.godot/
-game/reports/
+games-src/*/.godot/
+games-src/*/reports/
