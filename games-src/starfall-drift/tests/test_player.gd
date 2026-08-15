@@ -55,6 +55,23 @@ func test_dwarf_capture_pays_bonus() -> void:
 	p.attach_to(s, Vector2(116, 100), Vector2(0, 50))
 	assert_int(GameState.score()).is_equal(50)
 
+func test_drop_falls_with_orbital_momentum_instead_of_dying() -> void:
+	var s := _mk_star("standard", Vector2(100, 100))
+	var p := _mk_player()
+	p.attach_to(s, Vector2(128, 100), Vector2(0, 50))
+	var deaths: Array = []
+	p.died.connect(func(): deaths.append(1))
+	p.drop()
+	assert_int(p.state).is_equal(Player.State.FLYING)
+	assert_bool(s.occupied).is_false()
+	assert_object(p.star).is_null()
+	assert_object(p.last_star).is_null()
+	assert_int(deaths.size()).is_equal(0)
+	# 접선 속도 = ang_vel(2.4) * orbit_r(28) = 67.2, 오른쪽 접점 dir=+1이면 아래(+y) 방향
+	assert_float(p.vel.length()).is_equal_approx(67.2, 0.01)
+	p.tick(0.1)
+	assert_bool(p.vel.y > 0.0).is_true()   # 중력이 낙하를 가속
+
 func test_die_is_idempotent_and_frees_star() -> void:
 	var s := _mk_star("standard", Vector2(100, 100))
 	var p := _mk_player()

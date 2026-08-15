@@ -66,6 +66,20 @@ func launch() -> void:
 		Sfx.play("combo")
 	hopped.emit(bonus)
 
+func drop() -> void:
+	# 별 붕괴 시: 죽지 않고 공전 관성을 안은 채 낙하로 전환. 아래 별에 잡히면 생존.
+	if state != State.ORBITING or star == null:
+		return
+	if is_instance_valid(star):
+		vel = OrbitMath.launch_velocity(star.global_position, global_position, dir, star.ang_vel * star.orbit_r)
+		star.occupied = false
+	else:
+		vel = Vector2.ZERO
+	star = null
+	last_star = null
+	state = State.FLYING
+	Sfx.play("warn", -4.0)
+
 func die() -> void:
 	if state == State.DEAD:
 		return

@@ -34,6 +34,20 @@ func test_fall_death_reaches_game_over() -> void:
 	await runner.simulate_frames(60)
 	assert_int(GameState.phase).is_equal(GameState.Phase.GAME_OVER)
 
+func test_collapse_drops_player_and_run_continues() -> void:
+	var runner := scene_runner("res://src/main.tscn")
+	await runner.simulate_frames(2)
+	runner.simulate_action_pressed("drift")   # 타이틀 탭 = 시작 + 발사
+	await runner.simulate_frames(2)
+	var main = runner.scene()
+	# 비행 여부와 무관하게 확실한 공전 상태를 만든 뒤, 그 별을 강제 붕괴 직전까지 보낸다
+	var star: Star = main.stars_root.get_children()[0]
+	main.player.attach_to(star, star.global_position + Vector2(star.orbit_r, 0), Vector2(0, 10))
+	star.gauge = star.collapse_time - 0.001
+	await runner.simulate_frames(5)
+	assert_int(main.player.state).is_equal(Player.State.FLYING)   # 죽지 않고 낙하
+	assert_int(GameState.phase).is_equal(GameState.Phase.PLAYING)
+
 func test_quick_restart_skips_title_and_resets_combo() -> void:
 	GameState.combo = 4
 	GameState.quick_restart = true

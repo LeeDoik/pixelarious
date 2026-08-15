@@ -140,8 +140,9 @@ func _check_fall_death() -> void:
 		player.die()
 
 func _on_star_collapsed(s: Star) -> void:
+	# 붕괴는 즉사가 아니라 낙하 — 아래 별에 잡히면 살고, 화면 밖으로 떨어지면 낙사 규칙이 처리한다.
 	if player and player.star == s:
-		player.die()
+		player.drop()
 
 func _on_player_died() -> void:
 	var was_best := GameState.best
