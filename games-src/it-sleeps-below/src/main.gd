@@ -219,6 +219,7 @@ func _show_mine() -> void:
 	_swap(m)
 
 func _on_run_ended(reason: String, depth: int) -> void:
+	Sfx.heartbeat(0.0)
 	if reason == "surfaced":
 		var earned := GameState.end_run_settle()
 		_show_surface(earned)  # Surface가 정산 결과 + merchant.settle_N 대사 표시

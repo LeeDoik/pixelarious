@@ -77,7 +77,7 @@ func update_state(oil_ratio: float, lamp_on: bool, hearts: int, bag: int, slots:
 	if _oil_lie:
 		oil_ratio = 0.0
 	oil_bar.size.x = 98.0 * clampf(oil_ratio, 0.0, 1.0)
-	oil_bar.color = Color("#FFEC27") if lamp_on else Color(0.4, 0.4, 0.4)
+	oil_bar.color = Color("#FFEC27").darkened(clampf(1.0 - oil_ratio, 0.0, 0.6)) if lamp_on else Color(0.4, 0.4, 0.4)
 	hearts_label.text = "♥".repeat(hearts)
 	bag_label.text = "%d/%d" % [bag + (1 if _bag_lie else 0), slots]
 	depth_label.text = "%dm" % (_depth_lie if _depth_lie >= 0 else depth)

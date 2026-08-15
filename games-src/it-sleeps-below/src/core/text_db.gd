@@ -11,7 +11,14 @@ func _ready() -> void:
 		var req := HTTPRequest.new()
 		add_child(req)
 		req.request_completed.connect(_on_http)
-		req.request("text/text.json")
+		# JS eval에서 상대 URL이 나오는 것을 막는다 — Godot의 relative request()는 웹 빌드에서
+		# ERR_INVALID_PARAMETER로 실패한다(실측 확인). eval이 null/빈 문자열을 주면 상대 경로로 폴백.
+		var base_result: Variant = JavaScriptBridge.eval("window.location.href.replace(/[^/]*$/, '')", true)
+		var base: String = base_result if typeof(base_result) == TYPE_STRING else ""
+		if base == "":
+			req.request("text/text.json")
+		else:
+			req.request(base + "text/text.json")
 	else:
 		var path := ProjectSettings.globalize_path("res://").path_join("../../public/games/it-sleeps-below/text/text.json")
 		var f := FileAccess.open(path, FileAccess.READ)

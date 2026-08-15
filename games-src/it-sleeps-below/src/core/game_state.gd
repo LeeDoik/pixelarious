@@ -31,7 +31,7 @@ func end_run_death(depth_m: int) -> void:
 	profile.relic = {"row": depth_m, "items": run.bag.duplicate()}  # 이전 유품은 덮어써 소멸
 	profile.oil_bottles = 0
 	profile.miner_no += 1
-	profile.best_depth = maxi(profile.best_depth, depth_m)
+	profile.best_depth = maxi(profile.best_depth, int(run.get("depth", depth_m)))
 	save()
 
 func end_run_settle() -> int:

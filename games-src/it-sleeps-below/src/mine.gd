@@ -40,6 +40,11 @@ var alive := true
 var _lurker_mode := -1
 var _beat_acc := 0.0
 var _author_seen: Dictionary = {}
+var _light_sense_acc := 0.0
+var _prev_light_radius := -1.0
+var _prev_lamp_on := true
+var journal_overlay: CanvasLayer
+var journal_label: Label
 
 func _ready() -> void:
 	var ctx: Dictionary = GameState.start_run()
@@ -70,6 +75,7 @@ func _ready() -> void:
 	hud.pause_pressed.connect(func() -> void: get_tree().paused = not get_tree().paused)
 	strata_entered.connect(hud.show_strata)
 	strata_entered.connect(_on_strata_entered)
+	journal_found.connect(_on_journal_found)
 	Sfx.ambience_pitch(1.0)
 	Sfx.ambience_volume(-6.0)
 	anomalies = AnomalyDirector.new()
@@ -97,7 +103,13 @@ func _process(delta: float) -> void:
 		oil = Oil.tank(GameState.profile.upgrades.lamp) * Tuning.OIL_PICKUP_RATIO
 		Sfx.play("lamp_toggle")
 	GameState.run.oil = oil
-	view.reveal(ppos, finale.current_radius if finale_mode and finale else light_radius())
+	var cur_light_radius := light_radius()
+	# 기름 소모로 빛 반경 단계가 내려갈 때만 경고음 — 램프 수동 토글로 인한 변화는 제외
+	if lamp_on and _prev_lamp_on and cur_light_radius < _prev_light_radius:
+		Sfx.play("oil_warning")
+	_prev_light_radius = cur_light_radius
+	_prev_lamp_on = lamp_on
+	view.reveal(ppos, finale.current_radius if finale_mode and finale else cur_light_radius)
 	view.camera_row = ppos.y
 	if held_dir != Vector2i.ZERO and not busy:
 		_try_move(held_dir)
@@ -109,7 +121,7 @@ func _process(delta: float) -> void:
 	light_rig.follow(player.position)
 	if not finale_mode:
 		# 피날레 중에는 FinaleDirector가 심장 펄스로만 반경을 구동한다 — 여기서 덮어쓰면 펄스가 씹힌다
-		light_rig.set_radius_tiles(light_radius())
+		light_rig.set_radius_tiles(cur_light_radius)
 	hud.update_state(oil / Oil.tank(GameState.profile.upgrades.lamp), lamp_on, hearts,
 		GameState.run.bag.size(), Economy.bag_slots(GameState.profile.upgrades.bag), ppos.y)
 	if ppos.y >= Tuning.LURKER_MIN_DEPTH:
@@ -122,6 +134,8 @@ func _notification(what: int) -> void:
 		get_tree().paused = true
 
 func toggle_lamp() -> void:
+	if finale_mode:
+		return
 	lamp_on = not lamp_on
 	GameState.run.lamp_on = lamp_on
 	Sfx.play("lamp_toggle")
@@ -197,15 +211,16 @@ func _dig(target: Vector2i) -> void:
 	await get_tree().create_timer(Economy.dig_time(GameState.profile.upgrades.pick, strata_row)).timeout
 	_last_dig_end = Time.get_ticks_msec() / 1000.0
 	noise_event.emit(target, level)
-	_collect(target)
-	cells[WorldGen.idx(target.x, target.y)] = WorldGen.T_EMPTY
-	view.cells = cells
-	var s: int = mini(WorldGen.strata_of(strata_row), 3)
-	last_dig_sfx = ["dig_dirt", "dig_rock", "dig_rock", "dig_flesh"][s]
-	Sfx.play(last_dig_sfx)
+	if _collect(target):
+		cells[WorldGen.idx(target.x, target.y)] = WorldGen.T_EMPTY
+		view.cells = cells
+		var s: int = mini(WorldGen.strata_of(strata_row), 3)
+		last_dig_sfx = ["dig_dirt", "dig_rock", "dig_rock", "dig_flesh"][s]
+		Sfx.play(last_dig_sfx)
 	_after_move()
 
-func _collect(target: Vector2i) -> void:
+func _collect(target: Vector2i) -> bool:
+	# false를 반환하면 채굴이 셀을 비우지 않는다 — 가방이 가득 찬 광석은 그대로 남아 다음에 다시 캘 수 있다
 	var c := cells[WorldGen.idx(target.x, target.y)]
 	if c >= WorldGen.ORE_BASE:
 		if GameState.run.bag.size() < bag_capacity():
@@ -213,6 +228,7 @@ func _collect(target: Vector2i) -> void:
 			Sfx.play("ore_pickup")
 		else:
 			hud.flash_bag_full()
+			return false
 	elif c == WorldGen.T_OIL:
 		oil = minf(Oil.tank(GameState.profile.upgrades.lamp), oil + Oil.tank(GameState.profile.upgrades.lamp) * Tuning.OIL_PICKUP_RATIO)
 		Sfx.play("ore_pickup")
@@ -224,10 +240,14 @@ func _collect(target: Vector2i) -> void:
 				Sfx.play("journal_get")
 				journal_found.emit(spot.id)
 	elif c == WorldGen.T_RELIC:
+		# 가방이 가득 차 못 담은 유품은 소멸시키지 않고 그 자리에 남겨 다음 런의 월드젠이 재배치한다
+		var remainder: Array = []
 		for item in GameState.profile.relic.get("items", []):
 			if GameState.run.bag.size() < bag_capacity():
 				GameState.run.bag.append(int(item))
-		GameState.profile.relic = {}
+			else:
+				remainder.append(int(item))
+		GameState.profile.relic = {} if remainder.is_empty() else {"row": target.y, "items": remainder}
 		GameState.save()
 		Sfx.play("ore_pickup")
 	elif c == WorldGen.T_HEART:
@@ -236,6 +256,7 @@ func _collect(target: Vector2i) -> void:
 		finale.mine = self
 		add_child(finale)
 		finale.start()
+	return true
 
 func _after_move() -> void:
 	player.set_anim("idle")
@@ -285,7 +306,7 @@ func die(reason: String) -> void:
 		return
 	alive = false
 	player.set_anim("death")
-	GameState.end_run_death(GameState.run.depth)
+	GameState.end_run_death(ppos.y)
 	await get_tree().create_timer(1.2).timeout
 	run_ended.emit(reason, GameState.run.depth)
 
@@ -312,8 +333,15 @@ func _update_lurker(delta: float) -> void:
 	# 헌트 웨이브 전체가 러커 없이 지나간다 — lurker == null인 한 매 프레임 재시도 (스폰 자체는 저렴)
 	if director.mode == LurkerLogic.M_HUNT and lurker == null:
 		_spawn_lurker()
+	_light_sense_acc += delta
+	var sense_due := _light_sense_acc >= Tuning.LIGHT_SENSE_INTERVAL
+	if sense_due:
+		_light_sense_acc = fmod(_light_sense_acc, Tuning.LIGHT_SENSE_INTERVAL)
 	if lurker:
 		lurker.tick(delta, ppos, light_radius(), lamp_on)
+		if sense_due and lamp_on and not lurker.frozen:
+			# 램프가 켜져 있으면 러커가 최후 목격 위치를 갱신한다 — 꺼두면 마지막으로 안 위치만 안다 (스펙 §3)
+			lurker.target = ppos
 		var dist := Vector2(lurker.grid_pos).distance_to(Vector2(ppos))
 		_tick_heartbeat(delta, 0.8 + 8.0 / maxf(dist, 1.0))
 	elif not heartbeat_forced:
@@ -448,9 +476,11 @@ func _first_deep_encounter() -> void:
 		if not alive:
 			l.queue_free()
 			return
-		l.grid_pos = LurkerLogic.next_step(l.grid_pos, ppos, is_open_cell)
-		l.position = Vector2(l.grid_pos * 16) + Vector2(8, 0)
-		l.frozen = LurkerLogic.is_frozen(l.grid_pos, ppos, light_radius(), lamp_on)
+		var frozen := LurkerLogic.is_frozen(l.grid_pos, ppos, light_radius(), lamp_on)
+		if not frozen:
+			l.grid_pos = LurkerLogic.next_step(l.grid_pos, ppos, is_open_cell)
+			l.position = Vector2(l.grid_pos * 16) + Vector2(8, 0)
+		l.frozen = frozen
 		l.queue_redraw()
 	if not is_instance_valid(l):
 		return
@@ -477,3 +507,55 @@ func _silhouette_flash() -> void:
 	ghost.position = Vector2(player.position) + Vector2(dir * (light_radius() + 1.5) * 16.0, 0)
 	add_child(ghost)
 	get_tree().create_timer(1.2).timeout.connect(ghost.queue_free)
+
+# ── 일지 열람 오버레이 (스펙 §15 — 일지 1장 = 화면 하나, 탭으로 닫는다) ──
+
+func _on_journal_found(id: String) -> void:
+	if journal_overlay == null:
+		_build_journal_overlay()
+	journal_label.text = TextDb.t("journals", id)
+	journal_overlay.visible = true
+	get_tree().paused = true
+
+func _build_journal_overlay() -> void:
+	var font: FontFile = load("res://assets/fonts/Galmuri9.ttf")
+
+	journal_overlay = CanvasLayer.new()
+	journal_overlay.layer = 20  # Main의 일시정지 오버레이(레이어 10)보다 위에서 완전히 덮는다
+	journal_overlay.process_mode = Node.PROCESS_MODE_ALWAYS
+	add_child(journal_overlay)
+
+	var scrim := ColorRect.new()
+	scrim.color = Color(0, 0, 0, 0.88)
+	scrim.position = Vector2.ZERO
+	scrim.size = Vector2(270, 480)
+	journal_overlay.add_child(scrim)
+
+	journal_label = Label.new()
+	journal_label.add_theme_font_override("font", font)
+	journal_label.add_theme_font_size_override("font_size", 9)
+	journal_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	journal_label.position = Vector2(16, 16)
+	journal_label.size = Vector2(238, 390)
+	journal_overlay.add_child(journal_label)
+
+	var hint := Label.new()
+	hint.add_theme_font_override("font", font)
+	hint.add_theme_font_size_override("font_size", 8)
+	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	hint.position = Vector2(0, 420)
+	hint.size = Vector2(270, 20)
+	hint.text = TextDb.t("ui", "retry")
+	journal_overlay.add_child(hint)
+
+	var catcher := Button.new()
+	catcher.flat = true
+	catcher.focus_mode = Control.FOCUS_NONE
+	catcher.position = Vector2.ZERO
+	catcher.size = Vector2(270, 480)
+	catcher.pressed.connect(_close_journal_overlay)
+	journal_overlay.add_child(catcher)
+
+func _close_journal_overlay() -> void:
+	journal_overlay.visible = false
+	get_tree().paused = false
