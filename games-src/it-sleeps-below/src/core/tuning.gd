@@ -5,6 +5,12 @@ class_name Tuning
 const TILE_PX := 16
 const STRATA_BOUNDS := [40, 120, 240, 400]  # 표토<40 ≤암반<120 ≤균열대<240 ≤심층<400, 400=최심부
 const RELIC_ROW_JITTER := 3
+const JOURNAL_ROW_JITTER := 2
+const PLACE_ROW_MAX := 395   # 일지·유품 배치 하한 (챔버 위)
+const CHAMBER_TOP := 396     # 최심부 챔버 시작 행
+const CHAMBER_X_MIN := 5
+const CHAMBER_X_MAX := 10    # inclusive
+const HEART_X := 8
 
 # ── 이동/채굴 (초 단위, 타일당) ──
 const WALK_TIME := 0.15

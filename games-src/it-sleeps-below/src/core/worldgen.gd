@@ -64,17 +64,17 @@ static func generate(seed_v: int, ctx: Dictionary) -> Dictionary:
 	return {"cells": cells, "journal_spots": journal_spots, "relic_spot": relic_spot}
 
 static func _carve_chamber(cells: PackedInt32Array) -> void:
-	for y in range(396, DEPTH):
-		for x in range(5, 11):
+	for y in range(Tuning.CHAMBER_TOP, DEPTH):
+		for x in range(Tuning.CHAMBER_X_MIN, Tuning.CHAMBER_X_MAX + 1):
 			cells[idx(x, y)] = T_EMPTY
-	cells[idx(8, 400)] = T_HEART
+	cells[idx(Tuning.HEART_X, DEPTH - 1)] = T_HEART
 
 static func _place_journals(cells: PackedInt32Array, rng: RandomNumberGenerator, found: Array) -> Array:
 	var spots: Array = []
 	for entry in Lore.series():
 		if found.has(entry.id):
 			continue
-		var y: int = clampi(entry.row + rng.randi_range(-2, 2), 1, 395)
+		var y: int = clampi(entry.row + rng.randi_range(-Tuning.JOURNAL_ROW_JITTER, Tuning.JOURNAL_ROW_JITTER), 1, Tuning.PLACE_ROW_MAX)
 		var x: int = rng.randi_range(1, W - 2)
 		cells[idx(x, y)] = T_JOURNAL
 		spots.append({"id": entry.id, "x": x, "y": y})
@@ -83,7 +83,7 @@ static func _place_journals(cells: PackedInt32Array, rng: RandomNumberGenerator,
 static func _place_relic(cells: PackedInt32Array, rng: RandomNumberGenerator, relic: Dictionary) -> Dictionary:
 	if not relic.has("row"):
 		return {}
-	var y: int = clampi(int(relic.row) + rng.randi_range(-Tuning.RELIC_ROW_JITTER, Tuning.RELIC_ROW_JITTER), 1, 395)
+	var y: int = clampi(int(relic.row) + rng.randi_range(-Tuning.RELIC_ROW_JITTER, Tuning.RELIC_ROW_JITTER), 1, Tuning.PLACE_ROW_MAX)
 	var x: int = rng.randi_range(1, W - 2)
 	cells[idx(x, y)] = T_RELIC
 	return {"x": x, "y": y}
