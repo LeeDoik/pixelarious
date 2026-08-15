@@ -62,3 +62,8 @@ func show_strata(strata: int) -> void:
 	tw.tween_property(strata_banner, "modulate:a", 1.0, 0.4)
 	tw.tween_interval(1.4)
 	tw.tween_property(strata_banner, "modulate:a", 0.0, 0.6)
+
+func flash_bag_full() -> void:
+	bag_label.modulate = Color(1.0, 0.35, 0.3)
+	var tw := create_tween()
+	tw.tween_property(bag_label, "modulate", Color.WHITE, 0.6)

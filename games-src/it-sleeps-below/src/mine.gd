@@ -180,6 +180,8 @@ func _collect(target: Vector2i) -> void:
 		if GameState.run.bag.size() < bag_capacity():
 			GameState.run.bag.append(c - WorldGen.ORE_BASE)
 			Sfx.play("ore_pickup")
+		else:
+			hud.flash_bag_full()
 	elif c == WorldGen.T_OIL:
 		oil = minf(Oil.tank(GameState.profile.upgrades.lamp), oil + Oil.tank(GameState.profile.upgrades.lamp) * Tuning.OIL_PICKUP_RATIO)
 		Sfx.play("ore_pickup")
