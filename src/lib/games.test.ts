@@ -38,7 +38,12 @@ describe('games registry', () => {
 
   it('playable set is exactly the expected slugs', () => {
     const playable = getGames().filter((g) => g.playPath !== null)
-    expect(playable.map((g) => g.slug)).toEqual(['starfall-drift', 'last-login', 'system-check'])
+    expect(playable.map((g) => g.slug)).toEqual([
+      'starfall-drift',
+      'it-sleeps-below',
+      'last-login',
+      'system-check',
+    ])
   })
 
   it('rejects a slug with a double hyphen', () => {
