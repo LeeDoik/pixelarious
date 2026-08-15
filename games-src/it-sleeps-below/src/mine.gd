@@ -12,6 +12,8 @@ var journal_spots: Array = []
 var view: MineView
 var player: Player
 var camera: Camera2D
+var light_rig: LightRig
+var hud: Hud
 
 var ppos := Vector2i(8, 0)
 var busy := false
@@ -42,6 +44,13 @@ func _ready() -> void:
 	camera.position_smoothing_enabled = true
 	add_child(camera)
 	_sync_positions(true)
+	light_rig = LightRig.new()
+	add_child(light_rig)
+	hud = Hud.new()
+	add_child(hud)
+	hud.lamp_pressed.connect(toggle_lamp)
+	hud.pause_pressed.connect(func() -> void: get_tree().paused = not get_tree().paused)
+	strata_entered.connect(hud.show_strata)
 
 func light_radius() -> float:
 	return Oil.radius(oil, Oil.tank(GameState.profile.upgrades.lamp), lamp_on)
@@ -73,6 +82,14 @@ func _process(delta: float) -> void:
 		_last_strata = s
 		strata_entered.emit(s)
 		Sfx.ambience(["amb_surface", "amb_rock", "amb_fissure", "", ""][mini(s, 4)])
+	light_rig.follow(player.position)
+	light_rig.set_radius_tiles(light_radius())
+	hud.update_state(oil / Oil.tank(GameState.profile.upgrades.lamp), lamp_on, hearts,
+		GameState.run.bag.size(), Economy.bag_slots(GameState.profile.upgrades.bag), ppos.y)
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_APPLICATION_FOCUS_OUT and alive:
+		get_tree().paused = true
 
 func toggle_lamp() -> void:
 	lamp_on = not lamp_on
