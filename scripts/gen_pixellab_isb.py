@@ -63,10 +63,9 @@ SPRITES = {
     # vista_alive 1차 결과는 구도는 맞았으나 분홍 발광이 사라져 재생성 (구도 유지 +
     # 봉우리마다 분홍 발광 반점을 명시적으로 다시 추가)
     "vista_alive":  (136, 80, f"same dark mountain silhouette and pine forest treeline composition as a calm dusk view, single mountain view distance, but every peak has faint pink glowing veins and small pulsing pink light spots like a heartbeat, mountains subtly breathing, cosmic horror scale, {STYLE}"),
-    # logo: 원안(철자 누락 "SLEPS")과 2차 재생성(단어 오류 "THEN.", 텍스처 소실)
-    # 모두 1차 재생성보다 못해 1차 재생성 문구로 확정 (완전한 두 단어가 나온
-    # 유일한 시도) — PixelLab 텍스트 렌더링 한계로 자간이 다소 거칠 수 있음
-    "logo":         (96, 48, f"game logo, large bold clear carved stone letters spelling exactly IT SLEEPS BELOW, legible readable font, moss and cracks, faint pink glow from cracks, {STYLE}"),
+    # logo: PixelLab 텍스트 렌더링이 4회 시도 모두 철자를 깨뜨려("SLEPS" 등)
+    # 텍스트 없는 명판으로 전환 — 타이틀 화면에서 실제 폰트로 텍스트를 오버레이한다.
+    "logo":         (96, 48, f"weathered carved stone plaque, rectangular, moss and cracks, faint pink glow seeping from the cracks, empty center area for text overlay, no letters, no text, {STYLE}"),
 }
 
 def read_key():
