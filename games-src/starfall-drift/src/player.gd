@@ -25,9 +25,17 @@ func _ready() -> void:
 	_trail.amount = 12
 	_trail.lifetime = 0.4
 	_trail.local_coords = false
-	_trail.scale_amount_min = 1.0
-	_trail.scale_amount_max = 1.5
-	_trail.color = Color("#FF77A8")
+	# 잔상 트레일: 지나온 자리에 그대로 남아 사라져야 한다 — 기본 중력(980 하방)을 끄지 않으면
+	# 파티클이 아래로 쏟아져 뭔가를 흘리는 것처럼 보인다.
+	_trail.gravity = Vector2.ZERO
+	_trail.initial_velocity_min = 0.0
+	_trail.initial_velocity_max = 0.0
+	_trail.scale_amount_min = 0.5
+	_trail.scale_amount_max = 1.0
+	var ramp := Gradient.new()
+	ramp.set_color(0, Color("#FF77A8"))
+	ramp.set_color(1, Color(1.0, 0.466, 0.658, 0.0))
+	_trail.color_ramp = ramp
 	_trail.emitting = true
 	add_child(_trail)
 	add_child(_sprite)
