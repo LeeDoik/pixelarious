@@ -19,17 +19,19 @@ func start() -> void:
 	mine.view.cells = mine.cells
 	mine.lamp_on = false
 	mine.finale_mode = true
+	mine._despawn_lurker()
 	_scatter_temptation()
 	for i in range(3):
 		var l := Lurker.new()
 		mine.add_child(l)
 		l.setup(_spawn_pos(i), mine.is_open_cell)
-		l.caught.connect(func() -> void: mine.die("death_lurker"))
+		l.caught.connect(func() -> void:
+			mine.die("death_lurker"))
 		mine.noise_event.connect(l.hear)  # 유혹 광석을 캐는 소리에도 반응해야 한다
 		lurkers.append(l)
 
 func _process(delta: float) -> void:
-	if not mine.finale_mode:
+	if not mine.finale_mode or not mine.alive:
 		return
 	_pulse_t += delta
 	var phase := sin(_pulse_t * TAU / Tuning.HEART_PULSE_SEC)
@@ -106,7 +108,7 @@ func _shake(amp: float, dur: float) -> void:
 	var gen := _shake_gen
 	var t := 0.0
 	while t < dur:
-		if not (is_instance_valid(mine) and is_instance_valid(mine.camera)) or gen != _shake_gen:
+		if not (is_instance_valid(mine) and mine.alive and is_instance_valid(mine.camera)) or gen != _shake_gen:
 			return
 		mine.camera.offset = Vector2(randf_range(-amp, amp), randf_range(-amp, amp))
 		await get_tree().create_timer(0.15).timeout

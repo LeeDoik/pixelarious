@@ -235,7 +235,8 @@ func _show_ending(earned: int, depth: int) -> void:
 	var e := Ending.new()
 	e.earned = earned
 	e.depth = depth
-	e.finished.connect(func() -> void: _show_surface(earned))
+	e.finished.connect(func() -> void:
+		_show_surface(earned))
 	_swap(e)
 
 # ── DEATH ──
