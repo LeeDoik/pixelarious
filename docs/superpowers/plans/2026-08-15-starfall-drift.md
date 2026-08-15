@@ -969,8 +969,9 @@ func test_streams_loaded() -> void:
 		assert_bool(Sfx.has_stream(n)).is_true()
 
 func test_unknown_name_is_silent_noop() -> void:
-	Sfx.play("no_such_sound")   # 크래시 없이 통과하면 성공
-	assert_bool(true).is_true()
+	var before := Sfx.get_child_count()
+	Sfx.play("no_such_sound")   # 미등록 이름은 플레이어를 만들지 않고 무시
+	assert_int(Sfx.get_child_count()).is_equal(before)
 ```
 
 runtest — Expected: `has_stream` 미정의 FAIL.
