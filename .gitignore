@@ -9,3 +9,5 @@ next-env.d.ts
 
 games-src/*/.godot/
 games-src/*/reports/
+
+.claude/worktrees/

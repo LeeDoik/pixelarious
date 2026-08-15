@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 
-const SITE_NAME = 'NEO_KIDO'
+const SITE_NAME = 'PIXELARIOUS'
 const START_DELAY_MS = 600
 const CHAR_DELAY_MS = 95
 const FINISH_DELAY_MS = 250

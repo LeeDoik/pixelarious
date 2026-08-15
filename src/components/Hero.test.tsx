@@ -8,19 +8,15 @@ afterEach(() => {
 })
 
 describe('Hero', () => {
-  it('types out NEO_KIDO over time', () => {
+  it('types out PIXELARIOUS over time', () => {
     vi.useFakeTimers()
     const { container } = render(<Hero />)
     const h1 = screen.getByRole('heading', { level: 1 })
-    expect(h1.textContent).not.toContain('NEO_KIDO')
+    expect(h1.textContent).not.toContain('PIXELARIOUS')
     act(() => {
-      vi.advanceTimersByTime(600 + 95 * 8 + 300)
+      vi.advanceTimersByTime(600 + 95 * 11 + 300)
     })
-    expect(h1.textContent).toContain('NEO_KIDO')
-    // Assert done-state visuals
-    const underscoreSpan = h1.querySelector('span.u')
-    expect(underscoreSpan).not.toBeNull()
-    expect(underscoreSpan?.textContent).toBe('_')
+    expect(h1.textContent).toContain('PIXELARIOUS')
     const scrollHint = container.querySelector('.scroll-hint')
     expect(scrollHint?.classList.contains('show')).toBe(true)
   })
@@ -38,11 +34,7 @@ describe('Hero', () => {
     } as unknown as MediaQueryList)
     const { container } = render(<Hero />)
     const h1 = screen.getByRole('heading', { level: 1 })
-    expect(h1.textContent).toContain('NEO_KIDO')
-    // Assert done-state visuals
-    const underscoreSpan = h1.querySelector('span.u')
-    expect(underscoreSpan).not.toBeNull()
-    expect(underscoreSpan?.textContent).toBe('_')
+    expect(h1.textContent).toContain('PIXELARIOUS')
     const scrollHint = container.querySelector('.scroll-hint')
     expect(scrollHint?.classList.contains('show')).toBe(true)
   })
