@@ -1,7 +1,7 @@
 extends Node2D
 ## TITLE → OPENING → SURFACE ↔ MINE → DEATH → SURFACE. 씬 전환은 자식 교체.
 
-enum S { TITLE, OPENING, SURFACE, MINE, DEATH }
+enum S { TITLE, OPENING, SURFACE, MINE, DEATH, ENDING }
 
 var state: int = S.TITLE
 var current: Node
@@ -222,8 +222,21 @@ func _on_run_ended(reason: String, depth: int) -> void:
 	if reason == "surfaced":
 		var earned := GameState.end_run_settle()
 		_show_surface(earned)  # Surface가 정산 결과 + merchant.settle_N 대사 표시
+	elif reason == "finale_escaped":
+		var earned := GameState.end_run_settle()  # 탈출도 정산은 동일 — 심장·유혹 광석 값을 잃지 않는다
+		_show_ending(earned, depth)
 	else:
 		_show_death(reason)
+
+# ── ENDING ──
+
+func _show_ending(earned: int, depth: int) -> void:
+	state = S.ENDING
+	var e := Ending.new()
+	e.earned = earned
+	e.depth = depth
+	e.finished.connect(func() -> void: _show_surface(earned))
+	_swap(e)
 
 # ── DEATH ──
 

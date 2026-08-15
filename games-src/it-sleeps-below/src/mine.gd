@@ -22,6 +22,8 @@ var lurker: Lurker
 var director := {"mode": LurkerLogic.M_SILENCE, "t": 20.0}
 var anomalies: AnomalyDirector
 var heartbeat_forced := false
+var finale_mode := false
+var finale: FinaleDirector
 
 var ppos := Vector2i(8, 0)
 var busy := false
@@ -43,6 +45,9 @@ func _ready() -> void:
 	var ctx: Dictionary = GameState.start_run()
 	var g := WorldGen.generate(GameState.run.seed, ctx)
 	cells = g.cells
+	if GameState.profile.ending_seen:
+		# 이미 리빌을 본 세이브 — 심장 챔버는 비어 있다 (스펙 §9)
+		cells[WorldGen.idx(Tuning.HEART_X, WorldGen.DEPTH - 1)] = WorldGen.T_EMPTY
 	journal_spots = g.journal_spots
 	relic_spot = g.relic_spot
 	oil = GameState.run.oil
@@ -92,7 +97,7 @@ func _process(delta: float) -> void:
 		oil = Oil.tank(GameState.profile.upgrades.lamp) * Tuning.OIL_PICKUP_RATIO
 		Sfx.play("lamp_toggle")
 	GameState.run.oil = oil
-	view.reveal(ppos, light_radius())
+	view.reveal(ppos, finale.current_radius if finale_mode and finale else light_radius())
 	view.camera_row = ppos.y
 	if held_dir != Vector2i.ZERO and not busy:
 		_try_move(held_dir)
@@ -102,7 +107,9 @@ func _process(delta: float) -> void:
 		strata_entered.emit(s)
 		Sfx.ambience(["amb_surface", "amb_rock", "amb_fissure", "", ""][mini(s, 4)])
 	light_rig.follow(player.position)
-	light_rig.set_radius_tiles(light_radius())
+	if not finale_mode:
+		# 피날레 중에는 FinaleDirector가 심장 펄스로만 반경을 구동한다 — 여기서 덮어쓰면 펄스가 씹힌다
+		light_rig.set_radius_tiles(light_radius())
 	hud.update_state(oil / Oil.tank(GameState.profile.upgrades.lamp), lamp_on, hearts,
 		GameState.run.bag.size(), Economy.bag_slots(GameState.profile.upgrades.bag), ppos.y)
 	if ppos.y >= Tuning.LURKER_MIN_DEPTH:
@@ -223,6 +230,12 @@ func _collect(target: Vector2i) -> void:
 		GameState.profile.relic = {}
 		GameState.save()
 		Sfx.play("ore_pickup")
+	elif c == WorldGen.T_HEART:
+		GameState.run.bag.append(6)  # 발광 광석 취급 + 서사상 '심장 하나' — 가방 용량 무시
+		finale = FinaleDirector.new()
+		finale.mine = self
+		add_child(finale)
+		finale.start()
 
 func _after_move() -> void:
 	player.set_anim("idle")
@@ -256,7 +269,7 @@ func _after_move() -> void:
 	if ppos.y == 0 and alive:
 		alive = false
 		busy = false
-		run_ended.emit("surfaced", GameState.run.depth)
+		run_ended.emit("finale_escaped" if finale_mode else "surfaced", GameState.run.depth)
 		return
 	busy = false
 
@@ -286,6 +299,8 @@ func _sync_positions(snap: bool) -> void:
 # ── 러커 스폰/디스폰/심박 (Task 13) ──
 
 func _update_lurker(delta: float) -> void:
+	if finale_mode:
+		return  # 피날레는 FinaleDirector가 자체 러커 3개체를 직접 관리한다
 	if director.mode != _lurker_mode:
 		_lurker_mode = director.mode
 		match director.mode:
