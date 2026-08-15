@@ -31,7 +31,7 @@ static func is_frozen(lurker: Vector2i, player: Vector2i, radius: float, lamp_on
 
 static func hear(state: Dictionary, noise_pos: Vector2i, noise_level: float) -> Dictionary:
 	var out := state.duplicate()
-	if noise_level >= 0.5:
+	if noise_level >= Tuning.NOISE_ALERT_THRESHOLD:
 		out.target = noise_pos
 		out.alert = true
 	return out

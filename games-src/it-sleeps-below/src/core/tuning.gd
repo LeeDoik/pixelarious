@@ -35,6 +35,7 @@ const LURKER_MIN_DEPTH := 240     # 실체 스폰 시작 (심층)
 const DIRECTOR_BASE := {"hunt": 18.0, "retreat": 8.0, "silence": 30.0}
 const DIRECTOR_SILENCE_MIN := 10.0
 const DIRECTOR_DEPTH_SCALE := 0.05  # 100m당 침묵 -5초
+const NOISE_ALERT_THRESHOLD := 0.5  # 이 소음 레벨 이상이면 러커가 목표를 갱신
 
 # ── 이코노미 ──
 const ORE_VALUES := [5, 10, 25, 50, 100, 150, 300]

@@ -14,6 +14,9 @@ var strata_banner := Label.new()
 var lamp_btn := Button.new()
 var pause_btn := Button.new()
 var _font: FontFile
+var _depth_lie := -1
+var _oil_lie := false
+var _bag_lie := false
 
 func _ready() -> void:
 	_font = load("res://assets/fonts/Galmuri9.ttf")
@@ -48,12 +51,26 @@ func _ready() -> void:
 	pause_btn.pressed.connect(func() -> void: pause_pressed.emit())
 	add_child(pause_btn)
 
+func lie_depth(value: int, sec: float) -> void:
+	_depth_lie = value
+	get_tree().create_timer(sec).timeout.connect(func() -> void: _depth_lie = -1)
+
+func lie_oil_zero(sec: float) -> void:
+	_oil_lie = true
+	get_tree().create_timer(sec).timeout.connect(func() -> void: _oil_lie = false)
+
+func lie_bag_plus(sec: float) -> void:
+	_bag_lie = true
+	get_tree().create_timer(sec).timeout.connect(func() -> void: _bag_lie = false)
+
 func update_state(oil_ratio: float, lamp_on: bool, hearts: int, bag: int, slots: int, depth: int) -> void:
+	if _oil_lie:
+		oil_ratio = 0.0
 	oil_bar.size.x = 98.0 * clampf(oil_ratio, 0.0, 1.0)
 	oil_bar.color = Color("#FFEC27") if lamp_on else Color(0.4, 0.4, 0.4)
 	hearts_label.text = "♥".repeat(hearts)
-	bag_label.text = "%d/%d" % [bag, slots]
-	depth_label.text = "%dm" % depth
+	bag_label.text = "%d/%d" % [bag + (1 if _bag_lie else 0), slots]
+	depth_label.text = "%dm" % (_depth_lie if _depth_lie >= 0 else depth)
 
 func show_strata(strata: int) -> void:
 	strata_banner.text = "─ %s ─" % TextDb.t("ui", "strata_%d" % strata)

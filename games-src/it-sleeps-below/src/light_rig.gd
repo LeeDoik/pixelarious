@@ -39,4 +39,6 @@ func blackout(sec: float) -> void:
 	var prev := light.energy
 	light.energy = 0.05
 	await get_tree().create_timer(sec).timeout
+	if not (is_instance_valid(self) and is_inside_tree()):
+		return
 	light.energy = prev
