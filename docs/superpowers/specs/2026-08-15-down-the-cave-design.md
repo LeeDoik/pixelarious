@@ -201,6 +201,8 @@
 - 오토로드: `GameState`(세이브·은행·업그레이드·일지/이력 플래그), `Sfx`
 - 씬: `Main`(거점 ↔ 갱도 상태 머신), `Surface`(거점·상인·수첩), `Mine`(TileMapLayer), `Player`, `Lurker`, `HUD`, `AnomalyDirector`
 - **순수 함수 코어** (`src/core/`): `worldgen.gd`(시드 절차 생성 — 지층 분포·광석/기름/일지 배치·유품 가방과 지킴이 배치), `economy.gd`(광석 가치·업그레이드 커브·정산), `oil.gd`(소모율·빛 반경 단계·토글 상태), `lurker_logic.gd`(상태 스텝: 빛 정지·어둠 추적·배회·지나침, 소리 감지 갱신, 파도형 디렉터 사이클), `anomaly_pool.gd`(이상 현상·연출 조우 트리거 조건·1회성), `lore.gd`(일지 시리즈 정의·수집 상태), `finale.gd`(탈출로 뒤틀림 — 내 통로 기반 보정·도달 가능성 검증)
+- **텍스트 런타임 로드**: 서사 텍스트(일지·상인·엔딩·이상 현상 문구)는 게임 팩 외부의 `public/games/down-the-cave/text/*.json`(ko/en 키 쌍)에 두고 실행 시점에 로드 — **텍스트 수정 시 Godot 재익스포트 없이 재배포만으로 반영**. 개발 실행용 폴백 경로는 구현 플랜에서 확정
+- **텍스트 에디터 (로컬 도구)**: 명령 하나로 열리는 브라우저 편집 화면 — 카테고리(일지/상인/엔딩/이상 현상)별 목록, KO/EN 나란히 편집, 키 완전성 검증, 저장 시 JSON에 직접 쓰기. 배포형 어드민은 만들지 않는다
 - 웹 익스포트: Web 프리셋, 스레드 비활성화(COOP/COEP 불필요), `web/shell.html` 재사용 → `public/games/down-the-cave/`
 - 사이트 등록: `content/games/02-down-the-cave.json`에 `playPath: "/games/down-the-cave/index.html"`, 태그를 `GODOT 4, 2D, ROGUELIKE, HORROR, MOBILE OK`로 교체. 소개문은 현행 유지 (이미 확정 기획과 일치)
 
@@ -222,5 +224,6 @@
 - 전투 시스템, 크래프팅/조합
 - NPC 대화 트리 (상인은 상점 UI + 짧은 메모만)
 - 적극 메타 연출 (가짜 크래시·브라우저 흉내) — §7 금지선
+- 배포형 텍스트 어드민 (에디터는 로컬 도구로만 — §15)
 - 리더보드·일일 시드, 분기 바이옴, 다회차 뉴게임+
 - 게임패드 지원, PWA 오프라인
