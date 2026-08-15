@@ -51,7 +51,7 @@ func test_heart_chamber() -> void:
 			found_heart = true
 	assert_bool(found_heart).is_true()
 
-func skip_test_journal_spots_follow_series_order() -> void:
+func test_journal_spots_follow_series_order() -> void:
 	var g := _gen(5)
 	assert_int(g.journal_spots.size()).is_greater(0)
 	var first: Dictionary = g.journal_spots[0]
