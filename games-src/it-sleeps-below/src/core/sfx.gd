@@ -46,6 +46,12 @@ func ambience(name: String) -> void:
 	_amb.stream = s
 	_amb.play()
 
+func ambience_pitch(p: float) -> void:
+	_amb.pitch_scale = p
+
+func ambience_volume(db: float) -> void:
+	_amb.volume_db = db
+
 func heartbeat(rate: float) -> void:
 	if rate <= 0.0:
 		_beat.stop()
