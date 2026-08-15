@@ -155,6 +155,7 @@ func _show_settle_result() -> void:
 	tw.tween_property(settle_label, "modulate:a", 1.0, 0.4)
 	tw.tween_interval(3.0)
 	tw.tween_property(settle_label, "modulate:a", 0.0, 0.8)
+	tw.tween_callback(func() -> void: if is_instance_valid(settle_label): settle_label.visible = false)
 
 func _next_settle_line() -> String:
 	if GameState.corruption() >= 3:
@@ -366,7 +367,7 @@ func _build_notebook_panel() -> void:
 	back_btn.add_theme_font_override("font", _font)
 	back_btn.add_theme_font_size_override("font_size", 9)
 	back_btn.text = "BACK"
-	back_btn.pressed.connect(func() -> void: journal_overlay.visible = false)
+	back_btn.pressed.connect(func() -> void: journal_overlay.visible = false; notebook_panel.visible = true)
 	ovbox.add_child(back_btn)
 
 	_refresh_notebook()

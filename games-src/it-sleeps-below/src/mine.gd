@@ -65,6 +65,8 @@ func _ready() -> void:
 	hud.pause_pressed.connect(func() -> void: get_tree().paused = not get_tree().paused)
 	strata_entered.connect(hud.show_strata)
 	strata_entered.connect(_on_strata_entered)
+	Sfx.ambience_pitch(1.0)
+	Sfx.ambience_volume(-6.0)
 	anomalies = AnomalyDirector.new()
 	anomalies.mine = self
 	add_child(anomalies)

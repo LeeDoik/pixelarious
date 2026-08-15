@@ -273,7 +273,7 @@ func _show_death(reason: String) -> void:
 	catcher.focus_mode = Control.FOCUS_NONE
 	catcher.position = Vector2.ZERO
 	catcher.size = Vector2(270, 480)
-	catcher.pressed.connect(func() -> void: _show_surface())
+	catcher.pressed.connect(func() -> void: if state == S.DEATH: _show_surface())
 	scene.add_child(catcher)
 
 	_swap(scene)
