@@ -33,7 +33,7 @@ export function Cartridge({
         }}
       >
         <span className="cart-no">{String(index + 1).padStart(2, '0')}</span>
-        <CoverCanvas scene={game.coverScene} />
+        <CoverCanvas scene={game.coverScene} image={game.coverImage} />
         <h3 className="cart-title">
           {game.title}
           {game.subtitle && <span className="kr">{game.subtitle}</span>}

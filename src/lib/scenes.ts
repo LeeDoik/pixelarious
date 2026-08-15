@@ -131,3 +131,43 @@ export function drawScene(canvas: MinimalCanvas, scene: CoverScene, palette: Pal
     px(63, 29, 2, 2, p.hi)
   }
 }
+
+/** 게임보이 4계조 램프 (어두운 순) — dmg 팔레트의 커버 이미지 양자화에 사용 */
+export const DMG_RAMP = ['#081820', '#346856', '#88C070', '#E0F8D0'] as const
+
+function hexToRgb(hex: string): [number, number, number] {
+  const n = parseInt(hex.slice(1), 16)
+  return [(n >> 16) & 0xff, (n >> 8) & 0xff, n & 0xff]
+}
+
+/**
+ * 이미지 커버를 캔버스에 그린다. dmg 팔레트에서는 휘도 기반 4계조로 양자화해
+ * 사이트의 게임보이 테마와 어울리게 만든다. night 팔레트는 원본 그대로.
+ */
+export function drawCoverImage(
+  canvas: MinimalCanvas,
+  img: CanvasImageSource,
+  palette: Palette,
+): void {
+  const ctx = canvas.getContext('2d')
+  if (!ctx) return
+  ctx.imageSmoothingEnabled = false
+  ctx.fillStyle = palette === 'dmg' ? DMG_RAMP[0] : '#0C0A1C'
+  ctx.fillRect(0, 0, canvas.width, canvas.height)
+  ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+  if (palette !== 'dmg') return
+  const data = ctx.getImageData(0, 0, canvas.width, canvas.height)
+  const ramp = DMG_RAMP.map(hexToRgb)
+  const px = data.data
+  for (let i = 0; i < px.length; i += 4) {
+    if (px[i + 3] < 128) {
+      ;[px[i], px[i + 1], px[i + 2]] = ramp[0]
+      px[i + 3] = 255
+      continue
+    }
+    const lum = 0.299 * px[i] + 0.587 * px[i + 1] + 0.114 * px[i + 2]
+    const bucket = lum < 56 ? 0 : lum < 118 ? 1 : lum < 180 ? 2 : 3
+    ;[px[i], px[i + 1], px[i + 2]] = ramp[bucket]
+  }
+  ctx.putImageData(data, 0, 0)
+}

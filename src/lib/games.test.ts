@@ -52,4 +52,13 @@ describe('games registry', () => {
   it('rejects a playPath pointing at a missing file', () => {
     expect(() => validate({ ...valid, playPath: '/games/nope/index.html' }, 'x.json')).toThrow()
   })
+
+  it('accepts an existing coverImage and keeps it optional', () => {
+    expect(() => validate({ ...valid, coverImage: '/covers/starfall-drift.png' }, 'x.json')).not.toThrow()
+    expect(() => validate({ ...valid }, 'x.json')).not.toThrow()
+  })
+
+  it('rejects a coverImage pointing at a missing file', () => {
+    expect(() => validate({ ...valid, coverImage: '/covers/nope.png' }, 'x.json')).toThrow()
+  })
 })

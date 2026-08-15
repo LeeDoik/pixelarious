@@ -10,6 +10,7 @@ export interface Game {
   description: string
   tags: string[]
   coverScene: CoverScene
+  coverImage?: string
   playPath: string | null
 }
 
@@ -28,6 +29,11 @@ export function validate(raw: Record<string, unknown>, file: string): Game {
   if (!Array.isArray(raw.tags) || raw.tags.some((t) => typeof t !== 'string')) fail('tags must be string[]')
   if (!COVER_SCENES.includes(raw.coverScene as CoverScene))
     fail(`coverScene must be one of: ${COVER_SCENES.join(', ')}`)
+  if (raw.coverImage !== undefined) {
+    if (typeof raw.coverImage !== 'string') fail('coverImage must be a string')
+    const absImg = path.join(process.cwd(), 'public', raw.coverImage)
+    if (!fs.existsSync(absImg)) fail(`coverImage file missing: ${raw.coverImage}`)
+  }
   if (raw.playPath !== null && typeof raw.playPath !== 'string') fail('playPath must be string or null')
   if (typeof raw.playPath === 'string') {
     const abs = path.join(process.cwd(), 'public', raw.playPath)
