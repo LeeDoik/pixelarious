@@ -22,7 +22,8 @@ SPRITES = {
     "star_dwarf":    (16, 16, f"small dense blue-white dwarf star, bright cyan #29adff core, intense glow, {STYLE}"),
     "star_giant":    (48, 48, f"large soft pink-red giant star, gentle warm #ff77a8 glow, calm majestic sphere, {STYLE}"),
     "asteroid":      (24, 24, f"lumpy irregular rock chunk, asymmetric silhouette, uneven bumpy cratered stone surface, dull gray-blue #1d2b53 with slate gray shading, NOT symmetric, NOT a gem, NOT a diamond, no facets, {STYLE}"),
-    "cracks":        (32, 32, f"pixel art crack decal, several thin jagged white cracks branching outward from a central impact point like a spiderweb, on a fully transparent PNG alpha background, no colored fill anywhere, no black square, no solid background plate, {STYLE}"),
+    # "cracks"는 PixelLab이 두 번 연속 성광(렌즈 플레어)으로 생성해 제외 —
+    # scripts/gen_cracks.py(절차 생성)가 단일 소스. 여기 다시 넣지 말 것.
     "nebula_a":      (64, 32, f"dark moody nebula cloud, deep indigo #1d2b53 and navy #0c0a1c, very low saturation, dim, barely-lit cosmic dust, {STYLE}"),
     "nebula_b":      (64, 32, f"soft hazy nebula cloud blob, filled uneven puffy silhouette spanning most of the canvas, dark navy blue #1d2b53 haze with a few tiny embedded starlight #fff1e8 specks, dim and low-contrast but clearly a cloud shape not scattered dots, {STYLE}"),
     "emblem":        (48, 48, f"shooting star emblem, yellow #ffec27 star head with pink #ff77a8 sparkling trail, dynamic diagonal, {STYLE}"),
