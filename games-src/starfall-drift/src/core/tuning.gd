@@ -43,5 +43,14 @@ const ASTEROID_SPEED_MIN := 40.0
 const ASTEROID_SPEED_MAX := 80.0
 const ASTEROID_SINE_AMP := 20.0
 
+# 스폰 배치 (spawner.gd 전용)
+const SPAWN_SAFETY_MARGIN := 8.0    # 도달 예산에서 빼는 여유
+const SPAWN_MAX_DX := 160.0         # 별 간 최대 수평 거리
+const SPAWN_RETRY_COUNT := 20
+const SPAWN_GAP_JITTER_MIN := 0.85
+const SPAWN_GAP_JITTER_MAX := 1.15
+const SPAWN_DRIFT_X := 120.0        # 다음 별 x 이동 범위(±)
+const SPAWN_WALL_MARGIN := 8.0      # 벽에서 궤도 반경 외 추가 여유
+
 const DEATH_SLOWMO := 0.25
 const DEATH_SLOWMO_SEC := 0.5

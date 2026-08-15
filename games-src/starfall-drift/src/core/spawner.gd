@@ -24,8 +24,8 @@ static func pick_type(p: Dictionary, roll: float) -> String:
 
 static func reachable(from_pos: Vector2, from_r: float, to_pos: Vector2, to_r: float) -> bool:
 	var rise := from_pos.y - to_pos.y
-	var budget := OrbitMath.max_rise(Tuning.LAUNCH_SPEED, Tuning.GRAVITY) + from_r + to_r - 8.0
-	return rise <= budget and absf(to_pos.x - from_pos.x) <= 160.0
+	var budget := OrbitMath.max_rise(Tuning.LAUNCH_SPEED, Tuning.GRAVITY) + from_r + to_r - Tuning.SPAWN_SAFETY_MARGIN
+	return rise <= budget and absf(to_pos.x - from_pos.x) <= Tuning.SPAWN_MAX_DX
 
 static func next_star(prev: Dictionary, h: float, rng: RandomNumberGenerator) -> Dictionary:
 	var p := params_for_height(h)
@@ -33,10 +33,10 @@ static func next_star(prev: Dictionary, h: float, rng: RandomNumberGenerator) ->
 	var to_r: float = Tuning.STAR_TYPES[type].orbit_r
 	var prev_r: float = Tuning.STAR_TYPES[prev.type].orbit_r
 	var prev_pos: Vector2 = prev.pos
-	for _i in range(20):
-		var gap: float = p.gap * rng.randf_range(0.85, 1.15)
-		var x := clampf(prev_pos.x + rng.randf_range(-120.0, 120.0), Tuning.WALL_MIN_X + to_r + 8.0, Tuning.WALL_MAX_X - to_r - 8.0)
+	for _i in range(Tuning.SPAWN_RETRY_COUNT):
+		var gap: float = p.gap * rng.randf_range(Tuning.SPAWN_GAP_JITTER_MIN, Tuning.SPAWN_GAP_JITTER_MAX)
+		var x := clampf(prev_pos.x + rng.randf_range(-Tuning.SPAWN_DRIFT_X, Tuning.SPAWN_DRIFT_X), Tuning.WALL_MIN_X + to_r + Tuning.SPAWN_WALL_MARGIN, Tuning.WALL_MAX_X - to_r - Tuning.SPAWN_WALL_MARGIN)
 		var pos := Vector2(x, prev_pos.y - gap)
 		if reachable(prev_pos, prev_r, pos, to_r):
 			return {"type": type, "pos": pos}
-	return {"type": type, "pos": Vector2(clampf(prev_pos.x, Tuning.WALL_MIN_X + to_r + 8.0, Tuning.WALL_MAX_X - to_r - 8.0), prev_pos.y - Tuning.GAP_BASE)}
+	return {"type": type, "pos": Vector2(clampf(prev_pos.x, Tuning.WALL_MIN_X + to_r + Tuning.SPAWN_WALL_MARGIN, Tuning.WALL_MAX_X - to_r - Tuning.SPAWN_WALL_MARGIN), prev_pos.y - Tuning.GAP_BASE)}

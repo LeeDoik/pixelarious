@@ -29,7 +29,7 @@ func test_pick_type_thresholds() -> void:
 	assert_str(Spawner.pick_type(p, 0.50)).is_equal("standard")
 
 func test_reachable_within_budget() -> void:
-	# max_rise(260,240)=140.8, budget = 140.8+28+28-8 = 189.6
+	# max_rise(260,240)=140.8, budget = 140.8+28+28-8 = 188.8
 	assert_bool(Spawner.reachable(Vector2(135, 400), 28.0, Vector2(135, 220), 28.0)).is_true()
 	assert_bool(Spawner.reachable(Vector2(135, 400), 28.0, Vector2(135, 200), 28.0)).is_false()
 	assert_bool(Spawner.reachable(Vector2(30, 400), 28.0, Vector2(200, 350), 28.0)).is_false()  # dx 170 > 160
