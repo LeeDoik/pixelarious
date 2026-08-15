@@ -1,0 +1,32 @@
+; Engine configuration file.
+config_version=5
+
+[application]
+config/name="IT SLEEPS BELOW"
+run/main_scene="res://src/main.tscn"
+config/features=PackedStringArray("4.7")
+config/icon="res://icon.svg"
+
+[autoload]
+GameState="*res://src/core/game_state.gd"
+Sfx="*res://src/core/sfx.gd"
+
+[editor_plugins]
+enabled=PackedStringArray("res://addons/gdUnit4/plugin.cfg")
+
+[display]
+window/size/viewport_width=270
+window/size/viewport_height=480
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+window/handheld/orientation=1
+
+[input_devices]
+pointing/emulate_touch_from_mouse=false
+pointing/emulate_mouse_from_touch=true
+
+[rendering]
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
+textures/canvas_textures/default_texture_filter=0
+environment/defaults/default_clear_color=Color(0.0471, 0.0392, 0.1098, 1)
