@@ -19,6 +19,8 @@ var lamp_on := true
 var oil := 0.0
 var hearts := 3
 var held_dir := Vector2i.ZERO
+var _held_key := KEY_NONE
+var _held_mouse := false
 var _last_dig_end := -10.0
 var _last_strata := -1
 var alive := true
@@ -81,12 +83,26 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo:
 		match event.keycode:
 			KEY_SPACE: toggle_lamp()
-			KEY_LEFT, KEY_A: held_dir = Vector2i(-1, 0)
-			KEY_RIGHT, KEY_D: held_dir = Vector2i(1, 0)
-			KEY_UP, KEY_W: held_dir = Vector2i(0, -1)
-			KEY_DOWN, KEY_S: held_dir = Vector2i(0, 1)
+			KEY_LEFT, KEY_A:
+				held_dir = Vector2i(-1, 0)
+				_held_key = event.keycode
+				_held_mouse = false
+			KEY_RIGHT, KEY_D:
+				held_dir = Vector2i(1, 0)
+				_held_key = event.keycode
+				_held_mouse = false
+			KEY_UP, KEY_W:
+				held_dir = Vector2i(0, -1)
+				_held_key = event.keycode
+				_held_mouse = false
+			KEY_DOWN, KEY_S:
+				held_dir = Vector2i(0, 1)
+				_held_key = event.keycode
+				_held_mouse = false
 	elif event is InputEventKey and not event.pressed:
-		held_dir = Vector2i.ZERO
+		if event.keycode == _held_key:
+			held_dir = Vector2i.ZERO
+			_held_key = KEY_NONE
 	elif event is InputEventMouseButton:
 		if event.pressed:
 			var world := get_canvas_transform().affine_inverse() * (event as InputEventMouseButton).position
@@ -94,8 +110,11 @@ func _unhandled_input(event: InputEvent) -> void:
 			var d := tile - ppos
 			if abs(d.x) + abs(d.y) == 1:
 				held_dir = d
-		else:
+				_held_mouse = true
+				_held_key = KEY_NONE
+		elif _held_mouse:
 			held_dir = Vector2i.ZERO
+			_held_mouse = false
 
 func _try_move(dir: Vector2i) -> void:
 	var act := MoveRules.classify(cells, ppos, dir, GameState.profile.upgrades.pick)
@@ -166,7 +185,7 @@ func _after_move() -> void:
 	player.set_anim("idle")
 	# 금 간 타일 — 머리 위가 CRACK이면 0.4초 뒤 붕괴 (그 자리에 있으면 데미지)
 	var above := ppos + Vector2i(0, -1)
-	if is_open_cell(ppos) and cells[WorldGen.idx(above.x, above.y)] == WorldGen.T_CRACK:
+	if above.y >= 0 and cells[WorldGen.idx(above.x, above.y)] == WorldGen.T_CRACK:
 		var crack_pos := above
 		var stood_at := ppos
 		get_tree().create_timer(0.4).timeout.connect(func() -> void:
@@ -193,12 +212,13 @@ func _after_move() -> void:
 	# 지표 복귀
 	if ppos.y == 0 and alive:
 		alive = false
+		busy = false
 		run_ended.emit("surfaced", GameState.run.depth)
 		return
 	busy = false
 
 func _damage(n: int, reason: String) -> void:
-	hearts -= n
+	hearts = maxi(0, hearts - n)
 	GameState.run.hearts = hearts
 	Sfx.play("fall_hurt")
 	if hearts <= 0:
