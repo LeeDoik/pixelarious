@@ -49,21 +49,29 @@ func _run(id: String) -> void:
 			var dir := -1 if rng.randi_range(0, 1) == 0 else 1
 			ghost.position = Vector2(mine.player.position) + Vector2(dir * (mine.light_radius() + 1.5) * 16.0, 0)
 			mine.add_child(ghost)
-			get_tree().create_timer(1.2).timeout.connect(ghost.queue_free)
+			get_tree().create_timer(1.2).timeout.connect(func() -> void:
+				if is_instance_valid(ghost):
+					ghost.queue_free())
 		"ore_whisper":
 			Sfx.play("whisper")
 		"rhythm_continues":
-			var names := ["dig_dirt", "dig_rock", "dig_rock", "dig_flesh"]
-			var sound: String = names[mini(WorldGen.strata_of(mine.ppos.y), 3)]
+			# 실제로 방금 낸 채굴음을 그대로 반복 — strata에서 다시 유도하지 않는다 (마지막 소리와 어긋날 수 있음)
+			var sound: String = mine.last_dig_sfx
+			if sound == "":
+				var names := ["dig_dirt", "dig_rock", "dig_rock", "dig_flesh"]
+				sound = names[mini(WorldGen.strata_of(mine.ppos.y), 3)]
 			Sfx.play(sound)
-			get_tree().create_timer(0.6).timeout.connect(func() -> void: Sfx.play(sound))
+			get_tree().create_timer(0.6).timeout.connect(func() -> void:
+				if is_instance_valid(mine):
+					Sfx.play(sound))
 		"ore_resealed":
 			_reseal_ore()
 		"false_heartbeat":
 			mine.heartbeat_forced = true
 			Sfx.heartbeat(1.6)
 			get_tree().create_timer(4.0).timeout.connect(func() -> void:
-				mine.heartbeat_forced = false
+				if is_instance_valid(mine):
+					mine.heartbeat_forced = false
 				Sfx.heartbeat(0.0))
 		"side_tunnel":
 			_dig_side_tunnel()
@@ -143,7 +151,9 @@ func _lie_depth_rises() -> void:
 	var base := mine.ppos.y
 	for i in range(6):
 		get_tree().create_timer(i * 0.5).timeout.connect(
-			func() -> void: mine.hud.lie_depth(base + i + 1, 0.5))
+			func() -> void:
+				if is_instance_valid(mine):
+					mine.hud.lie_depth(base + i + 1, 0.5))
 
 # ── 연출 조우 (러커 스프라이트 스크립트 배치, AI 없음) ──
 

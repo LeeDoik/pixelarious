@@ -33,6 +33,7 @@ var _held_key := KEY_NONE
 var _held_mouse := false
 var _last_dig_end := -10.0
 var _last_strata := -1
+var last_dig_sfx := ""
 var alive := true
 var _lurker_mode := -1
 var _beat_acc := 0.0
@@ -191,7 +192,8 @@ func _dig(target: Vector2i) -> void:
 	cells[WorldGen.idx(target.x, target.y)] = WorldGen.T_EMPTY
 	view.cells = cells
 	var s: int = mini(WorldGen.strata_of(strata_row), 3)
-	Sfx.play(["dig_dirt", "dig_rock", "dig_rock", "dig_flesh"][s])
+	last_dig_sfx = ["dig_dirt", "dig_rock", "dig_rock", "dig_flesh"][s]
+	Sfx.play(last_dig_sfx)
 	_after_move()
 
 func _collect(target: Vector2i) -> void:
@@ -285,12 +287,14 @@ func _update_lurker(delta: float) -> void:
 	if director.mode != _lurker_mode:
 		_lurker_mode = director.mode
 		match director.mode:
-			LurkerLogic.M_HUNT:
-				_spawn_lurker()
 			LurkerLogic.M_RETREAT:
 				_retreat_lurker()
 			LurkerLogic.M_SILENCE:
 				_despawn_lurker()
+	# M_HUNT는 모드 전환 프레임에만 스폰을 시도하면 _find_spawn_cell 실패 시
+	# 헌트 웨이브 전체가 러커 없이 지나간다 — lurker == null인 한 매 프레임 재시도 (스폰 자체는 저렴)
+	if director.mode == LurkerLogic.M_HUNT and lurker == null:
+		_spawn_lurker()
 	if lurker:
 		lurker.tick(delta, ppos, light_radius(), lamp_on)
 		var dist := Vector2(lurker.grid_pos).distance_to(Vector2(ppos))

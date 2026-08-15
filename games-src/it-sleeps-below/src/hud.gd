@@ -15,7 +15,9 @@ var lamp_btn := Button.new()
 var pause_btn := Button.new()
 var _font: FontFile
 var _depth_lie := -1
+var _depth_lie_gen := 0
 var _oil_lie := false
+var _oil_lie_gen := 0
 var _bag_lie := false
 
 func _ready() -> void:
@@ -53,11 +55,19 @@ func _ready() -> void:
 
 func lie_depth(value: int, sec: float) -> void:
 	_depth_lie = value
-	get_tree().create_timer(sec).timeout.connect(func() -> void: _depth_lie = -1)
+	_depth_lie_gen += 1
+	var gen := _depth_lie_gen
+	get_tree().create_timer(sec).timeout.connect(func() -> void:
+		if gen == _depth_lie_gen:
+			_depth_lie = -1)
 
 func lie_oil_zero(sec: float) -> void:
 	_oil_lie = true
-	get_tree().create_timer(sec).timeout.connect(func() -> void: _oil_lie = false)
+	_oil_lie_gen += 1
+	var gen := _oil_lie_gen
+	get_tree().create_timer(sec).timeout.connect(func() -> void:
+		if gen == _oil_lie_gen:
+			_oil_lie = false)
 
 func lie_bag_plus(sec: float) -> void:
 	_bag_lie = true
