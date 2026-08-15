@@ -4,6 +4,7 @@ static func save_best(path: String, best: int) -> void:
 	var f := FileAccess.open(path, FileAccess.WRITE)
 	if f:
 		f.store_string(JSON.stringify({"best": best}))
+		f.close()
 
 static func load_best(path: String) -> int:
 	if not FileAccess.file_exists(path):

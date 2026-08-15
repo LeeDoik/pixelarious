@@ -46,7 +46,7 @@ func attach_to(s: Star, entry_pos: Vector2, entry_vel: Vector2) -> void:
 	captured.emit(s)
 
 func launch() -> void:
-	if state != State.ORBITING or star == null:
+	if state != State.ORBITING or star == null or not is_instance_valid(star):
 		return
 	var bonus := GameState.register_hop(star.gauge_ratio())
 	vel = OrbitMath.launch_velocity(star.global_position, global_position, dir, Tuning.LAUNCH_SPEED)
@@ -62,7 +62,7 @@ func die() -> void:
 	if state == State.DEAD:
 		return
 	state = State.DEAD
-	if star:
+	if star and is_instance_valid(star):
 		star.occupied = false
 		star = null
 	_sprite.visible = false
@@ -76,7 +76,7 @@ func _process(delta: float) -> void:
 func tick(delta: float) -> void:
 	match state:
 		State.ORBITING:
-			if star == null or not star.alive:
+			if star == null or not is_instance_valid(star) or not star.alive:
 				return
 			angle = OrbitMath.advance_angle(angle, star.ang_vel, dir, delta)
 			global_position = OrbitMath.orbit_pos(star.global_position, star.orbit_r, angle)

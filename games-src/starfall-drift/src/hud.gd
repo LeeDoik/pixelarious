@@ -23,6 +23,11 @@ func _ready() -> void:
 	_combo = _make_label(9, Vector2(10, 30), Color("#FFEC27"))
 	_bonus = _make_label(9, Vector2(180, 8), Color("#29ADFF"))
 	_bonus.modulate.a = 0.0
+	_update_offset()
+	get_viewport().size_changed.connect(_update_offset)
+
+func _update_offset() -> void:
+	offset.x = (get_viewport().get_visible_rect().size.x - Tuning.VIEW_W) / 2.0
 
 func set_altitude(m: int) -> void:
 	_alt.text = "%dm" % m

@@ -33,3 +33,12 @@ func test_fall_death_reaches_game_over() -> void:
 	# 슬로모 타이머 완료를 기다릴 필요는 없다 (오버레이 표시는 타이머 이후).
 	await runner.simulate_frames(60)
 	assert_int(GameState.phase).is_equal(GameState.Phase.GAME_OVER)
+
+func test_quick_restart_skips_title_and_resets_combo() -> void:
+	GameState.combo = 4
+	GameState.quick_restart = true
+	var runner := scene_runner("res://src/main.tscn")
+	await runner.simulate_frames(3)
+	assert_int(GameState.phase).is_equal(GameState.Phase.PLAYING)
+	assert_bool(GameState.quick_restart).is_false()
+	assert_int(GameState.combo).is_equal(1)

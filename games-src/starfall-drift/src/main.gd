@@ -123,6 +123,8 @@ func _stream_spawn() -> void:
 		top_star = next
 	var view_bottom := cam.position.y + _view_h() / 2.0
 	for s in stars_root.get_children():
+		if s == player.star or s == player.last_star:
+			continue
 		if (s as Node2D).global_position.y > view_bottom + Tuning.DESPAWN_BELOW:
 			s.queue_free()
 	for a in asteroids_root.get_children():

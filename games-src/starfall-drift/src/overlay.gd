@@ -13,6 +13,11 @@ func _ready() -> void:
 	_emblem.position = Vector2(Tuning.VIEW_W / 2.0, 120.0)
 	_emblem.scale = Vector2(2, 2)
 	add_child(_emblem)
+	_update_offset()
+	get_viewport().size_changed.connect(_update_offset)
+
+func _update_offset() -> void:
+	offset.x = (get_viewport().get_visible_rect().size.x - Tuning.VIEW_W) / 2.0
 
 func _label(text: String, y: float, size: int, color: Color) -> Label:
 	var l := Label.new()
