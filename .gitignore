@@ -11,3 +11,4 @@ games-src/*/.godot/
 games-src/*/reports/
 
 .claude/worktrees/
+.superpowers/
