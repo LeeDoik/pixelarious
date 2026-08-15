@@ -14,7 +14,7 @@ func _arm() -> void:
 	_next_t = rng.randf_range(45.0, 90.0)
 
 func _process(delta: float) -> void:
-	if not mine.alive or mine.ppos.y < 40:
+	if not mine.alive or mine.ppos.y < 40 or mine.finale_mode:
 		return
 	_next_t -= delta
 	if _next_t > 0.0:
