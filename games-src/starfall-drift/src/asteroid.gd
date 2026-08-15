@@ -28,7 +28,7 @@ func tick(delta: float) -> void:
 		return
 	_t += delta
 	global_position.x += _speed * _dir * delta
-	global_position.y = _base_y + sin(_t * 2.0 + _phase) * Tuning.ASTEROID_SINE_AMP
-	rotation += delta * _dir * 1.5
-	if global_position.x < Tuning.WALL_MIN_X - 30.0 or global_position.x > Tuning.WALL_MAX_X + 30.0:
+	global_position.y = _base_y + sin(_t * Tuning.ASTEROID_SINE_FREQ + _phase) * Tuning.ASTEROID_SINE_AMP
+	rotation += delta * _dir * Tuning.ASTEROID_SPIN
+	if global_position.x < Tuning.WALL_MIN_X - Tuning.ASTEROID_EDGE_MARGIN or global_position.x > Tuning.WALL_MAX_X + Tuning.ASTEROID_EDGE_MARGIN:
 		_dir *= -1.0

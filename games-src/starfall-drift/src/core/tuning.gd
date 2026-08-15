@@ -11,6 +11,7 @@ const GRAVITY := 240.0          # px/s^2 (하방)
 const LAUNCH_SPEED := 260.0     # px/s (접선)
 const KILL_MARGIN := 20.0       # 카메라 하단 밖 사망 여유
 const CAM_LEAD := 40.0          # 플레이어를 화면 중앙보다 위에 두는 오프셋
+const CAM_FOLLOW_SPEED := 6.0   # 카메라 lerp 속도
 
 const SWIFT_GAUGE := 0.30
 const COMBO_MAX := 5
@@ -51,6 +52,15 @@ const SPAWN_GAP_JITTER_MIN := 0.85
 const SPAWN_GAP_JITTER_MAX := 1.15
 const SPAWN_DRIFT_X := 120.0        # 다음 별 x 이동 범위(±)
 const SPAWN_WALL_MARGIN := 8.0      # 벽에서 궤도 반경 외 추가 여유
+
+# 월드 조립 (main.gd·asteroid.gd 전용)
+const SPAWN_AHEAD := 200.0          # 카메라 상단 위로 미리 생성할 여유
+const DESPAWN_BELOW := 100.0        # 카메라 하단 아래 해제 여유
+const FIRST_STAR_OFFSET_Y := 100.0  # 첫 거성: 화면 하단에서 위로
+const ASTEROID_Y_OFFSET := 45.0     # 동반 스폰 시 별 아래 오프셋
+const ASTEROID_EDGE_MARGIN := 30.0
+const ASTEROID_SPIN := 1.5
+const ASTEROID_SINE_FREQ := 2.0
 
 const DEATH_SLOWMO := 0.25
 const DEATH_SLOWMO_SEC := 0.5

@@ -28,8 +28,11 @@ func _ready() -> void:
 	_build_world()
 	Sfx.start_ambient()
 
+func _view_h() -> float:
+	return get_viewport().get_visible_rect().size.y
+
 func _build_world() -> void:
-	start_y = Tuning.VIEW_H - 100.0
+	start_y = Tuning.VIEW_H - Tuning.FIRST_STAR_OFFSET_Y
 	var first := _spawn_star("giant", Vector2(Tuning.VIEW_W / 2.0, start_y), 1.0)
 	top_star = {"type": "giant", "pos": first.global_position}
 	player = Player.new()
@@ -62,8 +65,9 @@ func _process(delta: float) -> void:
 	_stream_spawn()
 	_update_camera(delta)
 	_check_fall_death()
-	GameState.update_rise(_height())
-	hud.set_altitude(Scoring.height_score(_height()))
+	var height := _height()
+	GameState.update_rise(height)
+	hud.set_altitude(Scoring.height_score(height))
 	hud.set_combo(GameState.combo)
 
 func _handle_capture() -> void:
@@ -86,8 +90,8 @@ func _handle_asteroid_hit() -> void:
 			return
 
 func _stream_spawn() -> void:
-	var view_top := cam.position.y - Tuning.VIEW_H / 2.0
-	while (top_star.pos as Vector2).y > view_top - 200.0:
+	var view_top := cam.position.y - _view_h() / 2.0
+	while (top_star.pos as Vector2).y > view_top - Tuning.SPAWN_AHEAD:
 		var h: float = start_y - (top_star.pos as Vector2).y
 		var next := Spawner.next_star(top_star, h, rng)
 		var p := Spawner.params_for_height(h)
@@ -96,22 +100,22 @@ func _stream_spawn() -> void:
 			var ast := Asteroid.new()
 			asteroids_root.add_child(ast)
 			ast.add_to_group("asteroids")
-			ast.setup((next.pos as Vector2).y + 45.0, rng)
+			ast.setup((next.pos as Vector2).y + Tuning.ASTEROID_Y_OFFSET, rng)
 		top_star = next
-	var view_bottom := cam.position.y + Tuning.VIEW_H / 2.0
+	var view_bottom := cam.position.y + _view_h() / 2.0
 	for s in stars_root.get_children():
-		if (s as Node2D).global_position.y > view_bottom + 100.0:
+		if (s as Node2D).global_position.y > view_bottom + Tuning.DESPAWN_BELOW:
 			s.queue_free()
 	for a in asteroids_root.get_children():
-		if (a as Node2D).global_position.y > view_bottom + 100.0:
+		if (a as Node2D).global_position.y > view_bottom + Tuning.DESPAWN_BELOW:
 			a.queue_free()
 
 func _update_camera(delta: float) -> void:
 	cam_target_y = minf(cam_target_y, player.global_position.y + Tuning.CAM_LEAD)
-	cam.position.y = lerpf(cam.position.y, cam_target_y, minf(6.0 * delta, 1.0))
+	cam.position.y = lerpf(cam.position.y, cam_target_y, minf(Tuning.CAM_FOLLOW_SPEED * delta, 1.0))
 
 func _check_fall_death() -> void:
-	if player.state == Player.State.FLYING and player.global_position.y > cam.position.y + Tuning.VIEW_H / 2.0 + Tuning.KILL_MARGIN:
+	if player.state == Player.State.FLYING and player.global_position.y > cam.position.y + _view_h() / 2.0 + Tuning.KILL_MARGIN:
 		player.die()
 
 func _on_star_collapsed(s: Star) -> void:
