@@ -136,7 +136,8 @@ func _update_camera(delta: float) -> void:
 	cam.position.y = lerpf(cam.position.y, cam_target_y, minf(Tuning.CAM_FOLLOW_SPEED * delta, 1.0))
 
 func _check_fall_death() -> void:
-	if player.state == Player.State.FLYING and player.global_position.y > cam.position.y + _view_h() / 2.0 + Tuning.KILL_MARGIN:
+	# 상태 무관: 킬라인(화면 하단 + 여유) 아래로 내려가면 사망 — 화면 밖 별에 잡혀 공전해도 예외 없음.
+	if player.state != Player.State.DEAD and player.global_position.y > cam.position.y + _view_h() / 2.0 + Tuning.KILL_MARGIN:
 		player.die()
 
 func _on_star_collapsed(s: Star) -> void:
