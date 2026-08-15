@@ -146,7 +146,7 @@ func _on_player_died() -> void:
 	GameState.end_run()
 	Sfx.stop_ambient()
 	Engine.time_scale = Tuning.DEATH_SLOWMO
-	var t := get_tree().create_timer(Tuning.DEATH_SLOWMO_SEC * Tuning.DEATH_SLOWMO, true, false, true)
+	var t := get_tree().create_timer(Tuning.DEATH_SLOWMO_SEC, true, false, true)
 	t.timeout.connect(func():
 		Engine.time_scale = 1.0
 		overlay.show_game_over(GameState.score(), GameState.best, GameState.best > was_best)
