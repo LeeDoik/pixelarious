@@ -1,8 +1,9 @@
-# DOWN THE CAVE — 게임 설계
+# IT SLEEPS BELOW — 게임 설계
 
 **날짜:** 2026-08-15 (공포 컨셉 심화 반영: 같은 날 2차 질답)
 **상태:** 사용자 질답으로 확정된 설계 (구현 플랜의 입력)
-**대상:** NEO_KIDO 카트리지 `down-the-cave` (현재 플레이스홀더 → 실제 게임으로 교체)
+**대상:** NEO_KIDO 카트리지 (현재 `down-the-cave` 플레이스홀더 → 실제 게임으로 교체)
+**제목:** **IT SLEEPS BELOW — 아래에 잠든 것** (구 가제 DOWN THE CAVE에서 사용자 선정으로 변경. 슬러그·경로·JSON 파일명도 `it-sleeps-below`로 통일)
 
 ## 1. 컨셉
 
@@ -197,14 +198,14 @@
 
 ## 15. 기술 아키텍처
 
-- 신규 `games-src/down-the-cave/` — Godot 4.7.1 Standard(GDScript), gdUnit4 하네스 동일 패턴 (`$GODOT = C:\Users\LeeDoik\tools\godot\godot_console.exe`)
+- 신규 `games-src/it-sleeps-below/` — Godot 4.7.1 Standard(GDScript), gdUnit4 하네스 동일 패턴 (`$GODOT = C:\Users\LeeDoik\tools\godot\godot_console.exe`)
 - 오토로드: `GameState`(세이브·은행·업그레이드·일지/이력 플래그), `Sfx`
 - 씬: `Main`(거점 ↔ 갱도 상태 머신), `Surface`(거점·상인·수첩), `Mine`(TileMapLayer), `Player`, `Lurker`, `HUD`, `AnomalyDirector`
 - **순수 함수 코어** (`src/core/`): `worldgen.gd`(시드 절차 생성 — 지층 분포·광석/기름/일지 배치·유품 가방과 지킴이 배치), `economy.gd`(광석 가치·업그레이드 커브·정산), `oil.gd`(소모율·빛 반경 단계·토글 상태), `lurker_logic.gd`(상태 스텝: 빛 정지·어둠 추적·배회·지나침, 소리 감지 갱신, 파도형 디렉터 사이클), `anomaly_pool.gd`(이상 현상·연출 조우 트리거 조건·1회성), `lore.gd`(일지 시리즈 정의·수집 상태), `finale.gd`(탈출로 뒤틀림 — 내 통로 기반 보정·도달 가능성 검증)
-- **텍스트 런타임 로드**: 서사 텍스트(일지·상인·엔딩·이상 현상 문구)는 게임 팩 외부의 `public/games/down-the-cave/text/*.json`(ko/en 키 쌍)에 두고 실행 시점에 로드 — **텍스트 수정 시 Godot 재익스포트 없이 재배포만으로 반영**. 개발 실행용 폴백 경로는 구현 플랜에서 확정
-- **텍스트 에디터 (로컬 도구)**: 명령 하나로 열리는 브라우저 편집 화면 — 카테고리(일지/상인/엔딩/이상 현상)별 목록, KO/EN 나란히 편집, 키 완전성 검증, 저장 시 JSON에 직접 쓰기. 배포형 어드민은 만들지 않는다
-- 웹 익스포트: Web 프리셋, 스레드 비활성화(COOP/COEP 불필요), `web/shell.html` 재사용 → `public/games/down-the-cave/`
-- 사이트 등록: `content/games/02-down-the-cave.json`에 `playPath: "/games/down-the-cave/index.html"`, 태그를 `GODOT 4, 2D, ROGUELIKE, HORROR, MOBILE OK`로 교체. 소개문은 현행 유지 (이미 확정 기획과 일치)
+- **텍스트 런타임 로드**: 서사 텍스트(일지·상인·엔딩·이상 현상 문구)는 게임 팩 외부의 `public/games/it-sleeps-below/text/*.json`(ko/en 키 쌍)에 두고 실행 시점에 로드 — **텍스트 수정 시 Godot 재익스포트 없이 재배포만으로 반영**. 개발 실행용 폴백 경로는 구현 플랜에서 확정
+- **텍스트 에디터 (로컬 도구)**: 기존 개발용 `/editor` + `/api/editor` 패턴(프로덕션 404 검증됨)에 게임 텍스트 편집 화면을 추가 — 카테고리(일지/상인/엔딩/이상 현상)별 목록, KO/EN 나란히 편집, 키 완전성 검증, 저장 시 `public/games/it-sleeps-below/text/*.json`에 직접 쓰기. 배포형 어드민은 만들지 않는다
+- 웹 익스포트: Web 프리셋, 스레드 비활성화(COOP/COEP 불필요), `web/shell.html` 재사용 → `public/games/it-sleeps-below/`
+- 사이트 등록: `content/games/02-down-the-cave.json` → `02-it-sleeps-below.json`으로 개명, `slug: "it-sleeps-below"`, `title: "IT SLEEPS BELOW"`, `subtitle: "아래에 잠든 것"`, `playPath: "/games/it-sleeps-below/index.html"`, 태그를 `GODOT 4, 2D, ROGUELIKE, HORROR, MOBILE OK`로 교체. 소개문은 현행 유지 (이미 확정 기획과 일치)
 
 ## 16. 테스트 전략
 
