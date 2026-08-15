@@ -165,7 +165,7 @@ export function GameEditorClient({ chat, docs }: { chat: ChatData; docs: DocsDat
       </h1>
       <p className={styles.sub}>
         LAST LOGIN의 대사와 게임 내 문서를 고치는 편집기입니다. 저장하면{' '}
-        <code>game/content/</code>의 파일에 그대로 기록됩니다. 분기 구조(노드 연결·플래그)는
+        <code>games-src/last-login/content/</code>의 파일에 그대로 기록됩니다. 분기 구조(노드 연결·플래그)는
         여기서 바뀌지 않아 스토리 로직이 깨질 걱정 없이 문장만 다듬을 수 있습니다.
       </p>
       <p className={styles.notice}>

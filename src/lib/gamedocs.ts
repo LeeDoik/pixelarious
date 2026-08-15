@@ -1,10 +1,10 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
-/** 게임 내 파일(문서) 편집 계층 — game/content/docs.json.
+/** 게임 내 파일(문서) 편집 계층 — games-src/last-login/content/docs.json.
  *  문서 id(cid)는 fs.json·기록물 목록이 참조하므로 고정하고, 제목·본문만 수정한다. */
 
-const DOCS_PATH = path.join(process.cwd(), 'game', 'content', 'docs.json')
+const DOCS_PATH = path.join(process.cwd(), 'games-src', 'last-login', 'content', 'docs.json')
 
 export type GameDoc = { title: string; body: string }
 export type DocsData = Record<string, GameDoc>

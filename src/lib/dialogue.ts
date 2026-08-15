@@ -1,11 +1,11 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
-/** 게임 대화 데이터(game/content/chat.json)의 대사 편집 계층.
+/** 게임 대화 데이터(games-src/last-login/content/chat.json)의 대사 편집 계층.
  *  편집기는 텍스트·딜레이만 패치로 보내고, 분기 구조(id·next·require·set)는
  *  디스크의 원본을 그대로 유지한다 — 스토리 로직이 편집기로는 깨질 수 없다. */
 
-const CHAT_PATH = path.join(process.cwd(), 'game', 'content', 'chat.json')
+const CHAT_PATH = path.join(process.cwd(), 'games-src', 'last-login', 'content', 'chat.json')
 
 export type ChatChoice = { text: string; next: string; set?: string[] }
 export type ChatNode = {
