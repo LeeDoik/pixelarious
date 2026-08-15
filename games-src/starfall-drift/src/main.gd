@@ -156,8 +156,15 @@ func _on_player_died() -> void:
 		overlay.show_game_over(GameState.score(), GameState.best, GameState.best > was_best)
 	)
 
+func _is_drift_press(event: InputEvent) -> bool:
+	# 모바일 웹: 터치를 마우스 에뮬레이션에 맡기지 않고 직접 받는다
+	# (에뮬레이션은 꺼져 있음 — 켜면 한 탭이 터치+마우스로 두 번 발사된다).
+	if event is InputEventScreenTouch:
+		return event.pressed
+	return event.is_action_pressed("drift")
+
 func _unhandled_input(event: InputEvent) -> void:
-	if not event.is_action_pressed("drift"):
+	if not _is_drift_press(event):
 		return
 	if _paused:
 		_paused = false
@@ -179,6 +186,8 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_APPLICATION_FOCUS_OUT and GameState.phase == GameState.Phase.PLAYING and not _paused:
+		if not GameState.pause_on_focus_out:
+			return
 		_paused = true
 		get_tree().paused = true
 		overlay.show_paused()

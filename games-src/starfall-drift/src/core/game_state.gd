@@ -9,6 +9,9 @@ var phase: int = Phase.TITLE
 var combo: int = 1
 var best: int = 0
 var quick_restart: bool = false
+## 포커스 아웃 자동 일시정지 스위치 — 테스트 러너 창은 OS 포커스가 없어 가짜 FOCUS_OUT이
+## 수시로 날아오므로 테스트에서만 끈다. 프로덕션 기본값 true.
+var pause_on_focus_out: bool = true
 var _bonus: int = 0
 var _rise_px: float = 0.0
 

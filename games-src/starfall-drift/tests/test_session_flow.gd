@@ -1,10 +1,21 @@
 extends GdUnitTestSuite
 ## Task 11 통합 테스트: 타이틀 탭 → PLAYING, 강제 낙사 → GAME_OVER. 씬 러너로 헤드리스 구동.
 
+func before() -> void:
+	# 러너 창은 OS 포커스가 없어 진짜 FOCUS_OUT이 수시로 도착한다. PLAYING 중이면 트리가
+	# 일시정지돼 게이지·물리가 얼어붙는다. 테스트 "사이"의 틈(이전 씬이 아직 살아 있는
+	# 티어다운 구간)에도 도착할 수 있으므로, 스위치는 테스트별이 아니라 스위트 전체에서 끈다.
+	GameState.pause_on_focus_out = false
+
+func after() -> void:
+	GameState.pause_on_focus_out = true
+	get_tree().paused = false
+
+func before_test() -> void:
+	# 이전 테스트 티어다운 틈에 새어든 일시정지 방어
+	get_tree().paused = false
+
 func after_test() -> void:
-	# 이 테스트 러너 창은 OS 포커스가 없어 실행 중 NOTIFICATION_APPLICATION_FOCUS_OUT이 발생할 수 있고,
-	# main.gd의 포커스아웃 일시정지가 SceneTree.paused를 true로 남긴 채 테스트가 끝날 수 있다.
-	# 이후 스위트에 새는 것을 막기 위해 각 테스트 뒤 명시적으로 해제.
 	get_tree().paused = false
 
 func test_title_tap_starts_run_and_launches() -> void:
@@ -33,6 +44,24 @@ func test_fall_death_reaches_game_over() -> void:
 	# 슬로모 타이머 완료를 기다릴 필요는 없다 (오버레이 표시는 타이머 이후).
 	await runner.simulate_frames(60)
 	assert_int(GameState.phase).is_equal(GameState.Phase.GAME_OVER)
+
+func test_raw_touch_tap_starts_run() -> void:
+	# 모바일 웹: 마우스 에뮬레이션 없이 InputEventScreenTouch가 직접 drift로 동작해야 한다
+	var runner := scene_runner("res://src/main.tscn")
+	await runner.simulate_frames(2)
+	assert_int(GameState.phase).is_equal(GameState.Phase.TITLE)
+	var touch := InputEventScreenTouch.new()
+	touch.pressed = true
+	touch.position = Vector2(135, 240)
+	Input.parse_input_event(touch)
+	await runner.simulate_frames(2)
+	assert_int(GameState.phase).is_equal(GameState.Phase.PLAYING)
+	# 전역 Input 상태 오염 방지 — 릴리스 없이 끝내면 다음 테스트로 눌림 상태가 샌다
+	var release := InputEventScreenTouch.new()
+	release.pressed = false
+	release.position = touch.position
+	Input.parse_input_event(release)
+	await runner.simulate_frames(1)
 
 func test_collapse_drops_player_and_run_continues() -> void:
 	var runner := scene_runner("res://src/main.tscn")
