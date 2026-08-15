@@ -1,0 +1,77 @@
+{
+  "journals": {
+    "han_1": {
+      "ko": "한씨의 일지 (1)\n\n규칙을 적어둔다. 후임자가 있다면 읽어라.\n하나. 기름은 절반이 되면 돌아선다.\n둘. 갱도에서 다른 불빛을 봐도 부르지 마라.\n셋. 곡괭이 소리가 메아리로 두 번 울리면, 두 번째는 네가 낸 소리가 아니다.",
+      "en": "Han's Journal (1)\n\nI write down the rules. If there is a successor, read this.\nOne. Turn back when the oil is half gone.\nTwo. If you see another light in the shaft, do not call out.\nThree. If your pickaxe echoes twice, the second one was not yours."
+    },
+    "baek_1": {
+      "ko": "백가의 기록 (1)\n\n한씨는 겁쟁이다. 절반은 무슨. 은맥이 코앞인데.\n오늘 은 아홉 덩이. 상인은 값을 안 깎는다. 이상한 노인네지만 돈은 확실해.\n내일은 더 내려간다.",
+      "en": "Baek's Log (1)\n\nHan is a coward. Half tank, nonsense. The silver vein is right there.\nNine chunks of silver today. The merchant never haggles. Strange old one, but the money is real.\nTomorrow I go deeper."
+    },
+    "han_2": {
+      "ko": "한씨의 일지 (2)\n\n백가가 내 경고를 비웃었다. 그러라지.\n오늘 균열대 근처에서 벽에 긁힌 자국을 봤다. 곡괭이 자국이 아니다. 안쪽에서 긁은 자국이다.\n규칙 넷. 벽이 따뜻하면 파지 마라.",
+      "en": "Han's Journal (2)\n\nBaek laughed at my warnings. Let him.\nNear the fissures today I found scratches on the wall. Not pickaxe marks. Scratched from the inside.\nRule four. If the wall is warm, do not dig."
+    },
+    "seo_1": {
+      "ko": "서 연구원의 수기 (1)\n\n이 산의 광맥 분포는 지질학적으로 불가능하다. 광맥이 아니라... 관(管)에 가깝다.\n표본 채취를 위해 더 내려가야 한다. 광부들은 입을 다물었다. 128미터부터는 안내를 거부했다.",
+      "en": "Researcher Seo's Notes (1)\n\nThe ore distribution in this mountain is geologically impossible. Not veins... closer to vessels.\nI must descend further for samples. The miners have gone quiet. Below 128 meters, they refused to guide me."
+    },
+    "baek_2": {
+      "ko": "백가의 기록 (2)\n\n금이다. 금맥을 찾았다.\n한씨가 사라졌다고 다들 수군댄다. 겁쟁이니까 도망쳤겠지.\n...근데 오늘 아래쪽 갱도에서 한씨의 램프를 봤다. 분명 한씨의 초록 램프였다. 불렀는데 대답이 없었다.",
+      "en": "Baek's Log (2)\n\nGold. I found the gold vein.\nEveryone whispers that Han disappeared. Coward probably ran.\n...But today, down the lower shaft, I saw Han's lamp. It was his green lamp, I am certain. I called out. No answer."
+    },
+    "han_3": {
+      "ko": "한씨의 일지 (3)\n\n내 일지 두 권이 사라졌다. 아니, 옮겨져 있었다. 더 깊은 곳으로.\n산이 나를 아래로 부르고 있다. 규칙 다섯. 부름에는\n",
+      "en": "Han's Journal (3)\n\nTwo of my journals are gone. No — moved. Deeper.\nThe mountain is calling me down. Rule five. When it calls\n"
+    },
+    "seo_2": {
+      "ko": "서 연구원의 수기 (2)\n\n표본이 맥동한다. 상자 안에서. 채취한 지 사흘이 지났는데.\n광부 백씨가 며칠째 보이지 않는다. 그의 텐트는 그대로다. 장화도 그대로다.\n가설: 이 산은 광물을 만드는 것이 아니라, 광물로 유인한다.",
+      "en": "Researcher Seo's Notes (2)\n\nThe sample pulses. Inside the box. Three days after extraction.\nMiner Baek has not been seen for days. His tent is untouched. His boots, untouched.\nHypothesis: the mountain does not form minerals. It baits with them."
+    },
+    "baek_3": {
+      "ko": "백가의 기록 (3)\n\n발광 광석이 이렇게 많은데 왜 아무도 안 캐는 거지. 전부 내 거다.\n등 뒤에서 곡괭이 소리가 난다. 내 리듬이랑 똑같은데. 뒤돌아보면 아무도 없고.\n하나만 더 캐고 올라간다. 하나만 더",
+      "en": "Baek's Log (3)\n\nSo much glowing ore and no one digs it. It is all mine.\nI hear a pickaxe behind me. Same rhythm as mine. When I turn, nothing.\nOne more and I go up. Just one more"
+    },
+    "seo_3": {
+      "ko": "서 연구원의 수기 (3)\n\n이제 확신한다. 이 산은 살아 있다. 우리가 파는 것은 갱도가 아니라 상처다.\n그리고 저 실루엣들 — 광부의 형상을 한 것들 — 은 침입자를 막는 면역 반응이다.\n그들이 곡괭이 소리를 내는 이유: 아직 기억하기 때문이다.",
+      "en": "Researcher Seo's Notes (3)\n\nI am certain now. This mountain is alive. What we dig are not shafts but wounds.\nAnd those silhouettes — the ones shaped like miners — are an immune response against intruders.\nWhy they mimic pickaxe sounds: because they still remember."
+    },
+    "seo_4": {
+      "ko": "서 연구원의 수기 (4)\n\n심장이 있다. 최심부에. 맥동이 벽을 타고 올라온다.\n그것들이 나를 막지 않는다. 오히려 길을 비켜준다. 산이 나를 초대하고 있다.\n왜인지 이제 알겠다. 산은 보여주고 싶은 것이다. 자신이 무엇인지. 우리가 무엇을\n",
+      "en": "Researcher Seo's Notes (4)\n\nThere is a heart. At the deepest point. Its pulse climbs the walls.\nThey do not stop me. They step aside. The mountain is inviting me.\nAnd now I understand why. It wants to show us. What it is. What we\n"
+    }
+  },
+  "merchant": {
+    "opening": { "ko": "갱도는 저쪽이야.", "en": "The shaft is that way." },
+    "settle_1": { "ko": "좋은 광석이군. 산이 후하게 내어줬어.", "en": "Fine ore. The mountain gave generously." },
+    "settle_2": { "ko": "더 깊은 곳엔 더 좋은 게 있지. 언제나 그래.", "en": "There is always better, deeper down. Always." },
+    "settle_3": { "ko": "자네 전에도 광부들이 있었네. 다들 부지런했지.", "en": "There were miners before you. Diligent, all of them." },
+    "settle_4": { "ko": "산이 자네를 마음에 들어해.", "en": "The mountain likes you." },
+    "next_miner": { "ko": "…다음 분이신가.", "en": "...You must be the next one." },
+    "memo_gone": { "ko": "잠시 자리를 비운다. 광석은 두고 가면 셈해두지. — 상인", "en": "Away for a while. Leave your ore, I will keep count. — The Merchant" }
+  },
+  "ui": {
+    "tap_to_descend": { "ko": "탭하여 내려가기", "en": "TAP TO DESCEND" },
+    "strata_0": { "ko": "표토", "en": "TOPSOIL" },
+    "strata_1": { "ko": "암반", "en": "BEDROCK" },
+    "strata_2": { "ko": "균열대", "en": "THE FISSURES" },
+    "strata_3": { "ko": "심층", "en": "THE DEEP" },
+    "strata_4": { "ko": "최심부", "en": "THE BOTTOM" },
+    "paused": { "ko": "일시정지", "en": "PAUSED" },
+    "pause_dont_go": { "ko": "나가지 마", "en": "DON'T LEAVE" },
+    "retry": { "ko": "탭하여 계속", "en": "TAP TO CONTINUE" },
+    "notebook": { "ko": "수첩", "en": "NOTEBOOK" },
+    "shop": { "ko": "상점", "en": "SHOP" },
+    "death_fall": { "ko": "떨어졌다", "en": "YOU FELL" },
+    "death_lurker": { "ko": "그것이 너를 데려갔다", "en": "IT TOOK YOU" },
+    "death_generic": { "ko": "광부 하나가 산에 남았다", "en": "ANOTHER MINER STAYS BELOW" }
+  },
+  "opening": {
+    "arrive": { "ko": "산 아래, 광부 하나가 도착했다.", "en": "At the foot of the mountain, a miner arrives." }
+  },
+  "ending": {
+    "awaken": { "ko": "산이 깨어난다.", "en": "The mountain wakes." },
+    "caption": { "ko": "네가 판 것은 산이 아니라, 잠든 것의 살갗이었다.", "en": "What you dug was never a mountain. It was the skin of something asleep." },
+    "credits_thanks": { "ko": "IT SLEEPS BELOW — 플레이해 주셔서 감사합니다", "en": "IT SLEEPS BELOW — Thank you for playing" }
+  }
+}

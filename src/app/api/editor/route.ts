@@ -1,4 +1,5 @@
 import { updateGameRecord, type GamePatch } from '@/lib/editor'
+import { updateGameText } from '@/lib/gametext'
 import { updateProfile, type Profile } from '@/lib/profile'
 
 /** Writes edits back to content/. Development only — the editor is an authoring
@@ -23,13 +24,16 @@ export async function POST(request: Request) {
     if (body.target === 'profile') {
       return Response.json({ profile: updateProfile(body.patch as Partial<Profile>) })
     }
+    if (body.target === 'gametext') {
+      return Response.json({ text: updateGameText(body.patch) })
+    }
     if (body.target === 'game') {
       if (typeof body.slug !== 'string') {
         return Response.json({ error: '게임을 저장하려면 slug가 필요합니다.' }, { status: 400 })
       }
       return Response.json({ game: updateGameRecord(body.slug, body.patch as GamePatch) })
     }
-    return Response.json({ error: "target은 'game' 또는 'profile'이어야 합니다." }, { status: 400 })
+    return Response.json({ error: "target은 'game', 'profile', 'gametext' 중 하나여야 합니다." }, { status: 400 })
   } catch (error) {
     return Response.json({ error: (error as Error).message }, { status: 400 })
   }
