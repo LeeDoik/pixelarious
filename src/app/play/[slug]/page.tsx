@@ -18,7 +18,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug } = await params
   const game = getGame(slug)
-  return { title: game ? `${game.title} — NEO_KIDO` : 'NEO_KIDO' }
+  return { title: game ? `${game.title} — PIXELARIOUS` : 'PIXELARIOUS' }
 }
 
 export default async function PlayPage({ params }: { params: Promise<{ slug: string }> }) {

@@ -22,7 +22,7 @@ function read(file: string) {
 }
 
 beforeEach(() => {
-  dir = fs.mkdtempSync(path.join(os.tmpdir(), 'neo-kido-editor-'))
+  dir = fs.mkdtempSync(path.join(os.tmpdir(), 'pixelarious-editor-'))
   fs.writeFileSync(path.join(dir, '01-test-game.json'), JSON.stringify(record, null, 2) + '\n')
   fs.writeFileSync(
     path.join(dir, '02-other.json'),

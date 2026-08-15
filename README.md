@@ -1,4 +1,4 @@
-# NEO_KIDO
+# PIXELARIOUS
 
 1인 개발자 LeeDoik의 게임을 브라우저에서 바로 플레이하는 픽셀 아케이드.
 

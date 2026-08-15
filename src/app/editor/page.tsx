@@ -4,7 +4,7 @@ import { getGames } from '@/lib/games'
 import { getProfile } from '@/lib/profile'
 import { EditorClient } from '@/components/EditorClient'
 
-export const metadata: Metadata = { title: 'CARTRIDGE EDITOR — NEO_KIDO' }
+export const metadata: Metadata = { title: 'CARTRIDGE EDITOR — PIXELARIOUS' }
 
 export default function EditorPage() {
   // Authoring tool: it writes to the repo, so it only exists while developing.

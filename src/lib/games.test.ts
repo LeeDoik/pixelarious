@@ -6,7 +6,7 @@ const valid = {
   order: 90,
   title: 'SYSTEM CHECK',
   subtitle: '동작 확인용 카트리지',
-  description: 'NEO_KIDO 배포 파이프라인이 정상 작동하는지 확인하는 진단 카트리지입니다.',
+  description: 'PIXELARIOUS 배포 파이프라인이 정상 작동하는지 확인하는 진단 카트리지입니다.',
   tags: ['SYSTEM', 'WEB'],
   coverScene: 'system',
   playPath: null,

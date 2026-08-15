@@ -3,7 +3,7 @@
   "order": 90,
   "title": "SYSTEM CHECK",
   "subtitle": "동작 확인용 카트리지",
-  "description": "NEO_KIDO 배포 파이프라인이 정상 작동하는지 확인하는 진단 카트리지입니다. 첫 게임이 무사히 꽂힌 지금은 기념으로 남아 있습니다.",
+  "description": "PIXELARIOUS 배포 파이프라인이 정상 작동하는지 확인하는 진단 카트리지입니다. 첫 게임이 무사히 꽂힌 지금은 기념으로 남아 있습니다.",
   "tags": ["SYSTEM", "WEB"],
   "coverScene": "system",
   "playPath": "/games/system-check/index.html"

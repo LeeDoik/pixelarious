@@ -17,7 +17,7 @@ function read() {
 }
 
 beforeEach(() => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'neo-kido-profile-'))
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'pixelarious-profile-'))
   file = path.join(dir, 'profile.json')
   fs.writeFileSync(file, JSON.stringify(profile, null, 2) + '\n')
 })
