@@ -1,5 +1,5 @@
-import { describe, it, expect, afterEach } from 'vitest'
-import { render, screen, cleanup } from '@testing-library/react'
+import { describe, it, expect, afterEach, vi } from 'vitest'
+import { render, screen, cleanup, fireEvent } from '@testing-library/react'
 import { BrandClient } from './BrandClient'
 import type { Game } from '@/lib/games'
 
@@ -17,24 +17,79 @@ const games: Game[] = [
   },
 ]
 
+/** 스펙에 고정된 8개 자산의 내보내기 크기. profile 1024x1024, favicon 32x32,
+ * youtube-banner 2560x1440, shorts-card 1080x1920, 정사각형 포스트 3종
+ * 1080x1080, 세로형 질문 카드 1080x1350. */
+const EXPECTED_ASSETS: { id: string; w: number; h: number }[] = [
+  { id: 'profile', w: 1024, h: 1024 },
+  { id: 'favicon', w: 32, h: 32 },
+  { id: 'youtube-banner', w: 2560, h: 1440 },
+  { id: 'shorts-card', w: 1080, h: 1920 },
+  { id: 'post-full', w: 1080, h: 1080 },
+  { id: 'post-cartridge', w: 1080, h: 1080 },
+  { id: 'post-terminal', w: 1080, h: 1080 },
+  { id: 'post-question', w: 1080, h: 1350 },
+]
+
 describe('BrandClient', () => {
-  it('renders one canvas per asset at its exact export size', () => {
+  it.each(EXPECTED_ASSETS)(
+    'renders canvas[data-asset="$id"] at its exact export size ($w x $h)',
+    ({ id, w, h }) => {
+      const { container } = render(<BrandClient games={games} />)
+      const canvas = container.querySelector(`canvas[data-asset="${id}"]`)
+      expect(canvas?.getAttribute('width')).toBe(String(w))
+      expect(canvas?.getAttribute('height')).toBe(String(h))
+    },
+  )
+
+  it('distinguishes the 1080x1080 square posts from the 1080x1350 question card', () => {
     const { container } = render(<BrandClient games={games} />)
-    const profile = container.querySelector('canvas[data-asset="profile"]')
-    expect(profile?.getAttribute('width')).toBe('1024')
-    expect(profile?.getAttribute('height')).toBe('1024')
-    const banner = container.querySelector('canvas[data-asset="youtube-banner"]')
-    expect(banner?.getAttribute('width')).toBe('2560')
-    expect(banner?.getAttribute('height')).toBe('1440')
-    const favicon = container.querySelector('canvas[data-asset="favicon"]')
-    expect(favicon?.getAttribute('width')).toBe('32')
+    const squareHeights = ['post-full', 'post-cartridge', 'post-terminal'].map(
+      (id) => container.querySelector(`canvas[data-asset="${id}"]`)?.getAttribute('height'),
+    )
+    expect(squareHeights).toEqual(['1080', '1080', '1080'])
+    const question = container.querySelector('canvas[data-asset="post-question"]')
+    expect(question?.getAttribute('height')).toBe('1350')
+    expect(question?.getAttribute('height')).not.toBe(
+      container.querySelector('canvas[data-asset="post-full"]')?.getAttribute('height'),
+    )
   })
 
-  it('offers a PNG download for every asset', () => {
+  it('renders exactly the 8 spec assets, each with its own export button', () => {
     const { container } = render(<BrandClient games={games} />)
     const canvases = container.querySelectorAll('canvas[data-asset]')
     const buttons = screen.getAllByRole('button', { name: /PNG 내보내기/ })
+    expect(canvases.length).toBe(8)
     expect(buttons.length).toBe(canvases.length)
+  })
+
+  it('clicking an export button invokes the canvas toBlob to produce the PNG', () => {
+    // jsdom's HTMLCanvasElement.prototype.toBlob exists but only logs
+    // "not implemented" and never calls back — stub it so we can prove the
+    // click actually drives an export, not just that a button exists.
+    const toBlobSpy = vi
+      .spyOn(HTMLCanvasElement.prototype, 'toBlob')
+      .mockImplementation(function (callback) {
+        callback(new Blob(['stub'], { type: 'image/png' }))
+      })
+    const createObjectURLSpy = vi
+      .fn(() => 'blob:mock-url')
+      .mockName('URL.createObjectURL')
+    const revokeObjectURLSpy = vi.fn().mockName('URL.revokeObjectURL')
+    // jsdom does not implement these either; stub them so the download path
+    // in BrandClient can run to completion without throwing.
+    URL.createObjectURL = createObjectURLSpy as unknown as typeof URL.createObjectURL
+    URL.revokeObjectURL = revokeObjectURLSpy
+
+    render(<BrandClient games={games} />)
+    const button = screen.getAllByRole('button', { name: /PNG 내보내기/ })[0]
+    fireEvent.click(button)
+
+    expect(toBlobSpy).toHaveBeenCalledTimes(1)
+    expect(toBlobSpy.mock.calls[0][1]).toBe('image/png')
+    expect(createObjectURLSpy).toHaveBeenCalledTimes(1)
+
+    toBlobSpy.mockRestore()
   })
 
   it('lists the four post templates and no others', () => {

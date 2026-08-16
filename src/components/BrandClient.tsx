@@ -153,13 +153,20 @@ function AssetCard({ asset }: { asset: AssetDef }) {
     const canvas = ref.current
     if (!canvas || typeof canvas.toBlob !== 'function') return
     canvas.toBlob((blob) => {
+      // toBlob yields null if encoding fails; nothing was allocated, so there is
+      // nothing to revoke — just bail.
       if (!blob) return
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
       a.download = `pixelarious-${asset.id}-${asset.w}x${asset.h}.png`
       a.click()
-      URL.revokeObjectURL(url)
+      // Revoking synchronously right after click() races the browser's own
+      // read of the blob: the spec does not guarantee the download has
+      // snapshotted the data by the time this line runs, so a same-tick
+      // revoke can produce an empty or failed download in some browsers.
+      // Defer to the next tick so the click has been fully handled first.
+      setTimeout(() => URL.revokeObjectURL(url), 0)
     }, 'image/png')
   }, [asset])
 
