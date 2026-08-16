@@ -226,7 +226,14 @@ export function drawShortsCard(canvas: BrandCanvas, headline: string[]): void {
   const tile = Math.round(W * 0.26)
   drawMarkInto(ctx, Math.round((W - tile) / 2), Math.round(H * 0.14), tile, tile)
 
-  const size = pixelFontSize(W * 0.075)
+  // 좌우 여백을 남긴 실사용 폭 안에 맞춘다(drawQuestion과 같은 방식) — 긴 헤드라인 한 줄이
+  // 캔버스를 양옆으로 넘치는 사고를 막는다.
+  const pad = Math.round(W * 0.075)
+  const availWidth = W - pad * 2
+  let size = pixelFontSize(W * 0.075)
+  for (const line of headline) {
+    size = Math.min(size, fitPixelFont(ctx, BODY_FONT, line, size, availWidth))
+  }
   ctx.font = `${size}px ${BODY_FONT}`
   ctx.textBaseline = 'middle'
   ctx.fillStyle = BRAND.text
@@ -300,7 +307,7 @@ function drawLabelBadge(
   y: number,
   label: PostLabel,
   fontSize: number,
-): number {
+): void {
   ctx.font = `${fontSize}px ${DISPLAY_FONT}`
   ctx.textBaseline = 'middle'
   const w = Math.round(textWidth(ctx, label, fontSize))
@@ -311,7 +318,6 @@ function drawLabelBadge(
   ctx.fillRect(x, y, w + padX * 2, boxH)
   ctx.fillStyle = BRAND.deep
   ctx.fillText(label, x + padX, y + Math.round(boxH / 2))
-  return boxH
 }
 
 /**
@@ -338,15 +344,26 @@ function fitVertical(size: number, limit: number, heightFn: (size: number) => nu
   return fitted
 }
 
-/** 우하단 출처 표시. 캡처가 퍼져도 계정이 남는다 — 스펙 §6 */
-function drawWatermark(ctx: CanvasRenderingContext2D, W: number, H: number): void {
-  const { top: y, tile } = watermarkBand(W, H)
+/**
+ * drawWatermark이 그릴 워터마크의 왼쪽 시작 x좌표. 이름 글자폭을 실측해야 하므로 ctx가
+ * 필요하다 — 워터마크 높이에서 가로로 겹치면 안 되는 콘텐츠(A 풀블리드 제목)가 그리기 전에
+ * 이 값을 미리 알아야 하므로 계산을 따로 뽑아 공유한다.
+ */
+function watermarkStartX(ctx: CanvasRenderingContext2D, W: number, H: number): number {
+  const { tile } = watermarkBand(W, H)
   const pad = Math.round(W * 0.03)
   const nameSize = pixelFontSize(W * 0.016)
   ctx.font = `${nameSize}px ${DISPLAY_FONT}`
   const nameW = Math.round(textWidth(ctx, 'PIXELARIOUS', nameSize))
   const totalW = tile + Math.round(tile * 0.3) + nameW
-  const x = W - pad - totalW
+  return W - pad - totalW
+}
+
+/** 우하단 출처 표시. 캡처가 퍼져도 계정이 남는다 — 스펙 §6 */
+function drawWatermark(ctx: CanvasRenderingContext2D, W: number, H: number): void {
+  const { top: y, tile } = watermarkBand(W, H)
+  const nameSize = pixelFontSize(W * 0.016)
+  const x = watermarkStartX(ctx, W, H)
   drawMarkInto(ctx, x, y, tile, tile)
   ctx.font = `${nameSize}px ${DISPLAY_FONT}`
   ctx.textBaseline = 'middle'
@@ -394,7 +411,16 @@ function drawFullBleed(
 
   const pad = Math.round(W * 0.055)
   const labelSize = pixelFontSize(W * 0.022)
-  const titleSize = pixelFontSize(W * 0.062)
+
+  // 제목의 마지막 줄은 기본 크기에서 항상 워터마크 높이와 겹친다 — 실측 기반으로 워터마크
+  // 시작 x좌표 왼쪽 폭 안에 맞춘다(drawQuestion과 같은 방식). 워터마크보다 왼쪽에 있으면
+  // 캔버스 밖으로 넘치는 것도 함께 막힌다.
+  const wmX = watermarkStartX(ctx, W, H)
+  const titleAvailWidth = wmX - pad
+  let titleSize = pixelFontSize(W * 0.062)
+  for (const line of spec.title) {
+    titleSize = Math.min(titleSize, fitPixelFont(ctx, DISPLAY_FONT, line, titleSize, titleAvailWidth))
+  }
   const lineGap = Math.round(titleSize * 1.5)
 
   const titleBlockH = lineGap * spec.title.length

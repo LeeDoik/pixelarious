@@ -49,7 +49,7 @@ export function fakeCanvas(width: number, height: number) {
   }
 }
 
-const NIGHT = new Set(Object.values(BRAND))
+const NIGHT: Set<string> = new Set(Object.values(BRAND))
 
 describe('pixelFontSize', () => {
   it('snaps down to a multiple of 8 so the pixel font never blurs', () => {
@@ -253,6 +253,50 @@ describe('drawShortsCard', () => {
     expect(drawn).toContain('첫 줄')
     expect(drawn).toContain('둘째 줄')
   })
+
+  it('shrinks a long headline so it stays centred inside the canvas instead of clipping', () => {
+    // fakeCanvas has no measureText, so it can never exercise the shrink branch — same gap as
+    // the other shrink tests in this file. This stub reports a measureText width 3x the naive
+    // length*fontSize estimate, forcing drawShortsCard to actually shrink the headline instead
+    // of assuming the centred line fits inside the frame.
+    const texts: { color: string; text: string; x: number; y: number; font: string }[] = []
+    const ctx = {
+      fillStyle: '',
+      font: '',
+      textBaseline: '',
+      imageSmoothingEnabled: true,
+      fillRect() {},
+      fillText(text: string, x: number, y: number) {
+        texts.push({ color: String(this.fillStyle), text, x, y, font: String(this.font) })
+      },
+      drawImage() {},
+      measureText(text: string) {
+        const size = parseInt(String(this.font), 10) || 0
+        return { width: text.length * size * 3 }
+      },
+    }
+    const canvas = { width: 1080, height: 1920, getContext: () => ctx } as unknown as BrandCanvas
+
+    drawShortsCard(canvas, ['새 업데이트가 방금 나왔습니다'])
+
+    const W = 1080
+    const defaultSize = pixelFontSize(W * 0.075)
+    const headlineText = texts.find((t) => t.text === '새 업데이트가 방금 나왔습니다')
+    expect(headlineText).toBeDefined()
+    const shrunkSize = parseInt(headlineText!.font, 10)
+    expect(shrunkSize).toBeLessThan(defaultSize)
+
+    const pad = Math.round(W * 0.075)
+    const measuredWidth = headlineText!.text.length * shrunkSize * 3
+    expect(
+      headlineText!.x,
+      'shrunk headline starts left of the padded margin',
+    ).toBeGreaterThanOrEqual(pad)
+    expect(
+      headlineText!.x + measuredWidth,
+      'shrunk headline still clips past the right margin',
+    ).toBeLessThanOrEqual(W - pad)
+  })
 })
 
 describe('drawPost — A 풀블리드', () => {
@@ -320,6 +364,60 @@ describe('drawPost — A 풀블리드', () => {
       image: { width: 320, height: 180 },
     })
     expect(smoothing).toBe(false)
+  })
+
+  it('shrinks the title so it clears the watermark instead of colliding with it', () => {
+    // fakeCanvas has no measureText, so it can never exercise the shrink branch — same gap as
+    // the YouTube tagline / cartridge title tests above. This stub reports a measureText width
+    // 3x the naive length*fontSize estimate, forcing drawFullBleed to actually shrink the title
+    // instead of relying on horizontal luck to keep it clear of the watermark.
+    const texts: { color: string; text: string; x: number; y: number; font: string }[] = []
+    const ctx = {
+      fillStyle: '',
+      font: '',
+      textBaseline: '',
+      imageSmoothingEnabled: true,
+      fillRect() {},
+      fillText(text: string, x: number, y: number) {
+        texts.push({ color: String(this.fillStyle), text, x, y, font: String(this.font) })
+      },
+      drawImage() {},
+      measureText(text: string) {
+        const size = parseInt(String(this.font), 10) || 0
+        return { width: text.length * size * 3 }
+      },
+    }
+    const canvas = { width: 1080, height: 1080, getContext: () => ctx } as unknown as BrandCanvas
+
+    drawPost(canvas, {
+      kind: 'full',
+      label: 'NEW GAME',
+      title: ['DOWN THE CAVE'],
+      image: null,
+    })
+
+    const W = 1080
+    const defaultTitleSize = pixelFontSize(W * 0.062)
+    const titleText = texts.find((t) => t.text === 'DOWN THE CAVE')
+    expect(titleText).toBeDefined()
+    const shrunkSize = parseInt(titleText!.font, 10)
+    expect(shrunkSize).toBeLessThan(defaultTitleSize)
+
+    // recompute the watermark's left edge under the same inflated metric that forced the
+    // shrink — matches watermarkStartX in brand.ts (tile + 30% gap + measured name width).
+    const pad = Math.round(W * 0.055)
+    const tile = Math.round(W * 0.055)
+    const wmPad = Math.round(W * 0.03)
+    const nameSize = pixelFontSize(W * 0.016)
+    const nameW = Math.round('PIXELARIOUS'.length * nameSize * 3)
+    const wmX = W - wmPad - (tile + Math.round(tile * 0.3) + nameW)
+
+    const measuredWidth = titleText!.text.length * shrunkSize * 3
+    expect(
+      titleText!.x + measuredWidth,
+      'shrunk title still reaches the watermark',
+    ).toBeLessThanOrEqual(wmX)
+    expect(titleText!.x).toBeGreaterThanOrEqual(pad)
   })
 })
 
@@ -602,51 +700,59 @@ describe('drawPost — C 터미널 로그', () => {
     ).toBeLessThanOrEqual(right)
   })
 
-  it('shrinks the log font and clamps the block above the watermark when the log runs long', () => {
-    const { canvas, rects, texts } = fakeCanvas(1080, 1080)
-    const log = Array.from({ length: 20 }, (_, i) => ({
-      text: `> STEP ${i}`,
-      status: 'OK',
-      tone: 'ok' as const,
-    }))
-    drawPost(canvas, {
-      kind: 'terminal',
-      label: 'DEV LOG',
-      log,
-      headline: ['헤드라인 첫줄', '헤드라인 둘째줄'],
-    })
+  it.each([
+    [1080, 1080],
+    [1080, 1350],
+  ])(
+    'shrinks the log font and clamps the block above the watermark when the log runs long (%ix%i)',
+    (W, H) => {
+      const { canvas, rects, texts } = fakeCanvas(W, H)
+      // 1080x1350 has more vertical headroom than 1080x1080, so the log needs enough lines to
+      // overflow the taller canvas too — not just the square one.
+      const log = Array.from({ length: 30 }, (_, i) => ({
+        text: `> STEP ${i}`,
+        status: 'OK',
+        tone: 'ok' as const,
+      }))
+      drawPost(canvas, {
+        kind: 'terminal',
+        label: 'DEV LOG',
+        log,
+        headline: ['헤드라인 첫줄', '헤드라인 둘째줄'],
+      })
 
-    const defaultLogSize = pixelFontSize(1080 * 0.022)
-    const logText = texts.find((t) => t.text === '> STEP 0')
-    expect(logText).toBeDefined()
-    const shrunkLogSize = parseInt(logText!.font, 10)
-    expect(shrunkLogSize, 'log font must shrink to make room').toBeLessThan(defaultLogSize)
+      const defaultLogSize = pixelFontSize(W * 0.022)
+      const logText = texts.find((t) => t.text === '> STEP 0')
+      expect(logText).toBeDefined()
+      const shrunkLogSize = parseInt(logText!.font, 10)
+      expect(shrunkLogSize, 'log font must shrink to make room').toBeLessThan(defaultLogSize)
 
-    const pad = Math.round(1080 * 0.075)
-    const wmTile = Math.round(1080 * 0.055)
-    const wmPad = Math.round(1080 * 0.03)
-    const watermarkTop = 1080 - wmPad - wmTile
+      const pad = Math.round(W * 0.075)
+      const wmTile = Math.round(W * 0.055)
+      const wmPad = Math.round(W * 0.03)
+      const watermarkTop = H - wmPad - wmTile
 
-    const lastHeadline = texts.find((t) => t.text === '헤드라인 둘째줄')
-    expect(lastHeadline).toBeDefined()
-    const headSize = parseInt(lastHeadline!.font, 10)
-    // textBaseline is 'middle', so the line's own bottom edge is y + size/2.
-    expect(
-      lastHeadline!.y + headSize / 2,
-      'last headline line reaches the watermark band',
-    ).toBeLessThanOrEqual(watermarkTop)
-    expect(lastHeadline!.y + headSize / 2).toBeLessThanOrEqual(1080)
+      const lastHeadline = texts.find((t) => t.text === '헤드라인 둘째줄')
+      expect(lastHeadline).toBeDefined()
+      const headSize = parseInt(lastHeadline!.font, 10)
+      // textBaseline is 'middle', so the line's own bottom edge is y + size/2.
+      expect(
+        lastHeadline!.y + headSize / 2,
+        'last headline line reaches the watermark band',
+      ).toBeLessThanOrEqual(watermarkTop)
+      expect(lastHeadline!.y + headSize / 2).toBeLessThanOrEqual(H)
 
-    const cursor = rects.find(
-      (r) => r.color === BRAND.gold && r.h === headSize && r.w === Math.round(headSize * 0.62),
-    )
-    expect(cursor, 'headline cursor block not found').toBeDefined()
-    expect(cursor!.y + cursor!.h, 'cursor reaches the watermark band').toBeLessThanOrEqual(
-      watermarkTop,
-    )
-    expect(cursor!.y + cursor!.h).toBeLessThanOrEqual(1080)
-    expect(cursor!.x, 'cursor stays left of the padded margin').toBeGreaterThanOrEqual(pad)
-  })
+      const cursor = rects.find(
+        (r) => r.color === BRAND.gold && r.h === headSize && r.w === Math.round(headSize * 0.62),
+      )
+      expect(cursor, 'headline cursor block not found').toBeDefined()
+      expect(cursor!.y + cursor!.h, 'cursor reaches the watermark band').toBeLessThanOrEqual(
+        watermarkTop,
+      )
+      expect(cursor!.y + cursor!.h).toBeLessThanOrEqual(H)
+      expect(cursor!.x, 'cursor stays left of the padded margin').toBeGreaterThanOrEqual(pad)
+    },
+  )
 })
 
 describe('drawPost — D 질문 카드', () => {
@@ -714,26 +820,32 @@ describe('drawPost — D 질문 카드', () => {
     )
   })
 
-  it('shrinks a long question so its centred block clears the watermark band', () => {
-    const { canvas, texts } = fakeCanvas(1080, 1080)
-    const question = Array.from({ length: 9 }, (_, i) => `질문 줄 ${i}`)
-    drawPost(canvas, { kind: 'question', label: 'YOUR TURN', question })
+  it.each([
+    [1080, 1080],
+    [1080, 1350],
+  ])(
+    'shrinks a long question so its centred block clears the watermark band (%ix%i)',
+    (W, H) => {
+      const { canvas, texts } = fakeCanvas(W, H)
+      const question = Array.from({ length: 9 }, (_, i) => `질문 줄 ${i}`)
+      drawPost(canvas, { kind: 'question', label: 'YOUR TURN', question })
 
-    const defaultQSize = pixelFontSize(1080 * 0.085)
-    const lines = question.map((q) => texts.find((t) => t.text === q))
-    for (const l of lines) expect(l).toBeDefined()
-    const shrunkQSize = parseInt(lines[0]!.font, 10)
-    expect(shrunkQSize, 'question font must shrink to make room').toBeLessThan(defaultQSize)
+      const defaultQSize = pixelFontSize(W * 0.085)
+      const lines = question.map((q) => texts.find((t) => t.text === q))
+      for (const l of lines) expect(l).toBeDefined()
+      const shrunkQSize = parseInt(lines[0]!.font, 10)
+      expect(shrunkQSize, 'question font must shrink to make room').toBeLessThan(defaultQSize)
 
-    const wmTile = Math.round(1080 * 0.055)
-    const wmPad = Math.round(1080 * 0.03)
-    const watermarkTop = 1080 - wmPad - wmTile
+      const wmTile = Math.round(W * 0.055)
+      const wmPad = Math.round(W * 0.03)
+      const watermarkTop = H - wmPad - wmTile
 
-    const last = lines[lines.length - 1]!
-    expect(
-      last.y + shrunkQSize / 2,
-      'last question line reaches the watermark band',
-    ).toBeLessThanOrEqual(watermarkTop)
-    expect(last.y + shrunkQSize / 2).toBeLessThanOrEqual(1080)
-  })
+      const last = lines[lines.length - 1]!
+      expect(
+        last.y + shrunkQSize / 2,
+        'last question line reaches the watermark band',
+      ).toBeLessThanOrEqual(watermarkTop)
+      expect(last.y + shrunkQSize / 2).toBeLessThanOrEqual(H)
+    },
+  )
 })
