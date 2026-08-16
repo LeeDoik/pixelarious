@@ -48,6 +48,28 @@ export function textWidth(
   return text.length * fontSize * PS2P_ADVANCE
 }
 
+/**
+ * 실측 기반으로 텍스트가 availWidth 안에 들어올 때까지 폰트 크기를 8px 단위로 줄인다.
+ * NeoDGM처럼 한글이 섞인 폰트는 실제 전진폭이 나이브 추정치와 크게 다를 수 있으므로,
+ * 테스트의 길이 기반 추정이 아니라 그리기 코드 자체가 안전 영역을 보장해야 한다.
+ * ctx.font는 측정을 위해 이 함수 안에서 갱신되며, 반환값을 그대로 그리기에 쓰면 된다.
+ */
+function fitPixelFont(
+  ctx: CanvasRenderingContext2D,
+  fontFamily: string,
+  text: string,
+  size: number,
+  availWidth: number,
+): number {
+  let fitted = size
+  ctx.font = `${fitted}px ${fontFamily}`
+  while (fitted > 8 && textWidth(ctx, text, fitted) > availWidth) {
+    fitted = pixelFontSize(fitted - 8)
+    ctx.font = `${fitted}px ${fontFamily}`
+  }
+  return fitted
+}
+
 /** 자산 크기에 비례하는 픽셀 단위. 1024px 자산에서 8px이 된다. */
 export function unitFor(w: number, h: number): number {
   return Math.max(1, Math.round(Math.min(w, h) / 128))
@@ -170,19 +192,21 @@ export function drawYouTubeBanner(canvas: BrandCanvas): void {
   const tileY = Math.round(top + (YT_SAFE.h - tile) / 2)
   drawMarkInto(ctx, left, tileY, tile, tile)
 
-  // 워드마크와 태그라인
+  // 워드마크와 태그라인 — 안전 영역 오른쪽 경계까지의 실제 여유폭을 실측해서 넘치면 줄인다
   const textX = left + tile + Math.round(tile * 0.22)
-  const wordSize = pixelFontSize(YT_SAFE.w * 0.055)
-  ctx.font = `${wordSize}px ${DISPLAY_FONT}`
+  const availWidth = left + YT_SAFE.w - textX
   ctx.textBaseline = 'middle'
+
+  const wordText = 'PIXELARIOUS'
+  fitPixelFont(ctx, DISPLAY_FONT, wordText, pixelFontSize(YT_SAFE.w * 0.055), availWidth)
   ctx.fillStyle = BRAND.text
   const wordY = Math.round(top + YT_SAFE.h * 0.42)
-  ctx.fillText('PIXELARIOUS', textX, wordY)
+  ctx.fillText(wordText, textX, wordY)
 
-  const tagSize = pixelFontSize(YT_SAFE.w * 0.022)
-  ctx.font = `${tagSize}px ${BODY_FONT}`
+  const tagText = '브라우저에서 바로 플레이 · PLAY IN YOUR BROWSER'
+  fitPixelFont(ctx, BODY_FONT, tagText, pixelFontSize(YT_SAFE.w * 0.022), availWidth)
   ctx.fillStyle = BRAND.dim
-  ctx.fillText('브라우저에서 바로 플레이 · PLAY IN YOUR BROWSER', textX, Math.round(top + YT_SAFE.h * 0.72))
+  ctx.fillText(tagText, textX, Math.round(top + YT_SAFE.h * 0.72))
 
   drawScanlines(ctx, W, H, unit)
 }

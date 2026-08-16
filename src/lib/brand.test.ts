@@ -129,7 +129,8 @@ describe('drawYouTubeBanner', () => {
     const top = (1440 - YT_SAFE.h) / 2
     const right = left + YT_SAFE.w
     const bottom = top + YT_SAFE.h
-    // 배경·별·스캔라인은 전면을 덮어도 된다. 마크 타일(deep)과 금색 커서, 글자만 검사한다.
+    // 배경·별·스캔라인과 마크 타일의 deep 배경은 전면을 덮어도 된다. 여기서는 안전 영역보다
+    // 좁은 금색 커서 사각형과 글자 위치만 검사한다.
     for (const r of rects.filter((r) => r.color === BRAND.gold && r.w < YT_SAFE.w)) {
       expect(r.x >= left && r.x + r.w <= right, `gold x ${r.x}..${r.x + r.w}`).toBe(true)
       expect(r.y >= top && r.y + r.h <= bottom, `gold y ${r.y}..${r.y + r.h}`).toBe(true)
@@ -164,6 +165,55 @@ describe('drawYouTubeBanner', () => {
     drawYouTubeBanner(a.canvas)
     drawYouTubeBanner(b.canvas)
     expect(a.rects).toEqual(b.rects)
+  })
+
+  it('shrinks the tagline when real glyph metrics would overflow the safe area', () => {
+    // fakeCanvas has no measureText, so it can never exercise the shrink branch — the
+    // naive text.length*fontSize estimate is exactly what the fit loop is meant to
+    // distrust. This stub reports a measureText width that is deliberately much wider
+    // than that estimate (standing in for NeoDGM's real, wider Korean advance widths),
+    // forcing drawYouTubeBanner to actually shrink the font instead of just assuming it fits.
+    const rects: { color: string; x: number; y: number; w: number; h: number }[] = []
+    const texts: { color: string; text: string; x: number; y: number; font: string }[] = []
+    const ctx = {
+      fillStyle: '',
+      font: '',
+      textBaseline: '',
+      imageSmoothingEnabled: true,
+      fillRect(x: number, y: number, w: number, h: number) {
+        rects.push({ color: String(this.fillStyle), x, y, w, h })
+      },
+      fillText(text: string, x: number, y: number) {
+        texts.push({ color: String(this.fillStyle), text, x, y, font: String(this.font) })
+      },
+      drawImage() {},
+      measureText(text: string) {
+        const size = parseInt(String(this.font), 10) || 0
+        // 3x the naive length*fontSize estimate — wide enough to force the fit loop to shrink.
+        return { width: text.length * size * 3 }
+      },
+    }
+    const canvas = { width: 2560, height: 1440, getContext: () => ctx } as unknown as BrandCanvas
+
+    drawYouTubeBanner(canvas)
+
+    const left = (2560 - YT_SAFE.w) / 2
+    const top = (1440 - YT_SAFE.h) / 2
+    const right = left + YT_SAFE.w
+    const bottom = top + YT_SAFE.h
+
+    const tagline = texts.find((t) => t.text.includes('PLAY IN YOUR BROWSER'))
+    expect(tagline).toBeDefined()
+    const shrunkSize = parseInt(tagline!.font, 10)
+    const defaultSize = pixelFontSize(YT_SAFE.w * 0.022)
+    expect(shrunkSize).toBeLessThan(defaultSize)
+
+    // it must still fit inside the safe area under the same inflated metric that forced the shrink
+    const measuredWidth = tagline!.text.length * shrunkSize * 3
+    expect(tagline!.x >= left && tagline!.x + measuredWidth <= right, 'shrunk tagline still overflows').toBe(
+      true,
+    )
+    expect(tagline!.y - shrunkSize >= top && tagline!.y + shrunkSize <= bottom).toBe(true)
   })
 })
 
