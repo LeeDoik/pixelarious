@@ -478,3 +478,83 @@ describe('drawPost — B 카트리지', () => {
     expect(draw.y).toBe(430)
   })
 })
+
+describe('drawPost — C 터미널 로그', () => {
+  it('draws each log line with its status and the headline lines', () => {
+    const { canvas, texts } = fakeCanvas(1080, 1080)
+    drawPost(canvas, {
+      kind: 'terminal',
+      label: 'DEV LOG',
+      log: [
+        { text: '> BUILD v0.3.1', status: '... OK', tone: 'ok' },
+        { text: '> LAMP RADIUS 8 -> 5', status: '... CHANGED', tone: 'gold' },
+      ],
+      headline: ['동굴이 훨씬', '무서워졌습니다'],
+    })
+    const drawn = texts.map((t) => t.text)
+    expect(drawn).toContain('> BUILD v0.3.1')
+    expect(drawn).toContain('... OK')
+    expect(drawn).toContain('... CHANGED')
+    expect(drawn).toContain('동굴이 훨씬')
+    expect(drawn).toContain('무서워졌습니다')
+    expect(drawn).toContain('DEV LOG')
+  })
+
+  it('colors ok status blue and gold status gold', () => {
+    const { canvas, texts } = fakeCanvas(1080, 1080)
+    drawPost(canvas, {
+      kind: 'terminal',
+      label: 'DEV LOG',
+      log: [
+        { text: '> A', status: '... OK', tone: 'ok' },
+        { text: '> B', status: '... CHANGED', tone: 'gold' },
+      ],
+      headline: ['가'],
+    })
+    expect(texts.find((t) => t.text === '... OK')?.color).toBe(BRAND.accent2)
+    expect(texts.find((t) => t.text === '... CHANGED')?.color).toBe(BRAND.gold)
+  })
+
+  it('draws a gold cursor block after the headline', () => {
+    const { canvas, rects } = fakeCanvas(1080, 1080)
+    drawPost(canvas, {
+      kind: 'terminal',
+      label: 'DEV LOG',
+      log: [],
+      headline: ['가'],
+    })
+    // 라벨 배지 + 워터마크 커서 + 헤드라인 커서 = 금색 사각형 3개 이상
+    expect(rects.filter((r) => r.color === BRAND.gold).length).toBeGreaterThanOrEqual(3)
+  })
+
+  it('handles an empty log without throwing', () => {
+    const { canvas, texts } = fakeCanvas(1080, 1080)
+    expect(() =>
+      drawPost(canvas, { kind: 'terminal', label: 'DEV LOG', log: [], headline: ['가'] }),
+    ).not.toThrow()
+    expect(texts.map((t) => t.text)).toContain('가')
+  })
+})
+
+describe('drawPost — D 질문 카드', () => {
+  it('draws the label and every question line', () => {
+    const { canvas, texts } = fakeCanvas(1080, 1350)
+    drawPost(canvas, {
+      kind: 'question',
+      label: 'YOUR TURN',
+      question: ['다음 게임,', '어떤 걸', '보고 싶으세요?'],
+    })
+    const drawn = texts.map((t) => t.text)
+    expect(drawn).toContain('YOUR TURN')
+    expect(drawn).toContain('다음 게임,')
+    expect(drawn).toContain('어떤 걸')
+    expect(drawn).toContain('보고 싶으세요?')
+  })
+
+  it('uses only NIGHT colors plus the scanline overlay', () => {
+    const { canvas, rects, texts } = fakeCanvas(1080, 1080)
+    drawPost(canvas, { kind: 'question', label: 'YOUR TURN', question: ['가?'] })
+    for (const r of rects) expect(NIGHT.has(r.color) || r.color === SCANLINE, r.color).toBe(true)
+    for (const t of texts) expect(NIGHT.has(t.color), t.color).toBe(true)
+  })
+})

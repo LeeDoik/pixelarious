@@ -272,7 +272,26 @@ export interface CartridgePost {
   cover: BrandImage | null
 }
 
-export type PostSpec = FullBleedPost | CartridgePost
+export interface TerminalLine {
+  text: string
+  status?: string
+  tone?: 'ok' | 'gold'
+}
+
+export interface TerminalPost {
+  kind: 'terminal'
+  label: PostLabel
+  log: TerminalLine[]
+  headline: string[]
+}
+
+export interface QuestionPost {
+  kind: 'question'
+  label: PostLabel
+  question: string[]
+}
+
+export type PostSpec = FullBleedPost | CartridgePost | TerminalPost | QuestionPost
 
 /** 금색 배지 + 칠흑 글자. 게시물 종류를 알리는 라벨 — 스펙 §6 */
 function drawLabelBadge(
@@ -464,6 +483,106 @@ function drawCartridge(
   drawWatermark(ctx, W, H)
 }
 
+function drawTerminal(
+  ctx: CanvasRenderingContext2D,
+  W: number,
+  H: number,
+  spec: TerminalPost,
+): void {
+  ctx.fillStyle = BRAND.deep
+  ctx.fillRect(0, 0, W, H)
+
+  const pad = Math.round(W * 0.075)
+  const labelSize = pixelFontSize(W * 0.022)
+  drawLabelBadge(ctx, pad, pad, spec.label, labelSize)
+
+  // 좌우 여백을 남긴 실사용 폭. 로그 줄과 헤드라인 둘 다 실측 기반으로 이 폭 안에 맞춘다 —
+  // 긴 빌드 로그나 긴 헤드라인 문장이 캔버스를 넘치는 사고를 막는다.
+  const availWidth = W - pad * 2
+
+  let logSize = pixelFontSize(W * 0.022)
+  for (const line of spec.log) {
+    const combined = line.text + (line.status ?? '')
+    logSize = Math.min(logSize, fitPixelFont(ctx, DISPLAY_FONT, combined, logSize, availWidth))
+  }
+  const logGap = Math.round(logSize * 2.4)
+  let y = pad + Math.round(labelSize * 4.2)
+
+  ctx.textBaseline = 'middle'
+  for (const line of spec.log) {
+    ctx.font = `${logSize}px ${DISPLAY_FONT}`
+    ctx.fillStyle = BRAND.dim
+    ctx.fillText(line.text, pad, y)
+    if (line.status) {
+      const x = pad + Math.round(textWidth(ctx, line.text, logSize))
+      ctx.fillStyle = line.tone === 'gold' ? BRAND.gold : BRAND.accent2
+      ctx.fillText(line.status, x, y)
+    }
+    y += logGap
+  }
+
+  let headSize = pixelFontSize(W * 0.062)
+  for (const line of spec.headline) {
+    headSize = Math.min(headSize, fitPixelFont(ctx, BODY_FONT, line, headSize, availWidth))
+  }
+  const headGap = Math.round(headSize * 1.5)
+  y += Math.round(headSize * 0.8)
+  ctx.font = `${headSize}px ${BODY_FONT}`
+  ctx.fillStyle = BRAND.text
+  let lastX = pad
+  spec.headline.forEach((line, i) => {
+    const lineY = y + headGap * i
+    ctx.fillText(line, pad, lineY)
+    lastX = pad + Math.round(textWidth(ctx, line, headSize))
+  })
+
+  // 마지막 줄 끝에서 커서가 깜빡인다 — 정지 이미지에서는 켜진 상태 (스펙 §4.1)
+  const lastY = y + headGap * Math.max(0, spec.headline.length - 1)
+  ctx.fillStyle = BRAND.gold
+  ctx.fillRect(
+    lastX + Math.round(headSize * 0.16),
+    Math.round(lastY - headSize / 2),
+    Math.round(headSize * 0.62),
+    headSize,
+  )
+
+  drawWatermark(ctx, W, H)
+}
+
+function drawQuestion(
+  ctx: CanvasRenderingContext2D,
+  W: number,
+  H: number,
+  spec: QuestionPost,
+): void {
+  ctx.fillStyle = BRAND.deep
+  ctx.fillRect(0, 0, W, H)
+
+  const pad = Math.round(W * 0.075)
+  const labelSize = pixelFontSize(W * 0.022)
+  drawLabelBadge(ctx, pad, pad, spec.label, labelSize)
+
+  // 배경을 비워 피드에서 눈에 걸리게 한다 — 글자는 크게, 가운데 정렬하지 않고 왼쪽에 쌓는다.
+  // 실측 기반으로 좌우 여백 안에 맞춘다 — 긴 질문 한 줄이 캔버스를 넘치는 사고를 막는다.
+  const availWidth = W - pad * 2
+  let qSize = pixelFontSize(W * 0.085)
+  for (const line of spec.question) {
+    qSize = Math.min(qSize, fitPixelFont(ctx, BODY_FONT, line, qSize, availWidth))
+  }
+  const qGap = Math.round(qSize * 1.45)
+  const blockH = qGap * spec.question.length
+  const firstY = Math.round((H - blockH) / 2 + qGap / 2)
+
+  ctx.font = `${qSize}px ${BODY_FONT}`
+  ctx.textBaseline = 'middle'
+  ctx.fillStyle = BRAND.text
+  spec.question.forEach((line, i) => {
+    ctx.fillText(line, pad, firstY + qGap * i)
+  })
+
+  drawWatermark(ctx, W, H)
+}
+
 export function drawPost(canvas: BrandCanvas, spec: PostSpec): void {
   const ctx = canvas.getContext('2d')
   if (!ctx) return
@@ -472,6 +591,8 @@ export function drawPost(canvas: BrandCanvas, spec: PostSpec): void {
 
   if (spec.kind === 'full') drawFullBleed(ctx, W, H, spec)
   else if (spec.kind === 'cartridge') drawCartridge(ctx, W, H, spec)
+  else if (spec.kind === 'terminal') drawTerminal(ctx, W, H, spec)
+  else drawQuestion(ctx, W, H, spec)
 
   drawScanlines(ctx, W, H, unitFor(W, H))
 }
