@@ -1,5 +1,17 @@
 import { describe, it, expect } from 'vitest'
-import { BRAND, SCANLINE, drawMark, drawProfile, drawFavicon, pixelFontSize, type BrandCanvas } from './brand'
+import {
+  BRAND,
+  SCANLINE,
+  drawMark,
+  drawProfile,
+  drawFavicon,
+  pixelFontSize,
+  drawYouTubeBanner,
+  drawShortsCard,
+  YT_SAFE,
+  SHORTS_SAFE_RATIO,
+  type BrandCanvas,
+} from './brand'
 
 export function fakeCanvas(width: number, height: number) {
   const rects: { color: string; x: number; y: number; w: number; h: number }[] = []
@@ -106,5 +118,76 @@ describe('drawProfile / drawFavicon', () => {
     drawFavicon(f.canvas)
     expect(p.texts.length).toBe(1)
     expect(f.texts.length).toBe(0)
+  })
+})
+
+describe('drawYouTubeBanner', () => {
+  it('keeps every logo and text pixel inside the safe area', () => {
+    const { canvas, rects, texts } = fakeCanvas(2560, 1440)
+    drawYouTubeBanner(canvas)
+    const left = (2560 - YT_SAFE.w) / 2
+    const top = (1440 - YT_SAFE.h) / 2
+    const right = left + YT_SAFE.w
+    const bottom = top + YT_SAFE.h
+    // 배경·별·스캔라인은 전면을 덮어도 된다. 마크 타일(deep)과 금색 커서, 글자만 검사한다.
+    for (const r of rects.filter((r) => r.color === BRAND.gold && r.w < YT_SAFE.w)) {
+      expect(r.x >= left && r.x + r.w <= right, `gold x ${r.x}..${r.x + r.w}`).toBe(true)
+      expect(r.y >= top && r.y + r.h <= bottom, `gold y ${r.y}..${r.y + r.h}`).toBe(true)
+    }
+    expect(texts.length).toBeGreaterThan(0)
+    for (const t of texts) {
+      const size = parseInt(t.font, 10)
+      const w = t.text.length * size
+      expect(t.x >= left && t.x + w <= right, `text "${t.text}" x ${t.x}..${t.x + w}`).toBe(true)
+      expect(t.y - size >= top && t.y + size <= bottom, `text "${t.text}" y ${t.y}`).toBe(true)
+    }
+  })
+
+  it('renders the wordmark and the bilingual tagline', () => {
+    const { canvas, texts } = fakeCanvas(2560, 1440)
+    drawYouTubeBanner(canvas)
+    const all = texts.map((t) => t.text)
+    expect(all).toContain('PIXELARIOUS')
+    expect(all.some((t) => t.includes('PLAY IN YOUR BROWSER'))).toBe(true)
+  })
+
+  it('uses only NIGHT colors plus the scanline overlay', () => {
+    const { canvas, rects, texts } = fakeCanvas(2560, 1440)
+    drawYouTubeBanner(canvas)
+    for (const r of rects) expect(NIGHT.has(r.color) || r.color === SCANLINE, r.color).toBe(true)
+    for (const t of texts) expect(NIGHT.has(t.color), t.color).toBe(true)
+  })
+
+  it('is deterministic — the starfield never reshuffles between renders', () => {
+    const a = fakeCanvas(2560, 1440)
+    const b = fakeCanvas(2560, 1440)
+    drawYouTubeBanner(a.canvas)
+    drawYouTubeBanner(b.canvas)
+    expect(a.rects).toEqual(b.rects)
+  })
+})
+
+describe('drawShortsCard', () => {
+  it('keeps content out of the bottom quarter the app UI covers', () => {
+    const { canvas, rects, texts } = fakeCanvas(1080, 1920)
+    drawShortsCard(canvas, ['새 게임이', '나왔습니다'])
+    const floor = 1920 * SHORTS_SAFE_RATIO
+    const gold = rects.filter((r) => r.color === BRAND.gold)
+    expect(gold.length).toBeGreaterThan(0)
+    for (const r of gold) {
+      expect(r.y + r.h <= floor, `gold reaches ${r.y + r.h}`).toBe(true)
+    }
+    for (const t of texts) {
+      const size = parseInt(t.font, 10)
+      expect(t.y + size <= floor, `text "${t.text}" reaches ${t.y + size}`).toBe(true)
+    }
+  })
+
+  it('renders each headline line as its own draw call', () => {
+    const { canvas, texts } = fakeCanvas(1080, 1920)
+    drawShortsCard(canvas, ['첫 줄', '둘째 줄'])
+    const drawn = texts.map((t) => t.text)
+    expect(drawn).toContain('첫 줄')
+    expect(drawn).toContain('둘째 줄')
   })
 })

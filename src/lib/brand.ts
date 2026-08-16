@@ -6,6 +6,8 @@
  * 팔레트와 폰트는 사이트(globals.css)와 같은 값이어야 한다 — 스펙 §4.2, §7.
  */
 
+import { rng } from './scenes'
+
 export type BrandCanvas = {
   width: number
   height: number
@@ -121,4 +123,97 @@ export function drawProfile(canvas: BrandCanvas): void {
 
 export function drawFavicon(canvas: BrandCanvas): void {
   drawMark(canvas, { letters: false })
+}
+
+/** 유튜브가 모든 기기에서 보장하는 중앙 영역 — 스펙 §5 */
+export const YT_SAFE = { w: 1546, h: 423 } as const
+
+/** 쇼츠 하단 25%는 앱 UI에 가린다 — 스펙 §8 */
+export const SHORTS_SAFE_RATIO = 0.75
+
+/** 결정적 픽셀 별밭. 커버 아트와 같은 시드 계열을 쓴다. */
+function drawStarfield(
+  ctx: CanvasRenderingContext2D,
+  w: number,
+  h: number,
+  unit: number,
+  seed: number,
+): void {
+  const r = rng(seed)
+  const count = Math.round((w * h) / 6000)
+  for (let i = 0; i < count; i++) {
+    const x = Math.floor(r() * w)
+    const y = Math.floor(r() * h)
+    // 금색은 커서 전용이다. 별에 쓰면 안전 영역 검사가 별까지 잡고,
+    // 브랜드의 유일한 강조색이 배경 노이즈로 흩어진다.
+    ctx.fillStyle = r() < 0.35 ? BRAND.dim : BRAND.text
+    ctx.fillRect(x, y, unit * 2, unit * 2)
+  }
+}
+
+export function drawYouTubeBanner(canvas: BrandCanvas): void {
+  const ctx = canvas.getContext('2d')
+  if (!ctx) return
+  const W = canvas.width
+  const H = canvas.height
+  const unit = unitFor(W, H)
+
+  ctx.fillStyle = BRAND.deep
+  ctx.fillRect(0, 0, W, H)
+  drawStarfield(ctx, W, H, unit, 7)
+
+  const left = Math.round((W - YT_SAFE.w) / 2)
+  const top = Math.round((H - YT_SAFE.h) / 2)
+
+  // 마크 타일
+  const tile = Math.round(YT_SAFE.h * 0.55)
+  const tileY = Math.round(top + (YT_SAFE.h - tile) / 2)
+  drawMarkInto(ctx, left, tileY, tile, tile)
+
+  // 워드마크와 태그라인
+  const textX = left + tile + Math.round(tile * 0.22)
+  const wordSize = pixelFontSize(YT_SAFE.w * 0.055)
+  ctx.font = `${wordSize}px ${DISPLAY_FONT}`
+  ctx.textBaseline = 'middle'
+  ctx.fillStyle = BRAND.text
+  const wordY = Math.round(top + YT_SAFE.h * 0.42)
+  ctx.fillText('PIXELARIOUS', textX, wordY)
+
+  const tagSize = pixelFontSize(YT_SAFE.w * 0.022)
+  ctx.font = `${tagSize}px ${BODY_FONT}`
+  ctx.fillStyle = BRAND.dim
+  ctx.fillText('브라우저에서 바로 플레이 · PLAY IN YOUR BROWSER', textX, Math.round(top + YT_SAFE.h * 0.72))
+
+  drawScanlines(ctx, W, H, unit)
+}
+
+export function drawShortsCard(canvas: BrandCanvas, headline: string[]): void {
+  const ctx = canvas.getContext('2d')
+  if (!ctx) return
+  const W = canvas.width
+  const H = canvas.height
+  const unit = unitFor(W, H)
+  const floor = H * SHORTS_SAFE_RATIO
+
+  ctx.fillStyle = BRAND.deep
+  ctx.fillRect(0, 0, W, H)
+  drawStarfield(ctx, W, H, unit, 23)
+
+  const tile = Math.round(W * 0.26)
+  drawMarkInto(ctx, Math.round((W - tile) / 2), Math.round(H * 0.14), tile, tile)
+
+  const size = pixelFontSize(W * 0.075)
+  ctx.font = `${size}px ${BODY_FONT}`
+  ctx.textBaseline = 'middle'
+  ctx.fillStyle = BRAND.text
+  const lineGap = Math.round(size * 1.5)
+  // 마지막 줄이 안전선 위에서 끝나도록 위로 쌓는다
+  const lastY = Math.round(floor - size * 1.5)
+  const firstY = lastY - lineGap * (headline.length - 1)
+  headline.forEach((line, i) => {
+    const w = textWidth(ctx, line, size)
+    ctx.fillText(line, Math.round((W - w) / 2), firstY + lineGap * i)
+  })
+
+  drawScanlines(ctx, W, H, unit)
 }
