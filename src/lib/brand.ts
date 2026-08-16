@@ -314,16 +314,39 @@ function drawLabelBadge(
   return boxH
 }
 
+/**
+ * drawWatermark이 차지하는 우하단 영역의 위쪽 y좌표와 타일 크기. 그리기 자체와, 세로 여유
+ * 공간을 계산해야 하는 템플릿(C 터미널·D 질문)이 이 숫자를 공유한다 — 두 곳에서 따로
+ * 계산하면 어긋나기 쉽다.
+ */
+function watermarkBand(W: number, H: number): { top: number; tile: number } {
+  const tile = Math.round(W * 0.055)
+  const pad = Math.round(W * 0.03)
+  return { top: H - pad - tile, tile }
+}
+
+/**
+ * fitPixelFont의 세로 버전. heightFn(size)가 limit을 넘는 동안 폰트 크기를 8px 단위로
+ * 줄인다 — 콘텐츠가 길어져 워터마크나 캔버스 아래쪽을 침범할 때 블록 전체를 위로 밀어
+ * 넣는 데 쓴다. fitPixelFont와 같이 8px에서 바닥을 친다.
+ */
+function fitVertical(size: number, limit: number, heightFn: (size: number) => number): number {
+  let fitted = size
+  while (fitted > 8 && heightFn(fitted) > limit) {
+    fitted = pixelFontSize(fitted - 8)
+  }
+  return fitted
+}
+
 /** 우하단 출처 표시. 캡처가 퍼져도 계정이 남는다 — 스펙 §6 */
 function drawWatermark(ctx: CanvasRenderingContext2D, W: number, H: number): void {
-  const tile = Math.round(W * 0.055)
+  const { top: y, tile } = watermarkBand(W, H)
   const pad = Math.round(W * 0.03)
   const nameSize = pixelFontSize(W * 0.016)
   ctx.font = `${nameSize}px ${DISPLAY_FONT}`
   const nameW = Math.round(textWidth(ctx, 'PIXELARIOUS', nameSize))
   const totalW = tile + Math.round(tile * 0.3) + nameW
   const x = W - pad - totalW
-  const y = H - pad - tile
   drawMarkInto(ctx, x, y, tile, tile)
   ctx.font = `${nameSize}px ${DISPLAY_FONT}`
   ctx.textBaseline = 'middle'
@@ -505,8 +528,30 @@ function drawTerminal(
     const combined = line.text + (line.status ?? '')
     logSize = Math.min(logSize, fitPixelFont(ctx, DISPLAY_FONT, combined, logSize, availWidth))
   }
+
+  let headSize = pixelFontSize(W * 0.062)
+  for (const line of spec.headline) {
+    headSize = Math.min(headSize, fitPixelFont(ctx, BODY_FONT, line, headSize, availWidth))
+  }
+
+  // 세로 여유 공간 — 워터마크 밴드 위, 아래쪽으로 pad만큼 더 여유를 둔다. 개발 로그는
+  // 실사용에서 줄 수가 얼마든 늘어날 수 있으므로, 헤드라인 크기는 고정한 채 로그 글자
+  // 크기(와 거기서 파생된 줄 간격)만 8px 단위로 줄여 커서가 워터마크나 캔버스 밖으로
+  // 밀려나지 않게 한다 — fitPixelFont의 세로 버전.
+  const contentTop = pad + Math.round(labelSize * 4.2)
+  const bottomLimit = watermarkBand(W, H).top - pad
+  const logCount = spec.log.length
+  const headCount = spec.headline.length
+  logSize = fitVertical(logSize, bottomLimit, (size) => {
+    const gap = Math.round(size * 2.4)
+    const y = contentTop + gap * logCount + Math.round(headSize * 0.8)
+    const headGap = Math.round(headSize * 1.5)
+    const lastY = y + headGap * Math.max(0, headCount - 1)
+    return lastY + Math.round(headSize / 2)
+  })
+
   const logGap = Math.round(logSize * 2.4)
-  let y = pad + Math.round(labelSize * 4.2)
+  let y = contentTop
 
   ctx.textBaseline = 'middle'
   for (const line of spec.log) {
@@ -521,10 +566,6 @@ function drawTerminal(
     y += logGap
   }
 
-  let headSize = pixelFontSize(W * 0.062)
-  for (const line of spec.headline) {
-    headSize = Math.min(headSize, fitPixelFont(ctx, BODY_FONT, line, headSize, availWidth))
-  }
   const headGap = Math.round(headSize * 1.5)
   y += Math.round(headSize * 0.8)
   ctx.font = `${headSize}px ${BODY_FONT}`
@@ -569,6 +610,20 @@ function drawQuestion(
   for (const line of spec.question) {
     qSize = Math.min(qSize, fitPixelFont(ctx, BODY_FONT, line, qSize, availWidth))
   }
+
+  // 질문이 길어져 줄 수가 늘면 가운데 정렬된 블록이 커지면서 워터마크와 겹칠 수 있다 —
+  // 터미널과 같은 방식으로 글자 크기(와 거기서 파생된 줄 간격)를 8px 단위로 줄여 블록을
+  // 워터마크 위로 밀어 넣는다.
+  const bottomLimit = watermarkBand(W, H).top - pad
+  const qCount = spec.question.length
+  qSize = fitVertical(qSize, bottomLimit, (size) => {
+    const gap = Math.round(size * 1.45)
+    const blockH = gap * qCount
+    const firstY = Math.round((H - blockH) / 2 + gap / 2)
+    const lastY = firstY + gap * Math.max(0, qCount - 1)
+    return lastY + Math.round(size / 2)
+  })
+
   const qGap = Math.round(qSize * 1.45)
   const blockH = qGap * spec.question.length
   const firstY = Math.round((H - blockH) / 2 + qGap / 2)
