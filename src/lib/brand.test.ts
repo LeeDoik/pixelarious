@@ -18,6 +18,14 @@ import {
 export function fakeCanvas(width: number, height: number) {
   const rects: { color: string; x: number; y: number; w: number; h: number }[] = []
   const texts: { color: string; text: string; x: number; y: number; font: string }[] = []
+  const images: {
+    img: unknown
+    x: number
+    y: number
+    w: number
+    h: number
+    smoothing: boolean
+  }[] = []
   const ctx = {
     fillStyle: '',
     font: '',
@@ -29,12 +37,15 @@ export function fakeCanvas(width: number, height: number) {
     fillText(text: string, x: number, y: number) {
       texts.push({ color: String(this.fillStyle), text, x, y, font: String(this.font) })
     },
-    drawImage() {},
+    drawImage(img: unknown, x: number, y: number, w: number, h: number) {
+      images.push({ img, x, y, w, h, smoothing: this.imageSmoothingEnabled })
+    },
   }
   return {
     canvas: { width, height, getContext: () => ctx } as unknown as BrandCanvas,
     rects,
     texts,
+    images,
   }
 }
 
@@ -359,6 +370,23 @@ describe('drawPost — B 카트리지', () => {
     const drawn = texts.map((t) => t.text)
     expect(drawn).toContain('PIXEL PONG.EXE')
     expect(drawn.filter((t) => t === '')).toHaveLength(0)
+    // 회귀가 spec.subtitle이 undefined인 채로 fillText를 여전히 호출한다면 mock은
+    // text: undefined를 기록한다 — '' 검사만으로는 이를 못 잡는다. 직접 증명한다.
+    expect(texts.some((t) => t.text === undefined)).toBe(false)
+
+    // 같은 스펙에 subtitle만 추가하면 텍스트 그리기 호출 수가 실제로 늘어나야 한다 —
+    // subtitle 라인이 조건에 따라 하나 더(또는 덜) 그려졌음을 직접 증명한다.
+    const withSub = fakeCanvas(1080, 1080)
+    drawPost(withSub.canvas, {
+      kind: 'cartridge',
+      index: 0,
+      title: 'PIXEL PONG.EXE',
+      subtitle: '픽셀퐁',
+      description: '하루 만에 만든 퐁 변형.',
+      tags: [],
+      cover: null,
+    })
+    expect(withSub.texts.length).toBeGreaterThan(texts.length)
   })
 
   it('draws the cartridge box on the surface color with a NEW GAME badge', () => {
@@ -388,5 +416,65 @@ describe('drawPost — B 카트리지', () => {
     })
     for (const r of rects) expect(NIGHT.has(r.color) || r.color === SCANLINE, r.color).toBe(true)
     for (const t of texts) expect(NIGHT.has(t.color), t.color).toBe(true)
+  })
+
+  it('shrinks a long title so it stays inside the box instead of overflowing', () => {
+    const { canvas, texts } = fakeCanvas(1080, 1080)
+    // The flagship title from the brief: at W=1080 the default titleSize (32px) times
+    // 14 chars (PS2P is 1em/char) is 448px, but textX(568)..boxX+boxW(1004) only leaves
+    // 436px — it would overflow by design unless the fitting loop shrinks it.
+    drawPost(canvas, {
+      kind: 'cartridge',
+      index: 0,
+      title: 'STARFALL DRIFT',
+      description: 'y',
+      tags: [],
+      cover: null,
+    })
+    const titleText = texts.find((t) => t.text === 'STARFALL DRIFT')
+    expect(titleText).toBeDefined()
+
+    const defaultTitleSize = pixelFontSize(1080 * 0.036) // 32
+    const shrunkSize = parseInt(titleText!.font, 10)
+    expect(shrunkSize).toBeLessThan(defaultTitleSize)
+
+    // Box's inner right edge at W=1080: pad=76, boxW=928, boxX=76 → boxX+boxW=1004
+    // (matches the trace in the review finding).
+    const boxInnerRight = 1004
+    const measuredWidth = titleText!.text.length * shrunkSize // fakeCanvas has no measureText
+    expect(titleText!.x + measuredWidth).toBeLessThanOrEqual(boxInnerRight)
+  })
+
+  it('draws the cover through the shared cover-fit helper, not a raw stretch', () => {
+    const { canvas, images } = fakeCanvas(1080, 1080)
+    // Deliberately NOT the 100:42 aspect the site's real covers happen to use — this
+    // proves the destination rect comes from drawImageCover's cover-fit maths
+    // (scale by Math.max, centre the overflow) rather than a plain drawImage stretch,
+    // which would coincidentally look right only when the aspect ratios happen to match.
+    const cover = { width: 300, height: 100 }
+    drawPost(canvas, {
+      kind: 'cartridge',
+      index: 0,
+      title: 'A',
+      description: 'b',
+      tags: [],
+      cover,
+    })
+
+    expect(images.length).toBe(1)
+    const draw = images[0]
+    expect(draw.img).toBe(cover)
+    expect(draw.smoothing).toBe(false)
+
+    // Geometry at W=1080: boxX=76, boxW=928, coverW=390, coverH=164,
+    // coverX=148, coverY=430 (see the trace in the review finding / drawCartridge).
+    // scale = max(390/300, 164/100) = 1.64 → dw=492, dh=164 (not 390×164 — a plain
+    // stretch to coverW×coverH — which is exactly what a raw drawImage would produce).
+    const coverW = 390
+    expect(draw.w).toBe(492)
+    expect(draw.h).toBe(164)
+    expect(draw.w).not.toBe(coverW)
+    expect(draw.x).toBe(97)
+    expect(draw.y).toBe(430)
   })
 })

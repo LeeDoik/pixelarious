@@ -312,21 +312,26 @@ function drawWatermark(ctx: CanvasRenderingContext2D, W: number, H: number): voi
   ctx.fillText('PIXELARIOUS', x + tile + Math.round(tile * 0.3), y + Math.round(tile / 2))
 }
 
-/** 이미지를 잘라내며 캔버스를 채운다(cover). 픽셀 보간은 끈다 — 스펙 §8 */
+/**
+ * 이미지를 잘라내며 대상 사각형(x, y, w, h)을 채운다(cover). 픽셀 보간은 끈다 — 스펙 §8
+ * W×H 전체를 채우던 원래 형태는 x=0, y=0, w=W, h=H로 호출하면 그대로 재현된다.
+ */
 function drawImageCover(
   ctx: CanvasRenderingContext2D,
   img: BrandImage,
-  W: number,
-  H: number,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
 ): void {
   ctx.imageSmoothingEnabled = false
-  const scale = Math.max(W / img.width, H / img.height)
+  const scale = Math.max(w / img.width, h / img.height)
   const dw = Math.round(img.width * scale)
   const dh = Math.round(img.height * scale)
   ctx.drawImage(
     img as unknown as CanvasImageSource,
-    Math.round((W - dw) / 2),
-    Math.round((H - dh) / 2),
+    x + Math.round((w - dw) / 2),
+    y + Math.round((h - dh) / 2),
     dw,
     dh,
   )
@@ -339,7 +344,7 @@ function drawFullBleed(
   spec: FullBleedPost,
 ): void {
   if (spec.image) {
-    drawImageCover(ctx, spec.image, W, H)
+    drawImageCover(ctx, spec.image, 0, 0, W, H)
   } else {
     ctx.fillStyle = BRAND.bg
     ctx.fillRect(0, 0, W, H)
@@ -412,18 +417,18 @@ function drawCartridge(
   ctx.fillStyle = BRAND.text
   ctx.fillRect(coverX - border, coverY - border, coverW + border * 2, coverH + border * 2)
   if (spec.cover) {
-    ctx.imageSmoothingEnabled = false
-    ctx.drawImage(spec.cover as unknown as CanvasImageSource, coverX, coverY, coverW, coverH)
+    drawImageCover(ctx, spec.cover, coverX, coverY, coverW, coverH)
   } else {
     ctx.fillStyle = BRAND.bg
     ctx.fillRect(coverX, coverY, coverW, coverH)
   }
 
-  // 제목 / 부제
+  // 제목 / 부제 — 실측 기반으로 박스 안쪽 오른쪽 경계까지만 쓰도록 줄인다(넘치면 8px 단위로 축소)
   const textX = coverX + coverW + innerPad
+  const titleAvailWidth = boxX + boxW - textX
   const hasSub = typeof spec.subtitle === 'string' && spec.subtitle.length > 0
   const titleY = boxY + Math.round(stripH / 2) - (hasSub ? Math.round(subSize * 0.9) : 0)
-  ctx.font = `${titleSize}px ${DISPLAY_FONT}`
+  fitPixelFont(ctx, DISPLAY_FONT, spec.title, titleSize, titleAvailWidth)
   ctx.fillStyle = BRAND.text
   ctx.fillText(spec.title, textX, titleY)
   if (hasSub) {
@@ -432,13 +437,14 @@ function drawCartridge(
     ctx.fillText(spec.subtitle as string, textX, titleY + Math.round(subSize * 1.8))
   }
 
-  // 점선 구분선 아래 설명 + 태그
+  // 점선 구분선 아래 설명 + 태그 — 설명도 같은 이유로 박스 안쪽 폭에 맞춰 줄인다
   const footY = boxY + stripH
   ctx.fillStyle = BRAND.dim
   for (let x = boxX + innerPad; x < boxX + boxW - innerPad; x += border * 6) {
     ctx.fillRect(x, footY, border * 3, border)
   }
-  ctx.font = `${descSize}px ${BODY_FONT}`
+  const descAvailWidth = boxW - innerPad * 2
+  fitPixelFont(ctx, BODY_FONT, spec.description, descSize, descAvailWidth)
   ctx.fillStyle = BRAND.text
   ctx.fillText(spec.description, boxX + innerPad, footY + Math.round(descSize * 1.4))
 
