@@ -273,8 +273,10 @@ func _after_move() -> void:
 			Sfx.play("rockfall")
 			if ppos == stood_at and alive:
 				_damage(1, "death_fall"))
-	# 지표 복귀 — 중력보다 먼저 판정 (수직갱 정상에서 도로 떨어지지 않도록)
-	if ppos.y == 0 and alive:
+	# 지표 복귀 — 중력보다 먼저 판정 (수직갱 정상에서 도로 떨어지지 않도록).
+	# 단, 실제로 내려갔다 온 경우만(run.depth > 0) — 시작 지점이 곧 0m 행이라
+	# 이 가드가 없으면 첫 행동 직후 즉시 귀환 처리된다.
+	if ppos.y == 0 and alive and GameState.run.depth > 0:
 		_sync_positions(false)
 		alive = false
 		busy = false
