@@ -260,7 +260,19 @@ export interface FullBleedPost {
   image: BrandImage | null
 }
 
-export type PostSpec = FullBleedPost
+export interface CartridgePost {
+  kind: 'cartridge'
+  /** 0부터 세는 슬롯 인덱스. 화면에는 1부터 두 자리로 표시한다(사이트와 동일). */
+  index: number
+  title: string
+  subtitle?: string
+  description: string
+  tags: string[]
+  /** 미리 렌더한 커버(100×42 캔버스). 없으면 자리를 비운다. */
+  cover: BrandImage | null
+}
+
+export type PostSpec = FullBleedPost | CartridgePost
 
 /** 금색 배지 + 칠흑 글자. 게시물 종류를 알리는 라벨 — 스펙 §6 */
 function drawLabelBadge(
@@ -353,6 +365,99 @@ function drawFullBleed(
   drawWatermark(ctx, W, H)
 }
 
+function drawCartridge(
+  ctx: CanvasRenderingContext2D,
+  W: number,
+  H: number,
+  spec: CartridgePost,
+): void {
+  ctx.fillStyle = BRAND.deep
+  ctx.fillRect(0, 0, W, H)
+
+  const pad = Math.round(W * 0.07)
+  const boxW = W - pad * 2
+  const boxX = pad
+  const border = Math.max(2, Math.round(W * 0.005))
+
+  const noSize = pixelFontSize(W * 0.02)
+  const titleSize = pixelFontSize(W * 0.036)
+  const subSize = pixelFontSize(W * 0.024)
+  const descSize = pixelFontSize(W * 0.026)
+  const tagSize = pixelFontSize(W * 0.016)
+
+  const coverW = Math.round(boxW * 0.42)
+  const coverH = Math.round((coverW * 42) / 100)
+  const stripH = coverH + Math.round(W * 0.06)
+  const footH = Math.round(descSize * 2.4 + (spec.tags.length ? tagSize * 3 : 0))
+  const boxH = stripH + footH
+  const boxY = Math.round((H - boxH) / 2)
+
+  // 흰 프레임 위에 서피스 색 본체 — 사이트 .cart와 같은 구성
+  ctx.fillStyle = BRAND.text
+  ctx.fillRect(boxX - border, boxY - border, boxW + border * 2, boxH + border * 2)
+  ctx.fillStyle = BRAND.surface
+  ctx.fillRect(boxX, boxY, boxW, boxH)
+
+  // 슬롯 번호
+  const innerPad = Math.round(W * 0.028)
+  ctx.font = `${noSize}px ${DISPLAY_FONT}`
+  ctx.textBaseline = 'middle'
+  ctx.fillStyle = BRAND.dim
+  const noText = String(spec.index + 1).padStart(2, '0')
+  ctx.fillText(noText, boxX + innerPad, boxY + Math.round(stripH / 2))
+
+  // 커버
+  const coverX = boxX + innerPad + Math.round(noSize * 2.6)
+  const coverY = boxY + Math.round((stripH - coverH) / 2)
+  ctx.fillStyle = BRAND.text
+  ctx.fillRect(coverX - border, coverY - border, coverW + border * 2, coverH + border * 2)
+  if (spec.cover) {
+    ctx.imageSmoothingEnabled = false
+    ctx.drawImage(spec.cover as unknown as CanvasImageSource, coverX, coverY, coverW, coverH)
+  } else {
+    ctx.fillStyle = BRAND.bg
+    ctx.fillRect(coverX, coverY, coverW, coverH)
+  }
+
+  // 제목 / 부제
+  const textX = coverX + coverW + innerPad
+  const hasSub = typeof spec.subtitle === 'string' && spec.subtitle.length > 0
+  const titleY = boxY + Math.round(stripH / 2) - (hasSub ? Math.round(subSize * 0.9) : 0)
+  ctx.font = `${titleSize}px ${DISPLAY_FONT}`
+  ctx.fillStyle = BRAND.text
+  ctx.fillText(spec.title, textX, titleY)
+  if (hasSub) {
+    ctx.font = `${subSize}px ${BODY_FONT}`
+    ctx.fillStyle = BRAND.dim
+    ctx.fillText(spec.subtitle as string, textX, titleY + Math.round(subSize * 1.8))
+  }
+
+  // 점선 구분선 아래 설명 + 태그
+  const footY = boxY + stripH
+  ctx.fillStyle = BRAND.dim
+  for (let x = boxX + innerPad; x < boxX + boxW - innerPad; x += border * 6) {
+    ctx.fillRect(x, footY, border * 3, border)
+  }
+  ctx.font = `${descSize}px ${BODY_FONT}`
+  ctx.fillStyle = BRAND.text
+  ctx.fillText(spec.description, boxX + innerPad, footY + Math.round(descSize * 1.4))
+
+  if (spec.tags.length) {
+    ctx.font = `${tagSize}px ${DISPLAY_FONT}`
+    ctx.fillStyle = BRAND.accent2
+    let tx = boxX + innerPad
+    const ty = footY + Math.round(descSize * 1.4) + Math.round(tagSize * 2.6)
+    for (const tag of spec.tags) {
+      ctx.fillText(tag, tx, ty)
+      tx += Math.round(textWidth(ctx, tag, tagSize)) + Math.round(tagSize * 1.6)
+    }
+  }
+
+  // 출시 공지 전용 템플릿이므로 라벨은 항상 NEW GAME이다
+  drawLabelBadge(ctx, boxX, Math.round(boxY - pad * 0.9), 'NEW GAME', pixelFontSize(W * 0.022))
+  drawWatermark(ctx, W, H)
+}
+
 export function drawPost(canvas: BrandCanvas, spec: PostSpec): void {
   const ctx = canvas.getContext('2d')
   if (!ctx) return
@@ -360,6 +465,7 @@ export function drawPost(canvas: BrandCanvas, spec: PostSpec): void {
   const H = canvas.height
 
   if (spec.kind === 'full') drawFullBleed(ctx, W, H, spec)
+  else if (spec.kind === 'cartridge') drawCartridge(ctx, W, H, spec)
 
   drawScanlines(ctx, W, H, unitFor(W, H))
 }

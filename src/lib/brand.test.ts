@@ -311,3 +311,82 @@ describe('drawPost — A 풀블리드', () => {
     expect(smoothing).toBe(false)
   })
 })
+
+describe('drawPost — B 카트리지', () => {
+  it('mirrors the site cartridge: slot number, title, subtitle, description, tags', () => {
+    const { canvas, texts } = fakeCanvas(1080, 1080)
+    drawPost(canvas, {
+      kind: 'cartridge',
+      index: 0,
+      title: 'STARFALL DRIFT',
+      subtitle: '스타폴 드리프트',
+      description: '탭 한 번으로 궤도를 바꿔 별에서 별로.',
+      tags: ['GODOT 4', 'ARCADE'],
+      cover: null,
+    })
+    const drawn = texts.map((t) => t.text)
+    expect(drawn).toContain('01')
+    expect(drawn).toContain('STARFALL DRIFT')
+    expect(drawn).toContain('스타폴 드리프트')
+    expect(drawn).toContain('탭 한 번으로 궤도를 바꿔 별에서 별로.')
+    expect(drawn).toContain('GODOT 4')
+    expect(drawn).toContain('ARCADE')
+  })
+
+  it('zero-pads the slot number the way the site does', () => {
+    const { canvas, texts } = fakeCanvas(1080, 1080)
+    drawPost(canvas, {
+      kind: 'cartridge',
+      index: 11,
+      title: 'X',
+      description: 'y',
+      tags: [],
+      cover: null,
+    })
+    expect(texts.map((t) => t.text)).toContain('12')
+  })
+
+  it('omits the subtitle line when there is none', () => {
+    const { canvas, texts } = fakeCanvas(1080, 1080)
+    drawPost(canvas, {
+      kind: 'cartridge',
+      index: 0,
+      title: 'PIXEL PONG.EXE',
+      description: '하루 만에 만든 퐁 변형.',
+      tags: [],
+      cover: null,
+    })
+    const drawn = texts.map((t) => t.text)
+    expect(drawn).toContain('PIXEL PONG.EXE')
+    expect(drawn.filter((t) => t === '')).toHaveLength(0)
+  })
+
+  it('draws the cartridge box on the surface color with a NEW GAME badge', () => {
+    const { canvas, rects, texts } = fakeCanvas(1080, 1080)
+    drawPost(canvas, {
+      kind: 'cartridge',
+      index: 0,
+      title: 'A',
+      description: 'b',
+      tags: [],
+      cover: null,
+    })
+    expect(rects.some((r) => r.color === BRAND.surface)).toBe(true)
+    expect(texts.map((t) => t.text)).toContain('NEW GAME')
+  })
+
+  it('uses only NIGHT colors plus the scanline overlay', () => {
+    const { canvas, rects, texts } = fakeCanvas(1080, 1350)
+    drawPost(canvas, {
+      kind: 'cartridge',
+      index: 2,
+      title: 'A',
+      subtitle: '가',
+      description: 'b',
+      tags: ['T'],
+      cover: null,
+    })
+    for (const r of rects) expect(NIGHT.has(r.color) || r.color === SCANLINE, r.color).toBe(true)
+    for (const t of texts) expect(NIGHT.has(t.color), t.color).toBe(true)
+  })
+})
