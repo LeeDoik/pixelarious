@@ -45,6 +45,7 @@
   - `function textWidth(ctx: CanvasRenderingContext2D, text: string, fontSize: number): number`
   - `function drawScanlines(ctx: CanvasRenderingContext2D, w: number, h: number, unit: number): void`
   - `function unitFor(w: number, h: number): number`
+  - `function drawMarkInto(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, contentScale?: number): void`
   - `function drawMark(canvas: BrandCanvas, opts?: { letters?: boolean }): void`
   - `function drawProfile(canvas: BrandCanvas): void`
   - `function drawFavicon(canvas: BrandCanvas): void`
@@ -254,34 +255,48 @@ export interface MarkOptions {
   letters?: boolean
 }
 
+/**
+ * 마크를 캔버스의 지정 영역에 그린다. 프로필도 배너도 워터마크도 전부 이 함수 하나를 쓴다.
+ * contentScale은 내용을 영역보다 작게 잡는 비율 — 원형 크롭에는 0.707(내접 정사각형)을 넘긴다.
+ */
+export function drawMarkInto(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  contentScale = 1,
+): void {
+  ctx.fillStyle = BRAND.deep
+  ctx.fillRect(x, y, w, h)
+  const fontSize = pixelFontSize((Math.min(w, h) * contentScale) / 4.2)
+  ctx.font = `${fontSize}px ${DISPLAY_FONT}`
+  ctx.textBaseline = 'middle'
+  const wordW = Math.round(textWidth(ctx, 'PIX', fontSize))
+  const cursorW = Math.round(fontSize * 0.62)
+  const gap = Math.round(fontSize * 0.16)
+  const startX = x + Math.round((w - (wordW + gap + cursorW)) / 2)
+  const midY = y + Math.round(h / 2)
+  ctx.fillStyle = BRAND.text
+  ctx.fillText('PIX', startX, midY)
+  ctx.fillStyle = BRAND.gold
+  ctx.fillRect(startX + wordW + gap, Math.round(midY - fontSize / 2), cursorW, fontSize)
+}
+
 export function drawMark(canvas: BrandCanvas, opts: MarkOptions = {}): void {
   const ctx = canvas.getContext('2d')
   if (!ctx) return
-  const letters = opts.letters !== false
   const W = canvas.width
   const H = canvas.height
 
-  ctx.fillStyle = BRAND.deep
-  ctx.fillRect(0, 0, W, H)
-
-  if (letters) {
-    // 프로필은 원형으로 잘린다. 내접 정사각형(변 = 지름/√2) 안에서만 그린다 — 스펙 §4.1
-    const safe = Math.min(W, H) * 0.707
-    const fontSize = pixelFontSize(safe / 4.2)
-    ctx.font = `${fontSize}px ${DISPLAY_FONT}`
-    ctx.textBaseline = 'middle'
-    const wordW = Math.round(textWidth(ctx, 'PIX', fontSize))
-    const cursorW = Math.round(fontSize * 0.62)
-    const gap = Math.round(fontSize * 0.16)
-    const x = Math.round((W - (wordW + gap + cursorW)) / 2)
-    const midY = Math.round(H / 2)
-    ctx.fillStyle = BRAND.text
-    ctx.fillText('PIX', x, midY)
-    ctx.fillStyle = BRAND.gold
-    ctx.fillRect(x + wordW + gap, Math.round(midY - fontSize / 2), cursorW, fontSize)
+  if (opts.letters !== false) {
+    // 프로필은 원형으로 잘린다. 내접 정사각형 안에서만 그린다 — 스펙 §4.1
+    drawMarkInto(ctx, 0, 0, W, H, 0.707)
     drawScanlines(ctx, W, H, unitFor(W, H))
   } else {
     // 파비콘 크기에서는 스캔라인이 노이즈가 된다 — 커서 블록만 남긴다
+    ctx.fillStyle = BRAND.deep
+    ctx.fillRect(0, 0, W, H)
     const cursorW = Math.round(W * 0.34)
     const cursorH = Math.round(H * 0.52)
     ctx.fillStyle = BRAND.gold
@@ -324,7 +339,7 @@ git commit -m "feat(brand): PIX 마크 렌더러 — 원형 크롭 안전, 파�
 - Modify: `src/lib/brand.test.ts` (describe 블록 추가)
 
 **Interfaces:**
-- Consumes: Task 1의 `BRAND`, `SCANLINE`, `BrandCanvas`, `pixelFontSize`, `textWidth`, `unitFor`, `drawScanlines`, `DISPLAY_FONT`, `BODY_FONT`, `drawMark`; `scenes.ts`의 `rng`
+- Consumes: Task 1의 `BRAND`, `SCANLINE`, `BrandCanvas`, `pixelFontSize`, `textWidth`, `unitFor`, `drawScanlines`, `drawMarkInto`, `DISPLAY_FONT`, `BODY_FONT`; `scenes.ts`의 `rng`. **`drawMarkInto`는 Task 1에 이미 있다 — 다시 정의하지 말고 그대로 호출한다**
 - Produces:
   - `const YT_SAFE: { w: 1546; h: 423 }`
   - `const SHORTS_SAFE_RATIO: 0.75`
@@ -484,30 +499,6 @@ export function drawYouTubeBanner(canvas: BrandCanvas): void {
   ctx.fillText('브라우저에서 바로 플레이 · PLAY IN YOUR BROWSER', textX, Math.round(top + YT_SAFE.h * 0.72))
 
   drawScanlines(ctx, W, H, unit)
-}
-
-/** 마크를 캔버스 일부 영역에 그린다. drawMark와 같은 규칙을 쓴다. */
-function drawMarkInto(
-  ctx: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  w: number,
-  h: number,
-): void {
-  ctx.fillStyle = BRAND.deep
-  ctx.fillRect(x, y, w, h)
-  const fontSize = pixelFontSize(Math.min(w, h) / 4.2)
-  ctx.font = `${fontSize}px ${DISPLAY_FONT}`
-  ctx.textBaseline = 'middle'
-  const wordW = Math.round(textWidth(ctx, 'PIX', fontSize))
-  const cursorW = Math.round(fontSize * 0.62)
-  const gap = Math.round(fontSize * 0.16)
-  const startX = x + Math.round((w - (wordW + gap + cursorW)) / 2)
-  const midY = y + Math.round(h / 2)
-  ctx.fillStyle = BRAND.text
-  ctx.fillText('PIX', startX, midY)
-  ctx.fillStyle = BRAND.gold
-  ctx.fillRect(startX + wordW + gap, Math.round(midY - fontSize / 2), cursorW, fontSize)
 }
 
 export function drawShortsCard(canvas: BrandCanvas, headline: string[]): void {
