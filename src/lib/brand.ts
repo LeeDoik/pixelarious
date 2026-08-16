@@ -241,3 +241,125 @@ export function drawShortsCard(canvas: BrandCanvas, headline: string[]): void {
 
   drawScanlines(ctx, W, H, unit)
 }
+
+export type PostLabel = 'NEW GAME' | 'DEV LOG' | 'YOU ASKED' | 'YOUR TURN'
+
+/** 스펙 §6이 허용하는 라벨 전부. 새 라벨을 늘리지 않는다. */
+export const POST_LABELS: readonly PostLabel[] = ['NEW GAME', 'DEV LOG', 'YOU ASKED', 'YOUR TURN']
+
+/** drawImage에 넘길 수 있고 크기를 아는 것. 테스트에서는 크기만 있는 스텁을 쓴다. */
+export interface BrandImage {
+  width: number
+  height: number
+}
+
+export interface FullBleedPost {
+  kind: 'full'
+  label: PostLabel
+  title: string[]
+  image: BrandImage | null
+}
+
+export type PostSpec = FullBleedPost
+
+/** 금색 배지 + 칠흑 글자. 게시물 종류를 알리는 라벨 — 스펙 §6 */
+function drawLabelBadge(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  label: PostLabel,
+  fontSize: number,
+): number {
+  ctx.font = `${fontSize}px ${DISPLAY_FONT}`
+  ctx.textBaseline = 'middle'
+  const w = Math.round(textWidth(ctx, label, fontSize))
+  const padX = Math.round(fontSize * 0.6)
+  const padY = Math.round(fontSize * 0.5)
+  const boxH = fontSize + padY * 2
+  ctx.fillStyle = BRAND.gold
+  ctx.fillRect(x, y, w + padX * 2, boxH)
+  ctx.fillStyle = BRAND.deep
+  ctx.fillText(label, x + padX, y + Math.round(boxH / 2))
+  return boxH
+}
+
+/** 우하단 출처 표시. 캡처가 퍼져도 계정이 남는다 — 스펙 §6 */
+function drawWatermark(ctx: CanvasRenderingContext2D, W: number, H: number): void {
+  const tile = Math.round(W * 0.055)
+  const pad = Math.round(W * 0.03)
+  const nameSize = pixelFontSize(W * 0.016)
+  ctx.font = `${nameSize}px ${DISPLAY_FONT}`
+  const nameW = Math.round(textWidth(ctx, 'PIXELARIOUS', nameSize))
+  const totalW = tile + Math.round(tile * 0.3) + nameW
+  const x = W - pad - totalW
+  const y = H - pad - tile
+  drawMarkInto(ctx, x, y, tile, tile)
+  ctx.font = `${nameSize}px ${DISPLAY_FONT}`
+  ctx.textBaseline = 'middle'
+  ctx.fillStyle = BRAND.dim
+  ctx.fillText('PIXELARIOUS', x + tile + Math.round(tile * 0.3), y + Math.round(tile / 2))
+}
+
+/** 이미지를 잘라내며 캔버스를 채운다(cover). 픽셀 보간은 끈다 — 스펙 §8 */
+function drawImageCover(
+  ctx: CanvasRenderingContext2D,
+  img: BrandImage,
+  W: number,
+  H: number,
+): void {
+  ctx.imageSmoothingEnabled = false
+  const scale = Math.max(W / img.width, H / img.height)
+  const dw = Math.round(img.width * scale)
+  const dh = Math.round(img.height * scale)
+  ctx.drawImage(
+    img as unknown as CanvasImageSource,
+    Math.round((W - dw) / 2),
+    Math.round((H - dh) / 2),
+    dw,
+    dh,
+  )
+}
+
+function drawFullBleed(
+  ctx: CanvasRenderingContext2D,
+  W: number,
+  H: number,
+  spec: FullBleedPost,
+): void {
+  if (spec.image) {
+    drawImageCover(ctx, spec.image, W, H)
+  } else {
+    ctx.fillStyle = BRAND.bg
+    ctx.fillRect(0, 0, W, H)
+  }
+
+  const pad = Math.round(W * 0.055)
+  const labelSize = pixelFontSize(W * 0.022)
+  const titleSize = pixelFontSize(W * 0.062)
+  const lineGap = Math.round(titleSize * 1.5)
+
+  const titleBlockH = lineGap * spec.title.length
+  const badgeY = H - pad - titleBlockH - Math.round(labelSize * 2.6)
+  drawLabelBadge(ctx, pad, badgeY, spec.label, labelSize)
+
+  ctx.font = `${titleSize}px ${DISPLAY_FONT}`
+  ctx.textBaseline = 'middle'
+  ctx.fillStyle = BRAND.text
+  const firstY = H - pad - titleBlockH + Math.round(lineGap / 2)
+  spec.title.forEach((line, i) => {
+    ctx.fillText(line, pad, firstY + lineGap * i)
+  })
+
+  drawWatermark(ctx, W, H)
+}
+
+export function drawPost(canvas: BrandCanvas, spec: PostSpec): void {
+  const ctx = canvas.getContext('2d')
+  if (!ctx) return
+  const W = canvas.width
+  const H = canvas.height
+
+  if (spec.kind === 'full') drawFullBleed(ctx, W, H, spec)
+
+  drawScanlines(ctx, W, H, unitFor(W, H))
+}

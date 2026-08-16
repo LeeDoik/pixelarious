@@ -10,6 +10,8 @@ import {
   drawShortsCard,
   YT_SAFE,
   SHORTS_SAFE_RATIO,
+  drawPost,
+  POST_LABELS,
   type BrandCanvas,
 } from './brand'
 
@@ -239,5 +241,73 @@ describe('drawShortsCard', () => {
     const drawn = texts.map((t) => t.text)
     expect(drawn).toContain('첫 줄')
     expect(drawn).toContain('둘째 줄')
+  })
+})
+
+describe('drawPost — A 풀블리드', () => {
+  it('draws the label, the title lines and the watermark, and nothing else', () => {
+    const { canvas, texts } = fakeCanvas(1080, 1080)
+    drawPost(canvas, {
+      kind: 'full',
+      label: 'NEW GAME',
+      title: ['STARFALL', 'DRIFT'],
+      image: null,
+    })
+    const drawn = texts.map((t) => t.text)
+    expect(drawn).toContain('NEW GAME')
+    expect(drawn).toContain('STARFALL')
+    expect(drawn).toContain('DRIFT')
+    expect(drawn).toContain('PIXELARIOUS')
+    // 캡션을 이미지 안에 넣지 않는다 — 스펙 §6
+    expect(drawn.length).toBe(5) // 라벨 + 제목 2줄 + 워터마크 마크(PIX) + 워터마크 이름
+  })
+
+  it('paints the label badge in gold with deep text on top', () => {
+    const { canvas, rects, texts } = fakeCanvas(1080, 1080)
+    drawPost(canvas, { kind: 'full', label: 'DEV LOG', title: ['테스트'], image: null })
+    const badge = rects.find((r) => r.color === BRAND.gold && r.w > 40 && r.h < 120)
+    expect(badge).toBeDefined()
+    const labelText = texts.find((t) => t.text === 'DEV LOG')
+    expect(labelText?.color).toBe(BRAND.deep)
+  })
+
+  it('uses only NIGHT colors plus the scanline overlay', () => {
+    const { canvas, rects, texts } = fakeCanvas(1080, 1350)
+    drawPost(canvas, { kind: 'full', label: 'YOU ASKED', title: ['가'], image: null })
+    for (const r of rects) expect(NIGHT.has(r.color) || r.color === SCANLINE, r.color).toBe(true)
+    for (const t of texts) expect(NIGHT.has(t.color), t.color).toBe(true)
+  })
+
+  it('exposes exactly the four labels the spec allows', () => {
+    expect([...POST_LABELS]).toEqual(['NEW GAME', 'DEV LOG', 'YOU ASKED', 'YOUR TURN'])
+  })
+
+  it('turns off image smoothing so screenshots stay pixel-crisp', () => {
+    const rects: unknown[] = []
+    let smoothing = true
+    const ctx = {
+      fillStyle: '',
+      font: '',
+      textBaseline: '',
+      set imageSmoothingEnabled(v: boolean) {
+        smoothing = v
+      },
+      get imageSmoothingEnabled() {
+        return smoothing
+      },
+      fillRect() {
+        rects.push(1)
+      },
+      fillText() {},
+      drawImage() {},
+    }
+    const canvas = { width: 1080, height: 1080, getContext: () => ctx } as unknown as BrandCanvas
+    drawPost(canvas, {
+      kind: 'full',
+      label: 'NEW GAME',
+      title: ['가'],
+      image: { width: 320, height: 180 },
+    })
+    expect(smoothing).toBe(false)
   })
 })
