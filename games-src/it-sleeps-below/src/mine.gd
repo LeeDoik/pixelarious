@@ -273,25 +273,27 @@ func _after_move() -> void:
 			Sfx.play("rockfall")
 			if ppos == stood_at and alive:
 				_damage(1, "death_fall"))
-	# 중력
-	var land := MoveRules.fall_landing(cells, ppos)
-	if land != ppos:
-		var fall := land.y - ppos.y
-		var tw := create_tween()
-		tw.tween_property(player, "position", Vector2(land * 16) + Vector2(8, 8), Tuning.FALL_TIME * fall)
-		await tw.finished
-		ppos = land
-		GameState.run.depth = maxi(GameState.run.depth, ppos.y)
-		Sfx.play("land")
-		if fall > Economy.fall_tolerance(GameState.profile.upgrades.boots):
-			_damage(1, "death_fall")
-	_sync_positions(false)
-	# 지표 복귀
+	# 지표 복귀 — 중력보다 먼저 판정 (수직갱 정상에서 도로 떨어지지 않도록)
 	if ppos.y == 0 and alive:
+		_sync_positions(false)
 		alive = false
 		busy = false
 		run_ended.emit("finale_escaped" if finale_mode else "surfaced", GameState.run.depth)
 		return
+	# 중력 — 좌우 벽을 짚을 수 있으면(침니) 버틴다. 넓은 공동에서만 낙하
+	if not MoveRules.braced(cells, ppos):
+		var land := MoveRules.fall_landing(cells, ppos)
+		if land != ppos:
+			var fall := land.y - ppos.y
+			var tw := create_tween()
+			tw.tween_property(player, "position", Vector2(land * 16) + Vector2(8, 8), Tuning.FALL_TIME * fall)
+			await tw.finished
+			ppos = land
+			GameState.run.depth = maxi(GameState.run.depth, ppos.y)
+			Sfx.play("land")
+			if fall > Economy.fall_tolerance(GameState.profile.upgrades.boots):
+				_damage(1, "death_fall")
+	_sync_positions(false)
 	busy = false
 
 func _damage(n: int, reason: String) -> void:
