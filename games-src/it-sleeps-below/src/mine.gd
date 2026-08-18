@@ -116,7 +116,10 @@ func _process(delta: float) -> void:
 	if s != _last_strata:
 		_last_strata = s
 		strata_entered.emit(s)
-		Sfx.ambience(["amb_surface", "amb_rock", "amb_fissure", "", ""][mini(s, 4)])
+		if not finale_mode:
+			# 피날레 트랙은 탈출 중에도 유지된다 — 산이 깨어난 뒤에 지층 앰비언트로 돌아가면
+			# 지층 경계를 넘는 순간 각성이 취소된 것처럼 들린다
+			Sfx.ambience(["amb_surface", "amb_rock", "amb_fissure", "", ""][mini(s, 4)])
 	light_rig.follow(player.position)
 	if not finale_mode:
 		# 피날레 중에는 FinaleDirector가 심장 펄스로만 반경을 구동한다 — 여기서 덮어쓰면 펄스가 씹힌다

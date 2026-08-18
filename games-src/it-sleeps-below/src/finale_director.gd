@@ -11,7 +11,7 @@ var _pulse_t := 0.0
 var _shake_gen := 0
 
 func start() -> void:
-	Sfx.ambience("amb_finale")  # amb_finale.ogg는 아직 없음 — Sfx.ambience가 조용히 스킵한다
+	Sfx.ambience("amb_finale")
 	Sfx.play("awaken")
 	_awaken_intro()
 	var out: Dictionary = Finale.twist(mine.cells, GameState.run.seed)
