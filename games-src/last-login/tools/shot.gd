@@ -4,7 +4,7 @@ extends SceneTree
 ##
 ##   godot --path . -s tools/shot.gd -- <출력경로> [시나리오]
 ##
-## 시나리오: explorer(기본) | details | locked | notepad | desktop
+## 시나리오: explorer(기본) | details | locked | notepad | desktop | stack | settings | boot
 ##
 ## 주의: `-s`로 실행되는 스크립트는 오토로드가 등록되기 전에 컴파일된다.
 ## 여기서 프로젝트 클래스를 정적 타입으로 참조하면 그 스크립트가 딸려 컴파일되면서
@@ -20,11 +20,24 @@ func _run() -> void:
 	var args := OS.get_cmdline_user_args()
 	var out: String = args[0] if args.size() > 0 else "shot.png"
 	var scenario: String = args[1] if args.size() > 1 else "explorer"
+	if scenario == "boot":
+		root.add_child(load("res://src/boot/boot.tscn").instantiate())
+		await _settle(180)   # POST 타이핑이 끝나기를 기다린다
+		_save(out, scenario)
+		return
 	var desktop: Node = load("res://src/desktop/desktop.tscn").instantiate()
 	root.add_child(desktop)
 	await _settle()
 	var wm = desktop.wm
-	if scenario != "desktop":
+	if scenario == "settings":
+		# 오토로드도 이름으로 직접 쓰면 컴파일 시점에 없다 — 런타임에 노드로 집는다
+		root.get_node("/root/Fx").toggle_menu()
+		await _settle()
+	elif scenario == "stack":
+		for app in ["explorer", "mail", "messenger"]:
+			wm.open_app(app)
+		await _settle()
+	elif scenario != "desktop":
 		wm.open_app("explorer")
 		await _settle()
 		var explorer = _find_by_script(wm, "res://src/apps/explorer.gd")
@@ -36,13 +49,16 @@ func _run() -> void:
 			"notepad":
 				explorer.open_file("f_essay")
 		await _settle()
+	_save(out, scenario)
+
+func _save(out: String, scenario: String) -> void:
 	var img := root.get_texture().get_image()
 	var err := img.save_png(out)
 	print("shot: %s (%s) err=%d" % [out, scenario, err])
 	quit(0 if err == OK else 1)
 
-func _settle() -> void:
-	for i in SETTLE_FRAMES:
+func _settle(frames: int = SETTLE_FRAMES) -> void:
+	for i in frames:
 		await process_frame
 
 func _find_by_script(from: Node, script_path: String):
