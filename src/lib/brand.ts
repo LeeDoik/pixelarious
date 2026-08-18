@@ -154,22 +154,87 @@ export const YT_SAFE = { w: 1546, h: 423 } as const
 export const SHORTS_SAFE_RATIO = 0.75
 
 /** 결정적 픽셀 별밭. 커버 아트와 같은 시드 계열을 쓴다. */
+/** 별 하나가 담당하는 캔버스 면적. 클수록 하늘이 성겨진다. */
+const STAR_AREA_PER_PIXEL = 26000
+
+/**
+ * 4x4 순서 디더 행렬(Bayer). 8색 팔레트에서 톤 전이를 만드는 유일한 방법이다 —
+ * 부드러운 그라데이션은 팔레트를 벗어나므로 쓸 수 없다.
+ */
+const BAYER4 = [
+  [0, 8, 2, 10],
+  [12, 4, 14, 6],
+  [3, 11, 1, 9],
+  [15, 7, 13, 5],
+]
+
+/** 로고나 문구가 올라갈 자리 — 여기엔 배경 요소를 두지 않는다. */
+export interface Rect {
+  x: number
+  y: number
+  w: number
+  h: number
+}
+
+function inside(rect: Rect, x: number, y: number, size: number): boolean {
+  return x + size > rect.x && x < rect.x + rect.w && y + size > rect.y && y < rect.y + rect.h
+}
+
+/**
+ * 세로 방향 디더 그라데이션. densityAt(t)가 0이면 아무것도 안 그리고 1이면 꽉 채운다.
+ * 배경색 위에 색 셀만 얹으므로 밀도가 낮은 구간은 순회 비용도 들지 않는다.
+ */
+function drawDitherGradient(
+  ctx: CanvasRenderingContext2D,
+  w: number,
+  h: number,
+  cell: number,
+  color: string,
+  densityAt: (t: number) => number,
+): void {
+  const cols = Math.ceil(w / cell)
+  const rows = Math.ceil(h / cell)
+  ctx.fillStyle = color
+  for (let ry = 0; ry < rows; ry++) {
+    const density = densityAt(rows > 1 ? ry / (rows - 1) : 0)
+    if (density <= 0) continue
+    const threshold = density * 16
+    const row = BAYER4[ry & 3]
+    for (let rx = 0; rx < cols; rx++) {
+      if (row[rx & 3] < threshold) ctx.fillRect(rx * cell, ry * cell, cell, cell)
+    }
+  }
+}
+
+/**
+ * 별밭. avoid에 준 사각형들은 비워 둔다 — 로고와 문구가 앉을 자리에 별이 끼면
+ * 아무리 성겨도 지저분해 보인다.
+ */
 function drawStarfield(
   ctx: CanvasRenderingContext2D,
   w: number,
   h: number,
   unit: number,
   seed: number,
+  avoid: Rect[] = [],
 ): void {
   const r = rng(seed)
-  const count = Math.round((w * h) / 6000)
+  // 별은 배경 질감이지 주인공이 아니다. 밀도를 낮게 잡아야 로고가 묻히지 않는다 —
+  // 별 하나당 대략 160x160 픽셀을 차지한다.
+  const count = Math.round((w * h) / STAR_AREA_PER_PIXEL)
   for (let i = 0; i < count; i++) {
     const x = Math.floor(r() * w)
     const y = Math.floor(r() * h)
+    // 소수만 두 배 크기로 두어 밀도를 올리지 않고 원근감을 만든다.
+    const near = r() < 0.18
+    const size = near ? unit * 2 : unit
     // 금색은 커서 전용이다. 별에 쓰면 안전 영역 검사가 별까지 잡고,
     // 브랜드의 유일한 강조색이 배경 노이즈로 흩어진다.
-    ctx.fillStyle = r() < 0.35 ? BRAND.dim : BRAND.text
-    ctx.fillRect(x, y, unit * 2, unit * 2)
+    const color = near || r() < 0.6 ? BRAND.text : BRAND.dim
+    // 비워야 할 자리에 떨어졌으면 그냥 버린다. 밀어내면 경계에 별이 줄지어 선다.
+    if (avoid.some((rect) => inside(rect, x, y, size))) continue
+    ctx.fillStyle = color
+    ctx.fillRect(x, y, size, size)
   }
 }
 
@@ -180,12 +245,19 @@ export function drawYouTubeBanner(canvas: BrandCanvas): void {
   const H = canvas.height
   const unit = unitFor(W, H)
 
-  ctx.fillStyle = BRAND.deep
-  ctx.fillRect(0, 0, W, H)
-  drawStarfield(ctx, W, H, unit, 7)
-
   const left = Math.round((W - YT_SAFE.w) / 2)
   const top = Math.round((H - YT_SAFE.h) / 2)
+
+  ctx.fillStyle = BRAND.deep
+  ctx.fillRect(0, 0, W, H)
+  // 아래쪽으로 갈수록 짙어지는 성운 띠. 하단 38%에서만 올라온다.
+  drawDitherGradient(ctx, W, H, unit, BRAND.surface, (t) =>
+    t < 0.62 ? 0 : ((t - 0.62) / 0.38) * 0.8,
+  )
+  // 별은 안전 영역 바깥에만 둔다 — 가운데는 로고와 두 줄 문구가 들어갈 자리다.
+  drawStarfield(ctx, W, H, unit, 7, [
+    { x: left, y: top, w: YT_SAFE.w, h: YT_SAFE.h },
+  ])
 
   // 마크 타일
   const tile = Math.round(YT_SAFE.h * 0.55)
@@ -221,7 +293,16 @@ export function drawShortsCard(canvas: BrandCanvas, headline: string[]): void {
 
   ctx.fillStyle = BRAND.deep
   ctx.fillRect(0, 0, W, H)
-  drawStarfield(ctx, W, H, unit, 23)
+  // 위에서 아래로 내려가며 어둠이 깊어진다. 하단 55%는 완전히 비어 있다.
+  drawDitherGradient(ctx, W, H, unit, BRAND.surface, (t) =>
+    t > 0.45 ? 0 : ((0.45 - t) / 0.45) * 0.65,
+  )
+  // 마크 자리(상단)와 앱 UI가 덮는 하단 25%에는 별을 두지 않는다.
+  const markTile = Math.round(W * 0.26)
+  drawStarfield(ctx, W, H, unit, 23, [
+    { x: Math.round((W - markTile) / 2) - unit * 2, y: Math.round(H * 0.14) - unit * 2, w: markTile + unit * 4, h: markTile + unit * 4 },
+    { x: 0, y: floor, w: W, h: H - floor },
+  ])
 
   const tile = Math.round(W * 0.26)
   drawMarkInto(ctx, Math.round((W - tile) / 2), Math.round(H * 0.14), tile, tile)
@@ -405,8 +486,16 @@ function drawFullBleed(
   if (spec.image) {
     drawImageCover(ctx, spec.image, 0, 0, W, H)
   } else {
-    ctx.fillStyle = BRAND.bg
+    // 스크린샷이 없을 때의 배경. 단색 사각형은 "빈 자리"로 보이므로
+    // 커버 아트와 같은 어법(칠흑 + 디더 성운 + 성긴 별)으로 채운다.
+    const unit = unitFor(W, H)
+    ctx.fillStyle = BRAND.deep
     ctx.fillRect(0, 0, W, H)
+    drawDitherGradient(ctx, W, H, unit, BRAND.surface, (t) =>
+      t > 0.55 ? 0 : ((0.55 - t) / 0.55) * 0.6,
+    )
+    // 아래 40%에는 라벨·제목·워터마크가 앉는다.
+    drawStarfield(ctx, W, H, unit, 41, [{ x: 0, y: H * 0.6, w: W, h: H * 0.4 }])
   }
 
   const pad = Math.round(W * 0.055)

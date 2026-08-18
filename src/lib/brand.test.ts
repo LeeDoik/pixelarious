@@ -849,3 +849,57 @@ describe('drawPost — D 질문 카드', () => {
     },
   )
 })
+
+describe('배경 아트 — 디더 성운과 별 배치', () => {
+  it('banner leaves the safe area free of stars so the logo sits on empty dark', () => {
+    const { canvas, rects } = fakeCanvas(2560, 1440)
+    drawYouTubeBanner(canvas)
+    const left = (2560 - YT_SAFE.w) / 2
+    const top = (1440 - YT_SAFE.h) / 2
+    // 별은 text/dim 색이고 마크 타일보다 작다. 안전 영역 안에 하나도 없어야 한다.
+    const stars = rects.filter(
+      (r) => (r.color === BRAND.text || r.color === BRAND.dim) && r.w <= 40,
+    )
+    expect(stars.length).toBeGreaterThan(0)
+    for (const s of stars) {
+      const overlaps =
+        s.x + s.w > left && s.x < left + YT_SAFE.w && s.y + s.h > top && s.y < top + YT_SAFE.h
+      expect(overlaps, `star at ${s.x},${s.y} sits inside the safe area`).toBe(false)
+    }
+  })
+
+  it('banner dithers a nebula band that stays in the lower part of the frame', () => {
+    const { canvas, rects } = fakeCanvas(2560, 1440)
+    drawYouTubeBanner(canvas)
+    const band = rects.filter((r) => r.color === BRAND.surface)
+    expect(band.length).toBeGreaterThan(50)
+    // 상단 절반에는 성운이 올라오지 않는다
+    expect(band.every((r) => r.y >= 1440 * 0.55)).toBe(true)
+  })
+
+  it('shorts keeps stars out of the UI-covered bottom quarter', () => {
+    const { canvas, rects } = fakeCanvas(1080, 1920)
+    drawShortsCard(canvas, ['가'])
+    const floor = 1920 * SHORTS_SAFE_RATIO
+    const stars = rects.filter(
+      (r) => (r.color === BRAND.text || r.color === BRAND.dim) && r.w <= 40,
+    )
+    expect(stars.length).toBeGreaterThan(0)
+    for (const s of stars) {
+      expect(s.y + s.h <= floor, `star reaches ${s.y + s.h}`).toBe(true)
+    }
+  })
+
+  it('full-bleed without a screenshot paints the field, not a flat rectangle', () => {
+    const { canvas, rects } = fakeCanvas(1080, 1080)
+    drawPost(canvas, { kind: 'full', label: 'NEW GAME', title: ['A'], image: null })
+    // 예전에는 BRAND.bg 단색 하나였다. 이제 디더 셀과 별이 있어야 한다.
+    expect(rects.some((r) => r.color === BRAND.surface)).toBe(true)
+    const stars = rects.filter(
+      (r) => (r.color === BRAND.text || r.color === BRAND.dim) && r.w <= 40,
+    )
+    expect(stars.length).toBeGreaterThan(0)
+    // 하단 40%는 라벨·제목·워터마크 자리다
+    for (const s of stars) expect(s.y + s.h <= 1080 * 0.6 + 1).toBe(true)
+  })
+})
