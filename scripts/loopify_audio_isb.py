@@ -57,6 +57,38 @@ def auto_bounds(samples, sr, floor_below_peak=18.0, block=0.25):
     return keep[0] * block, (keep[-1] + 1) * block
 
 
+def snap_loop_seam(src, dst, search=0.010):
+    """루프 양끝을 잘라 접합점의 불연속을 최소화한다.
+
+    크로스페이드만으로는 접합점에 한 샘플짜리 단차가 남는다. 바람처럼 시끄러운
+    소재에서는 신호 자체의 변화폭에 묻히지만, 매끄러운 드론에서는 그 단차가 파일에서
+    가장 큰 불연속이 되어 루프마다 틱으로 들린다.
+
+    앞뒤 10ms 안에서 자를 지점을 모두 시험해 값과 기울기가 함께 이어지는 조합을 고른다
+    (제로크로싱만 맞추면 양끝 절댓값이 더해져 되레 나빠진다 — 실측으로 확인).
+    """
+    with wave.open(src, "rb") as w:
+        n, sr, ch, sw = w.getnframes(), w.getframerate(), w.getnchannels(), w.getsampwidth()
+        s = list(struct.unpack("<%dh" % (n * ch), w.readframes(n)))
+    before = abs(s[-1] - s[0])
+    if ch != 1 or n < sr * search * 4:
+        return src, before, before
+    win = int(sr * search)
+    best, bi, bj = None, 0, n
+    for i in range(win):
+        si, slope_i = s[i], s[i + 1] - s[i]
+        for j in range(n - win, n):
+            # 되감기는 순간 s[j-1] -> s[i]로 이어진다. 값 차이 + 기울기 차이를 함께 본다.
+            cost = abs(s[j - 1] - si) + abs((s[j - 1] - s[j - 2]) - slope_i)
+            if best is None or cost < best:
+                best, bi, bj = cost, i, j
+    cut = s[bi:bj]
+    with wave.open(dst, "wb") as w:
+        w.setnchannels(1); w.setsampwidth(sw); w.setframerate(sr)
+        w.writeframes(struct.pack("<%dh" % len(cut), *cut))
+    return dst, before, abs(cut[-1] - cut[0])
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("name")
@@ -110,6 +142,10 @@ def main():
             ffmpeg(["-i", cut, "-af",
                     f"afade=t=in:d={declick},afade=t=out:st={span - declick:.3f}:d={declick}",
                     "-c:a", "pcm_s16le", loop])
+
+        if xf > 0:
+            loop, before, snapped = snap_loop_seam(loop, os.path.join(tmp, "snap.wav"))
+            print(f"  이음매 정렬 {before} → {snapped}")
 
         looped, _ = read_mono(loop)
         gain = a.target_rms - rms_db(looped)
