@@ -31,7 +31,7 @@ export const PALETTES: Record<Palette, Record<CoverScene, ScenePalette>> = {
 const SEEDS: Record<CoverScene, number> = { starfall: 7, cave: 23, pong: 41, system: 77, lastlogin: 59 }
 
 /** mulberry32 시드 기반 PRNG — 커버가 렌더마다 같게 유지된다 */
-function rng(seed: number) {
+export function rng(seed: number) {
   return function () {
     seed |= 0
     seed = (seed + 0x6d2b79f5) | 0
