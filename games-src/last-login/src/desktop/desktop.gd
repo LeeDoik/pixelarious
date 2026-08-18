@@ -16,6 +16,8 @@ const ICON_TEXTURES := {
 	"browser": "res://assets/img/icons/browser.png",
 	"trash": "res://assets/img/icons/trash.png",
 }
+## 앱별 기본 창 크기 (없으면 WindowManager.DEFAULT_WIN_SIZE)
+const APP_WIN_SIZE := {"mail": Vector2(768, 560)}
 const OS_LOGO := "res://assets/img/icons/oslogo.png"
 const TRAY_VOLUME := "res://assets/img/icons/tray_volume.png"
 
@@ -67,7 +69,8 @@ func _ready() -> void:
 
 func _register_apps() -> void:
 	for id in APP_BUILDERS:
-		wm.register_app(id, ContentDB.ui("app_" + id), APP_BUILDERS[id], ICON_TEXTURES.get(id, ""))
+		wm.register_app(id, ContentDB.ui("app_" + id), APP_BUILDERS[id], ICON_TEXTURES.get(id, ""),
+			APP_WIN_SIZE.get(id, WindowManager.DEFAULT_WIN_SIZE))
 
 # --- 바탕화면 아이콘 ---
 

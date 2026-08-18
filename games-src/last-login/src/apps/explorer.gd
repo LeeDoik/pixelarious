@@ -19,13 +19,11 @@ const ROOT_ID := "root"
 const ROOT_LABEL := "내 컴퓨터"
 const DRIVE := "C:"
 const GRID_COLUMN_W := 148.0
-const ALNUM := "abcdefghijklmnopqrstuvwxyz0123456789"
 
 var _cwd := "mydocs"
 var _pending_locked := ""      # 암호 대기 중인 폴더 id
 var _history: Array[String] = []
 var _view_mode := ViewMode.ICONS
-var _message := ""             # 마지막으로 띄운 안내문
 
 var _list: ItemList
 var _tree: Tree
@@ -37,13 +35,7 @@ var _back_btn: Button
 var _up_btn: Button
 var _icons_btn: Button
 var _details_btn: Button
-var _modal: Control
-var _dialog_title: Label
-var _dialog_body: Label
-var _dialog_error: Label
-var _dialog_icon: TextureRect
-var _pw_edit: LineEdit
-var _cancel_btn: Button
+var _dialog: OSDialog
 var _tex_cache: Dictionary = {}
 
 func _ready() -> void:
@@ -57,7 +49,10 @@ func _ready() -> void:
 	col.add_child(_build_list())
 	col.add_child(_build_tree())
 	col.add_child(_build_status_bar())
-	_build_modal()
+	_dialog = OSDialog.new()
+	add_child(_dialog)
+	_dialog.submitted.connect(submit_password)
+	_dialog.closed.connect(func(): _pending_locked = "")
 	set_view_mode(ViewMode.ICONS)
 	_refresh()
 
@@ -179,90 +174,6 @@ func _build_status_bar() -> Control:
 	bar.add_child(row)
 	return bar
 
-func _build_modal() -> void:
-	# 암호 입력·안내를 위한 창 안 대화상자. 뒤를 덮어 목록 조작을 막는다.
-	_modal = Control.new()
-	_modal.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_modal.mouse_filter = Control.MOUSE_FILTER_STOP
-	_modal.visible = false
-	var scrim := ColorRect.new()
-	scrim.color = Color(0, 0, 0, 0.35)
-	scrim.set_anchors_preset(Control.PRESET_FULL_RECT)
-	scrim.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_modal.add_child(scrim)
-	var center := CenterContainer.new()
-	center.set_anchors_preset(Control.PRESET_FULL_RECT)
-	center.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var box := PanelContainer.new()
-	box.custom_minimum_size = Vector2(420, 0)
-	var shell := VBoxContainer.new()
-	shell.add_theme_constant_override("separation", 0)
-	var titlebar := Panel.new()
-	titlebar.add_theme_stylebox_override("panel", NuriTheme.titlebar_style(true))
-	titlebar.custom_minimum_size = Vector2(0, 24)
-	_dialog_title = Label.new()
-	_dialog_title.add_theme_font_size_override("font_size", 14)
-	_dialog_title.add_theme_color_override("font_color", Color.WHITE)
-	_dialog_title.position = Vector2(8, 3)
-	titlebar.add_child(_dialog_title)
-	shell.add_child(titlebar)
-	var pad := MarginContainer.new()
-	for side in ["left", "right", "top", "bottom"]:
-		pad.add_theme_constant_override("margin_" + side, 14)
-	var col := VBoxContainer.new()
-	col.add_theme_constant_override("separation", 10)
-	var head := HBoxContainer.new()
-	head.add_theme_constant_override("separation", 10)
-	_dialog_icon = TextureRect.new()
-	_dialog_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	_dialog_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	_dialog_icon.custom_minimum_size = Vector2(32, 32)
-	_dialog_icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	head.add_child(_dialog_icon)
-	var texts := VBoxContainer.new()
-	texts.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	texts.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	_dialog_body = Label.new()
-	_dialog_body.add_theme_font_size_override("font_size", 14)
-	_dialog_body.add_theme_color_override("font_color", NuriTheme.TEXT_DIM)
-	_dialog_body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_dialog_body.custom_minimum_size = Vector2(320, 0)
-	texts.add_child(_dialog_body)
-	head.add_child(texts)
-	col.add_child(head)
-	_pw_edit = LineEdit.new()
-	_pw_edit.max_length = 24
-	_pw_edit.placeholder_text = "비밀번호 (영문/숫자)"
-	_pw_edit.secret = true
-	_pw_edit.text_changed.connect(_filter_password)
-	_pw_edit.text_submitted.connect(func(t: String) -> void: submit_password(t))
-	col.add_child(_pw_edit)
-	_dialog_error = Label.new()
-	_dialog_error.add_theme_font_size_override("font_size", 14)
-	_dialog_error.add_theme_color_override("font_color", Color("9c2f2f"))
-	_dialog_error.visible = false
-	col.add_child(_dialog_error)
-	var buttons := HBoxContainer.new()
-	buttons.alignment = BoxContainer.ALIGNMENT_END
-	buttons.add_theme_constant_override("separation", 8)
-	var ok := Button.new()
-	ok.text = "확인"
-	ok.custom_minimum_size = Vector2(80, 0)
-	ok.pressed.connect(_on_dialog_ok)
-	_cancel_btn = Button.new()
-	_cancel_btn.text = "취소"
-	_cancel_btn.custom_minimum_size = Vector2(80, 0)
-	_cancel_btn.pressed.connect(_close_dialog)
-	buttons.add_child(ok)
-	buttons.add_child(_cancel_btn)
-	col.add_child(buttons)
-	pad.add_child(col)
-	shell.add_child(pad)
-	box.add_child(shell)
-	center.add_child(box)
-	_modal.add_child(center)
-	add_child(_modal)
-
 # ── 보기 전환 ─────────────────────────────────────────────────────────────
 
 func set_view_mode(mode: ViewMode) -> void:
@@ -356,9 +267,6 @@ func can_go_back() -> bool:
 func cwd() -> String:
 	return _cwd
 
-func last_message() -> String:
-	return _message
-
 func _go_back() -> void:
 	if _history.is_empty():
 		return
@@ -420,7 +328,7 @@ func open_folder(id: String) -> bool:
 		_pending_locked = id
 		_ask_password(String(n.get("name", "")))
 		return false
-	_close_dialog()
+	_dialog.close()
 	_navigate(id)
 	return true
 
@@ -460,45 +368,13 @@ func _photo_view(path: String) -> Control:
 # ── 암호 대화상자 ─────────────────────────────────────────────────────────
 
 func _ask_password(folder_name: String) -> void:
-	_dialog_icon.texture = _texture(ICON["folder_locked"])
-	_dialog_title.text = "암호 입력"
-	_dialog_body.text = "'%s' 폴더는 암호로 보호되어 있습니다." % folder_name
-	_message = _dialog_body.text
-	_dialog_error.visible = false
-	_pw_edit.visible = true
-	_pw_edit.text = ""
-	_cancel_btn.visible = true
-	_modal.visible = true
-	_pw_edit.grab_focus()
+	_dialog.ask_password("암호 입력", "'%s' 폴더는 암호로 보호되어 있습니다." % folder_name, ICON["folder_locked"])
 
 func _show_message(title: String, body: String) -> void:
-	_dialog_icon.texture = _texture(ICON["doc"])
-	_dialog_title.text = title
-	_dialog_body.text = body
-	_message = body
-	_dialog_error.visible = false
-	_pw_edit.visible = false
-	_cancel_btn.visible = false
-	_modal.visible = true
+	_dialog.show_message(title, body, ICON["doc"])
 
-func _on_dialog_ok() -> void:
-	if _pending_locked != "":
-		submit_password(_pw_edit.text)
-	else:
-		_close_dialog()
-
-func _close_dialog() -> void:
-	_pending_locked = ""
-	_modal.visible = false
-
-func _filter_password(t: String) -> void:
-	var filtered := ""
-	for ch in t:
-		if ch.to_lower() in ALNUM:
-			filtered += ch
-	if filtered != t:
-		_pw_edit.text = filtered
-		_pw_edit.caret_column = filtered.length()
+func last_message() -> String:
+	return _dialog.last_message() if is_instance_valid(_dialog) else ""
 
 func submit_password(text: String) -> bool:
 	if _pending_locked == "":
@@ -508,17 +384,15 @@ func submit_password(text: String) -> bool:
 		AudioDirector.play_sfx("unlock")
 		var target := _pending_locked
 		_pending_locked = ""
-		_modal.visible = false
+		_dialog.close()
 		return open_folder(target)
-	_dialog_error.text = "비밀번호가 올바르지 않습니다."
-	_dialog_error.visible = true
-	_message = _dialog_error.text
+	_dialog.show_error("비밀번호가 올바르지 않습니다.")
 	return false
 
 func _clear_pending_lock() -> void:
 	_pending_locked = ""
-	if is_instance_valid(_modal):
-		_modal.visible = false
+	if is_instance_valid(_dialog):
+		_dialog.close()
 
 # ── 표시 규칙 ─────────────────────────────────────────────────────────────
 

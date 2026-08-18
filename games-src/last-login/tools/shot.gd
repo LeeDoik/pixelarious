@@ -4,7 +4,7 @@ extends SceneTree
 ##
 ##   godot --path . -s tools/shot.gd -- <출력경로> [시나리오]
 ##
-## 시나리오: explorer(기본) | details | locked | notepad | desktop | stack | settings | boot | splash | start | maximize | shutdown | msg | msgchoice | msglogs
+## 시나리오: explorer(기본) | details | locked | notepad | desktop | stack | settings | boot | splash | start | maximize | shutdown | msg | msgchoice | msglogs | mail | maillock
 ##
 ## 주의: `-s`로 실행되는 스크립트는 오토로드가 등록되기 전에 컴파일된다.
 ## 여기서 프로젝트 클래스를 정적 타입으로 참조하면 그 스크립트가 딸려 컴파일되면서
@@ -49,6 +49,14 @@ func _run() -> void:
 			var msg = _find_by_script(wm, "res://src/apps/messenger.gd")
 			msg.open_log(2)          # 10-05 민규 — 시스템 줄이 섞인 가장 긴 로그
 			await _settle()
+	elif scenario == "mail" or scenario == "maillock":
+		wm.open_app("mail")
+		await _settle()
+		var ml = _find_by_script(wm, "res://src/apps/mail.gd")
+		ml.open_mail("m1")            # 첨부(퍼즐2)가 달린 메일
+		if scenario == "maillock":
+			ml.open_attachment("m1")   # 잠긴 첨부 → 암호 요구
+		await _settle()
 	elif scenario == "shutdown":
 		root.get_node("/root/GameState").set_flag("ending_start")
 		await _settle(30)

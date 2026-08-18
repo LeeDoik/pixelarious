@@ -6,6 +6,7 @@ signal windows_changed(open_ids: Array)
 signal app_focused(id: String)
 
 const OS_WINDOW := preload("res://src/desktop/os_window.tscn")
+const DEFAULT_WIN_SIZE := Vector2(640, 480)
 
 var _apps: Dictionary = {}     # id -> {title, builder}
 var _windows: Dictionary = {}  # id -> OSWindow
@@ -31,15 +32,17 @@ func _input(e: InputEvent) -> void:
 func _ready() -> void:
 	add_to_group("window_manager")
 
-func register_app(id: String, title: String, builder: Callable, icon: String = "") -> void:
-	_apps[id] = {"title": title, "builder": builder, "icon": icon}
+func register_app(id: String, title: String, builder: Callable, icon: String = "",
+		win_size: Vector2 = DEFAULT_WIN_SIZE) -> void:
+	## win_size는 앱마다 다르다 — 5열 표를 쓰는 누리메일은 640x480이 빠듯하다
+	_apps[id] = {"title": title, "builder": builder, "icon": icon, "size": win_size}
 
 func open_app(id: String) -> void:
 	if _windows.has(id):
 		focus_app(id)
 		return
 	var app: Dictionary = _apps[id]
-	open_window(id, app["title"], app["builder"].call(), Vector2(640, 480), app.get("icon", ""))
+	open_window(id, app["title"], app["builder"].call(), app.get("size", DEFAULT_WIN_SIZE), app.get("icon", ""))
 
 func open_window(id: String, title: String, content: Control, win_size: Vector2 = Vector2(640, 480), icon: String = "") -> void:
 	## 등록된 앱 외의 동적 창(사진 뷰어 등)도 이 경로로 연다

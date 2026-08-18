@@ -215,4 +215,92 @@ def _dot(fill, rim, lit):
 save(_dot((82, 192, 90), (24, 74, 34), (176, 232, 176)), "status_on.png")
 save(_dot((150, 150, 142), (66, 66, 60), (206, 206, 198)), "status_off.png")
 
+
+# 누리메일 (2026-08-18) — 목록 첫 열의 봉투/클립, 하단 첨부 막대의 잠긴 문서
+PAPER = (246, 246, 238)
+PAPER_IN = (214, 214, 204)
+EDGE = (58, 62, 70)
+CLIP = (150, 154, 164)
+CLIP_LIT = (206, 210, 218)
+
+def _ascii(rows, palette, scale=1):
+    w = max(len(r) for r in rows)
+    im = Image.new("RGBA", (w, len(rows)), (0, 0, 0, 0))
+    px = im.load()
+    for y, row in enumerate(rows):
+        for x, ch in enumerate(row):
+            if ch in palette:
+                px[x, y] = palette[ch]
+    if scale > 1:
+        im = im.resize((w * scale, len(rows) * scale), Image.NEAREST)
+    return im
+
+# 안 읽은 메일 = 닫힌 봉투 (덮개가 아래를 향한 V)
+save(_ascii([
+    "................",
+    "................",
+    "................",
+    "..############..",
+    "..#oooooooooo#..",
+    "..#Xoooooooo X..",
+    "..#oXoooooo Xo..",
+    "..#ooXoooo Xoo..",
+    "..#oooXoo Xooo..",
+    "..#ooooXXXoooo..",
+    "..#oooooooooo#..",
+    "..############..",
+    "................",
+    "................",
+    "................",
+    "................",
+], {"#": EDGE, "o": PAPER, "X": (150, 152, 158)}), "mail_unread.png")
+
+# 읽은 메일 = 덮개가 위로 젖혀진 봉투 (몸통은 흰색 + 편지 띠 — 안 그러면 회색 상자로 읽힌다)
+save(_ascii([
+    "................",
+    "................",
+    ".......##.......",
+    "......#oo#......",
+    ".....#oooo#.....",
+    "....#oooooo#....",
+    "...#oooooooo#...",
+    "..############..",
+    "..#oooooooooo#..",
+    "..#oIIIIIIIIo#..",
+    "..#oIIIIIIIIo#..",
+    "..#oooooooooo#..",
+    "..############..",
+    "................",
+    "................",
+    "................",
+], {"#": EDGE, "o": PAPER, "I": PAPER_IN}), "mail_read.png")
+
+# 첨부 클립 — 세로 겹고리는 16px에서 사각형으로 뭉개진다. 대각선이라야 두 줄이 갈린다.
+img = canvas(16); d = ImageDraw.Draw(img)
+outer = [(x, 13 - x) for x in range(3, 11)]          # 왼쪽-아래 → 오른쪽-위
+inner = [(x, 17 - x) for x in range(6, 14)]          # 4px 안쪽으로 나란히
+bottom = [(2, 11), (2, 12), (3, 13), (4, 13), (5, 13), (6, 12)]   # 아래를 감아 잇는다
+hook = [(11, 2), (12, 2), (13, 2), (14, 3), (14, 4)]              # 위로 넘어가는 고리
+tail = [(x, 15 - x) for x in range(8, 13)]           # 안쪽으로 되꺾여 멈추는 끝
+for pts in (outer, inner, bottom, hook, tail):
+    for (x, y) in pts:
+        if 0 <= x < 16 and 0 <= y < 16:
+            d.point((x, y), fill=CLIP)
+for (x, y) in [(3, 10), (6, 11), (13, 2)]:
+    d.point((x, y), fill=CLIP_LIT)
+save(img, "clip.png")
+
+# 잠긴 첨부 = 문서 위에 자물쇠 (folder_locked과 같은 합성 방식)
+doc = Image.open(os.path.join(OUT, "doc.png")).convert("RGBA")
+img = doc.copy(); d = ImageDraw.Draw(img)
+d.rectangle([17, 19, 29, 30], fill=(0, 0, 0, 60))
+d.arc([20, 12, 28, 22], 180, 360, fill=STEEL_MID, width=3)
+d.arc([21, 13, 27, 21], 180, 360, fill=STEEL_LIT, width=1)
+d.rectangle([18, 19, 29, 29], fill=BRASS_MID, outline=BRASS_EDGE)
+d.rectangle([19, 20, 28, 21], fill=BRASS_LIT)
+d.rectangle([19, 27, 28, 28], fill=BRASS_DIM)
+d.rectangle([23, 23, 24, 26], fill=BRASS_EDGE)
+d.point((23, 22), fill=BRASS_EDGE); d.point((24, 22), fill=BRASS_EDGE)
+save(img, "attach_locked.png")
+
 print("ok")
