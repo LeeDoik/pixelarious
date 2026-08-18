@@ -197,4 +197,22 @@ for (x, y) in WAVES:                          # 파형은 이어진 픽셀 사�
     d.point((x, y), fill=SPK)
 save(img, "tray_volume.png")
 
+
+# 접속 상태 점 (PC통신 상대 표시줄) — 16px에서 PIL ellipse는 들쭉날쭉해서 거리로 직접 찍는다
+def _dot(fill, rim, lit):
+    im = canvas(16); d = ImageDraw.Draw(im)
+    cx = cy = 7.5
+    for y in range(16):
+        for x in range(16):
+            dist = ((x - cx) ** 2 + (y - cy) ** 2) ** 0.5
+            if dist <= 4.6:
+                d.point((x, y), fill=fill)
+            elif dist <= 5.6:
+                d.point((x, y), fill=rim)
+    d.point((6, 5), fill=lit); d.point((7, 5), fill=lit); d.point((6, 6), fill=lit)
+    return im
+
+save(_dot((82, 192, 90), (24, 74, 34), (176, 232, 176)), "status_on.png")
+save(_dot((150, 150, 142), (66, 66, 60), (206, 206, 198)), "status_off.png")
+
 print("ok")
