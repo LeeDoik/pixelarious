@@ -24,6 +24,11 @@ const BODY_FONT := "res://assets/fonts/neodgm.ttf"
 const BODY_FONT_SIZE := 16
 const FALLBACK_FONT := "res://assets/fonts/Galmuri11.ttf"
 const HOME_URL := "portal.nurinet.co.kr"
+## 본문 한 줄이 통째로 [[img:이름]] 또는 [[blink:이름]]이면 그 자리에 그림이 들어간다.
+## 그 시절 페이지는 글 사이사이에 배너가 끼어 있었고, 마커 방식이라 ASCII 격자를 안 건드린다.
+const IMG_PATTERN := "^\\s*\\[\\[(img|blink):([a-z0-9_]+)\\]\\]\\s*$"
+const WEB_IMG_DIR := "res://assets/img/web/"
+const BLINK_SEC := 0.6
 const DEFAULT_SKIN := "system"
 ## 본문 칼럼 폭 = 가장 넓은 페이지(84칸 × 8px) + 좌우 여백.
 ## 창을 넓히면 남는 자리는 사이트색 바탕으로 남아 2002년 사이트처럼 보인다.
@@ -57,7 +62,10 @@ const ALLOWED := "abcdefghijklmnopqrstuvwxyz0123456789.-/:"
 const SAVED_PATTERN := "저장\\s*([0-9]{4}-[0-9]{2}-[0-9]{2}(?:\\s+[0-9]{2}:[0-9]{2})?)"
 
 var _addr: LineEdit
-var _grid: TextGrid
+var _blocks: VBoxContainer
+var _grids: Array[TextGrid] = []
+var _blinkers: Array[TextureRect] = []
+var _blink_on := true
 var _scroll: ScrollContainer
 var _status_left: Label
 var _status_right: Label
@@ -91,6 +99,11 @@ func _ready() -> void:
 	col.add_child(_build_status_bar())
 	_dialog = OSDialog.new()
 	add_child(_dialog)
+	var blink := Timer.new()
+	blink.wait_time = BLINK_SEC
+	blink.autostart = true
+	blink.timeout.connect(_tick_blink)
+	add_child(blink)
 	navigate(HOME_URL)
 
 # ── 구성 ──────────────────────────────────────────────────────────────────
@@ -224,15 +237,10 @@ func _build_page() -> Control:
 	for side in ["left", "right", "top", "bottom"]:
 		pad.add_theme_constant_override("margin_" + side, 8)
 	_scroll = ScrollContainer.new()
-	_grid = TextGrid.new()
-	_grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	var body_font := _body_font()
-	if body_font != null:
-		_grid.add_theme_font_override("font", body_font)
-		_grid.add_theme_font_size_override("font_size", BODY_FONT_SIZE)
-	_grid.link_activated.connect(func(url: String): navigate(url))
-	_grid.link_hovered.connect(_on_link_hovered)
-	_scroll.add_child(_grid)
+	_blocks = VBoxContainer.new()
+	_blocks.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_blocks.add_theme_constant_override("separation", 6)
+	_scroll.add_child(_blocks)
 	pad.add_child(_scroll)
 	_column.add_child(pad)
 	row.add_child(_column)
@@ -244,6 +252,76 @@ func _build_page() -> Control:
 	col.add_child(_footer)
 	field.add_child(col)
 	return field
+
+func _make_grid() -> TextGrid:
+	var g := TextGrid.new()
+	g.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var body_font := _body_font()
+	if body_font != null:
+		g.add_theme_font_override("font", body_font)
+		g.add_theme_font_size_override("font_size", BODY_FONT_SIZE)
+	g.link_activated.connect(func(url: String): navigate(url))
+	g.link_hovered.connect(_on_link_hovered)
+	return g
+
+func _set_body(text: String) -> void:
+	## 본문을 그림 마커로 잘라 [글, 그림, 글, …] 순서로 쌓는다.
+	for c in _blocks.get_children():
+		_blocks.remove_child(c)
+		c.queue_free()
+	_grids.clear()
+	_blinkers.clear()
+	var re := RegEx.new()
+	re.compile(IMG_PATTERN)
+	var buffer := PackedStringArray()
+	for line in text.split("\n"):
+		var m := re.search(line)
+		if m == null:
+			buffer.append(line)
+			continue
+		_flush_text(buffer)
+		_add_image(m.get_string(2), m.get_string(1) == "blink")
+	_flush_text(buffer)
+	_apply_block_colors()
+
+func _flush_text(buffer: PackedStringArray) -> void:
+	if buffer.is_empty():
+		return
+	var g := _make_grid()
+	_blocks.add_child(g)
+	g.grid_text = "\n".join(buffer)
+	_grids.append(g)
+	buffer.clear()
+
+func _add_image(name: String, blink: bool) -> void:
+	var path := WEB_IMG_DIR + name + ("_a.png" if blink else ".png")
+	if not ResourceLoader.exists(path):
+		return
+	var tr := TextureRect.new()
+	tr.texture = load(path)
+	tr.stretch_mode = TextureRect.STRETCH_KEEP
+	tr.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	tr.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	_blocks.add_child(tr)
+	if blink:
+		tr.set_meta("frames", [load(path), load(WEB_IMG_DIR + name + "_b.png")])
+		_blinkers.append(tr)
+
+func _tick_blink() -> void:
+	# 2002년 띠광고는 GIF로 깜빡였다. 한 군데만 움직여야 광고로 읽힌다.
+	_blink_on = not _blink_on
+	for tr in _blinkers:
+		if is_instance_valid(tr):
+			tr.texture = tr.get_meta("frames")[0 if _blink_on else 1]
+
+func _apply_block_colors() -> void:
+	if not SKINS.has(_skin):
+		return
+	var s: Dictionary = SKINS[_skin]
+	for g in _grids:
+		g.ink_color = Color(String(s["ink"]))
+		g.link_color = Color(String(s["link"]))
+		g.queue_redraw()
 
 func _gutter() -> Control:
 	## 사이트색이 드러나는 양옆 여백. 창이 좁으면 0까지 줄어들고 본문이 자리를 다 쓴다.
@@ -301,9 +379,7 @@ func _apply_skin(skin_id: String, note: String) -> void:
 	var foot := StyleBoxFlat.new()
 	foot.bg_color = Color(String(s["band"]))
 	_footer.add_theme_stylebox_override("panel", foot)
-	_grid.ink_color = Color(String(s["ink"]))
-	_grid.link_color = Color(String(s["link"]))
-	_grid.queue_redraw()
+	_apply_block_colors()
 
 func skin_id() -> String:
 	return _skin
@@ -361,7 +437,7 @@ func _render(url: String) -> Dictionary:
 		GameState.try_answer("puzzle3", u)
 	_apply_skin(String(page.get("skin", DEFAULT_SKIN)), String(page.get("band", "")))
 	_title = String(page["title"])
-	_grid.grid_text = String(page["body"])
+	_set_body(String(page["body"]))
 	_set_window_title(_title)
 	_status_left.text = "완료"
 	_status_right.text = "오프라인 캐시 · %s 저장" % _saved_at(String(page["body"]))
@@ -376,7 +452,7 @@ func _show_not_cached(u: String) -> void:
 	# 캐시에 없는 주소. 퍼즐3에서 주소를 더듬는 플레이어에게 이 화면이 피드백이 된다.
 	_apply_skin("system", "")
 	_title = "캐시에 없는 주소"
-	_grid.grid_text = """■ 캐시에 없는 주소입니다
+	_set_body("""■ 캐시에 없는 주소입니다
 
   이 컴퓨터에 저장된 오프라인 캐시에서 다음 주소를 찾을 수 없습니다.
 
@@ -384,7 +460,7 @@ func _show_not_cached(u: String) -> void:
 
   · 누리넷에 연결되어 있지 않으므로 서버에서 새로 받아올 수 없습니다.
   · 캐시는 주소 단위로 저장됩니다.
-    상위 주소가 없어도 하위 주소는 남아 있을 수 있습니다.""" % u
+    상위 주소가 없어도 하위 주소는 남아 있을 수 있습니다.""" % u)
 	_set_window_title(_title)
 	_status_left.text = "캐시 없음"
 	_status_right.text = "저장된 사본 없음"
@@ -458,7 +534,26 @@ func can_go_forward() -> bool:
 	return _pos >= 0 and _pos < _history.size() - 1
 
 func link_count() -> int:
-	return _grid.link_count()
+	var n := 0
+	for g in _grids:
+		n += g.link_count()
+	return n
+
+func image_count() -> int:
+	var n := 0
+	for c in _blocks.get_children():
+		if c is TextureRect:
+			n += 1
+	return n
+
+func blink_count() -> int:
+	return _blinkers.size()
+
+func grid_links() -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	for g in _grids:
+		out.append_array(g.links())
+	return out
 
 func _texture(path: String) -> Texture2D:
 	if _tex_cache.has(path):
