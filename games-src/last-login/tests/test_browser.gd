@@ -23,3 +23,67 @@ func test_unknown_url_returns_empty() -> void:
 	var b: Control = auto_free(BrowserApp.new())
 	add_child(b)
 	assert_bool(b.navigate("nowhere.example").is_empty()).is_true()
+
+func test_offline_cache_status_follows_the_page() -> void:
+	# 페이지마다 저장 시각이 다른 게 서사다 (성진의 마지막 접속 11-02 vs 누군가의 2003-01-31)
+	var b: Control = auto_free(BrowserApp.new())
+	add_child(b)
+	b.navigate("portal.nurinet.co.kr")
+	assert_str(b.cache_text()).contains("2002-11-02")
+	b.navigate("cafe.nurinet.co.kr/saebit")
+	assert_str(b.cache_text()).contains("2003-01-31")
+
+func test_every_page_states_when_it_was_cached() -> void:
+	# 상태표시줄이 본문에서 저장 시각을 뽑아 쓴다 — 콘텐츠에서 빠지면 "시각 미상"이 된다.
+	# (연도는 페이지마다 다르다: 성진의 마지막 접속 2002-11-02, 그 뒤 누군가의 2003-01-31)
+	var b: Control = auto_free(BrowserApp.new())
+	add_child(b)
+	var re := RegEx.new()
+	re.compile("[0-9]{4}-[0-9]{2}-[0-9]{2}")
+	var raw: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://content/web.json"))
+	for url in raw["pages"]:
+		b.navigate(String(url))
+		assert_bool(re.search(b.cache_text()) != null).override_failure_message(
+			"%s 페이지에서 저장 시각을 못 읽었다: %s" % [url, b.cache_text()]).is_true()
+
+func test_uncached_url_shows_the_dedicated_notice() -> void:
+	# 퍼즐3에서 주소를 더듬는 플레이어에게 이 화면이 피드백이 된다
+	var b: Control = auto_free(BrowserApp.new())
+	add_child(b)
+	assert_bool(b.navigate("cafe.nurinet.co.kr/saebit/list").is_empty()).is_true()
+	assert_str(b.page_title()).contains("캐시에 없는")
+	assert_str(b.status_text()).contains("캐시 없음")
+
+func test_history_back_and_forward() -> void:
+	var b: Control = auto_free(BrowserApp.new())
+	add_child(b)                              # _ready가 홈으로 한 번 이동한다
+	assert_bool(b.can_go_back()).is_false()
+	b.navigate("myhome.nurinet.co.kr/sj2002")
+	assert_bool(b.can_go_back()).is_true()
+	b.go_back()
+	assert_str(b.address_text()).is_equal("portal.nurinet.co.kr")
+	assert_bool(b.can_go_forward()).is_true()
+	b.go_forward()
+	assert_str(b.address_text()).is_equal("myhome.nurinet.co.kr/sj2002")
+
+func test_body_urls_become_links_but_dates_do_not() -> void:
+	# 마이홈 본문에는 방명록 주소가 적혀 있고, 날짜(2002.03.16)도 잔뜩 있다.
+	# 날짜가 링크가 되면 화면이 밑줄 범벅이 되고 퍼즐 감각도 무너진다.
+	var b: Control = auto_free(BrowserApp.new())
+	add_child(b)
+	b.navigate("myhome.nurinet.co.kr/sj2002")
+	assert_int(b.link_count()).is_greater(0)
+	for link in b._grid.links():
+		assert_str(String(link["url"])).override_failure_message(
+			"날짜가 링크로 잡혔다: " + String(link["url"])).contains(".co.kr")
+
+func test_gate_url_is_not_linked_anywhere() -> void:
+	# 퍼즐3은 /gate를 직접 쳐야 풀린다. 어느 페이지에도 그 주소가 적혀 있으면 안 된다.
+	var b: Control = auto_free(BrowserApp.new())
+	add_child(b)
+	var raw: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://content/web.json"))
+	for url in raw["pages"]:
+		b.navigate(String(url))
+		for link in b._grid.links():
+			assert_str(String(link["url"])).override_failure_message(
+				"%s 페이지가 /gate를 링크로 노출한다" % url).is_not_equal("cafe.nurinet.co.kr/saebit/gate")

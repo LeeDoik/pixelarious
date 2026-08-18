@@ -17,7 +17,7 @@ const ICON_TEXTURES := {
 	"trash": "res://assets/img/icons/trash.png",
 }
 ## 앱별 기본 창 크기 (없으면 WindowManager.DEFAULT_WIN_SIZE)
-const APP_WIN_SIZE := {"mail": Vector2(768, 560)}
+const APP_WIN_SIZE := {"mail": Vector2(768, 560), "browser": Vector2(768, 580)}
 const OS_LOGO := "res://assets/img/icons/oslogo.png"
 const TRAY_VOLUME := "res://assets/img/icons/tray_volume.png"
 

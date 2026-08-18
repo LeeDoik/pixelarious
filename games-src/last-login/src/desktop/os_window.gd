@@ -16,6 +16,7 @@ var _dragging := false
 var _resizing := false
 var _resize_zone := 0  # 비트마스크: 1=왼쪽 2=오른쪽 4=아래
 var _titlebar: Panel
+var _title_label: Label
 var _max_btn: Button
 var _maximized := false
 var _restore_rect := Rect2()
@@ -43,11 +44,11 @@ func setup(id: String, title: String, win_size: Vector2, icon_path: String = "")
 		ic.size = Vector2(20, 20)
 		_titlebar.add_child(ic)
 		title_x = 32.0
-	var tl := Label.new()
-	tl.text = title
-	tl.position = Vector2(title_x, 4)
-	tl.add_theme_color_override("font_color", Color.WHITE)
-	_titlebar.add_child(tl)
+	_title_label = Label.new()
+	_title_label.text = title
+	_title_label.position = Vector2(title_x, 4)
+	_title_label.add_theme_color_override("font_color", Color.WHITE)
+	_titlebar.add_child(_title_label)
 	var x := _titlebar_button("X", -26.0, -4.0)
 	x.pressed.connect(func(): request_close.emit(win_id))
 	_titlebar.add_child(x)
@@ -111,6 +112,11 @@ func _apply_resize(rel: Vector2) -> void:
 		var new_x := clampf(position.x + rel.x, 0.0, position.x + size.x - MIN_WIN_SIZE.x)
 		size.x += position.x - new_x
 		position.x = new_x
+
+func set_title(text: String) -> void:
+	## 브라우저처럼 내용에 따라 제목이 바뀌는 앱을 위해
+	if is_instance_valid(_title_label):
+		_title_label.text = text
 
 func set_active(active: bool) -> void:
 	if is_instance_valid(_titlebar):

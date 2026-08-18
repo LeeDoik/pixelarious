@@ -80,6 +80,14 @@ func close_app(id: String) -> void:
 func window_title(id: String) -> String:
 	return String(_titles.get(id, id))
 
+func set_window_title(id: String, title: String) -> void:
+	## 작업표시줄 글자도 같이 따라간다 (누리넷이 페이지 제목을 창 제목으로 쓴다)
+	if not _windows.has(id):
+		return
+	_titles[id] = title
+	(_windows[id] as OSWindow).set_title(title)
+	windows_changed.emit(open_ids())
+
 func window_icon(id: String) -> String:
 	return String(_win_icons.get(id, ""))
 
