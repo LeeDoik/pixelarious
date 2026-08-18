@@ -294,7 +294,8 @@ func _show_death(reason: String) -> void:
 	_swap(scene)
 
 func _death_text(reason: String) -> String:
-	var key := reason if reason in ["death_fall", "death_lurker"] else "death_generic"
+	# 낙하 데미지를 걷어낸 뒤로 사망은 러커뿐이다 — 나머지는 전부 일반 문구로 떨어진다
+	var key := "death_lurker" if reason == "death_lurker" else "death_generic"
 	return TextDb.t("ui", key)
 
 # ── PAUSE 오버레이 ──

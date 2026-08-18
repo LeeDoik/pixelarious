@@ -62,7 +62,6 @@
     "retry": { "ko": "탭하여 계속", "en": "TAP TO CONTINUE" },
     "notebook": { "ko": "수첩", "en": "NOTEBOOK" },
     "shop": { "ko": "상점", "en": "SHOP" },
-    "death_fall": { "ko": "떨어졌다", "en": "YOU FELL" },
     "death_lurker": { "ko": "그것이 너를 데려갔다", "en": "IT TOOK YOU" },
     "death_generic": { "ko": "광부 하나가 산에 남았다", "en": "ANOTHER MINER STAYS BELOW" }
   },
