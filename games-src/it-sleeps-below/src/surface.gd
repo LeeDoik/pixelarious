@@ -55,10 +55,10 @@ func _apply_corruption() -> void:
 	vista.modulate = tints[c]
 	# 새소리(표층 앰비언트) 볼륨 — 오염 1단계부터 -6dB 추가 감쇠 (기본 -6dB 위에 누적)
 	Sfx.ambience_volume(-12.0 if c >= 1 else -6.0)
-	# bgm — 오염될수록 음정이 틀어진다 (bgm_camp.ogg는 아직 없음 — 파일이 들어오면 그대로 동작)
-	Sfx.ambience("bgm_camp")
-	# Sfx._amb.pitch_scale 직접 제어 대신 Sfx에 ambience_pitch(p) 헬퍼를 추가해 사용
-	Sfx.ambience_pitch([1.0, 1.0, 0.98, 0.98, 0.95][c])
+	# bgm — 오염될수록 음정이 틀어진다. 음악은 앰비언트와 다른 채널이라
+	# 새소리는 멀쩡한 채로 음악만 틀어진다 (한 채널이면 아래 amb_surface가 곧바로 덮어썼다)
+	Sfx.music("bgm_camp")
+	Sfx.music_pitch([1.0, 1.0, 0.98, 0.98, 0.95][c])
 
 func _build_ui() -> void:
 	gold_label.add_theme_font_override("font", _font)

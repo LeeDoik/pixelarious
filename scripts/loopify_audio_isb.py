@@ -85,21 +85,31 @@ def main():
             start = auto_s if a.start is None else start
             end = auto_e if a.end is None else end
         span = end - start
-        xf = min(a.xfade, span / 2 - 0.1)
-        if xf <= 0:
+        xf = min(a.xfade, span / 2 - 0.1) if a.xfade > 0 else 0.0
+        if a.xfade > 0 and xf <= 0:
             sys.exit("구간이 크로스페이드보다 짧다")
 
         print(f"{a.name}: 원본 {dur:.2f}s / RMS {rms_db(samples):.1f} dB")
-        print(f"  트림 {start:.2f}~{end:.2f}s ({span:.2f}s), 크로스페이드 {xf:.2f}s"
-              f" → 루프 {span - xf:.2f}s")
-
-        # 꼬리를 머리 위로 겹친다: [A=start+xf..end] 뒤에 [B=start..start+xf]를 크로스페이드
         cut = os.path.join(tmp, "cut.wav")
         ffmpeg(["-ss", str(start), "-t", str(span), "-i", raw, "-c:a", "pcm_s16le", cut])
         loop = os.path.join(tmp, "loop.wav")
-        ffmpeg(["-ss", str(xf), "-i", cut, "-t", str(xf), "-i", cut,
-                "-filter_complex", f"[0][1]acrossfade=d={xf}:c1=tri:c2=tri",
-                "-c:a", "pcm_s16le", loop])
+
+        if xf > 0:
+            print(f"  트림 {start:.2f}~{end:.2f}s ({span:.2f}s), 크로스페이드 {xf:.2f}s"
+                  f" → 루프 {span - xf:.2f}s")
+            # 꼬리를 머리 위로 겹친다: [A=start+xf..end] 뒤에 [B=start..start+xf]를 크로스페이드
+            ffmpeg(["-ss", str(xf), "-i", cut, "-t", str(xf), "-i", cut,
+                    "-filter_complex", f"[0][1]acrossfade=d={xf}:c1=tri:c2=tri",
+                    "-c:a", "pcm_s16le", loop])
+        else:
+            # --xfade 0 = 음악용. 크로스페이드로 머리를 페이드인하면 악기 어택이 뭉개지고
+            # 여음이 다음 프레이즈에 겹쳐버린다. 이음매 클릭만 막고 프레이즈를 그대로 둔다.
+            print(f"  트림 {start:.2f}~{end:.2f}s ({span:.2f}s), 크로스페이드 없음"
+                  f" (프레이즈 여음 보존) → 루프 {span:.2f}s")
+            declick = 0.015
+            ffmpeg(["-i", cut, "-af",
+                    f"afade=t=in:d={declick},afade=t=out:st={span - declick:.3f}:d={declick}",
+                    "-c:a", "pcm_s16le", loop])
 
         looped, _ = read_mono(loop)
         gain = a.target_rms - rms_db(looped)

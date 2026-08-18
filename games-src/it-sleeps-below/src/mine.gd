@@ -76,6 +76,7 @@ func _ready() -> void:
 	journal_found.connect(_on_journal_found)
 	Sfx.ambience_pitch(1.0)
 	Sfx.ambience_volume(-6.0)
+	Sfx.music("")  # 하강 = 음악의 소멸 (스펙 §14) — 갱도에는 앰비언트만 남는다
 	anomalies = AnomalyDirector.new()
 	anomalies.mine = self
 	add_child(anomalies)
