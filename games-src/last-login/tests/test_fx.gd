@@ -38,3 +38,17 @@ func test_menu_toggles() -> void:
 	assert_bool(Fx.is_menu_open()).is_true()
 	Fx.toggle_menu()
 	assert_bool(Fx.is_menu_open()).is_false()
+
+func test_pointer_cursors_are_present_and_center_hotspot_safe() -> void:
+	# 창 가장자리 커서 자산이 빠지면 그 순간에만 호스트 OS 커서가 튀어나온다.
+	# Fx가 핫스팟을 이미지 정중앙으로 잡으므로 가로세로는 짝수여야 한다.
+	assert_int(Fx.POINTER_CURSORS.size()).is_equal(6)
+	for shape in Fx.POINTER_CURSORS:
+		var path: String = Fx.POINTER_CURSORS[shape]
+		assert_bool(ResourceLoader.exists(path)).override_failure_message(
+			"cursor asset missing: " + path).is_true()
+		var tex: Texture2D = load(path)
+		assert_int(tex.get_width() % 2).override_failure_message(
+			"%s width %d is odd" % [path, tex.get_width()]).is_equal(0)
+		assert_int(tex.get_height() % 2).override_failure_message(
+			"%s height %d is odd" % [path, tex.get_height()]).is_equal(0)

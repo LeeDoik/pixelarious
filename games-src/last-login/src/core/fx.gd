@@ -6,6 +6,17 @@ const SETTINGS_PATH := "user://settings.json"
 const WARP_K := 0.03           # 곡면 강도 (셰이더 uniform과 입력 보정이 공유)
 const INJECTED_DEVICE := 4242  # 재주입 이벤트 식별용 센티널
 
+## 크기조절·분할선 커서. 전부 이미지 정중앙이 핫스팟이라 가로세로가 짝수여야 한다
+## (gen_cursor.py가 그 조건을 assert로 잡는다).
+const POINTER_CURSORS := {
+	Input.CURSOR_HSIZE: "res://assets/img/cursor_hsize.png",
+	Input.CURSOR_VSIZE: "res://assets/img/cursor_vsize.png",
+	Input.CURSOR_FDIAGSIZE: "res://assets/img/cursor_fdiag.png",
+	Input.CURSOR_BDIAGSIZE: "res://assets/img/cursor_bdiag.png",
+	Input.CURSOR_HSPLIT: "res://assets/img/cursor_hsplit.png",
+	Input.CURSOR_VSPLIT: "res://assets/img/cursor_vsplit.png",
+}
+
 var _warp: ColorRect
 var _menu: Panel
 var _volume_slider: HSlider
@@ -28,6 +39,13 @@ func _apply_cursor() -> void:
 		Input.set_custom_mouse_cursor(arrow, Input.CURSOR_POINTING_HAND, Vector2.ZERO)
 	if ResourceLoader.exists("res://assets/img/cursor_ibeam.png"):
 		Input.set_custom_mouse_cursor(load("res://assets/img/cursor_ibeam.png"), Input.CURSOR_IBEAM, Vector2(5, 17))
+	# 창 가장자리·분할선 커서. 여기가 비면 창을 끄는 순간에만 호스트 OS의 커서가 튀어나온다
+	for shape in POINTER_CURSORS:
+		var path: String = POINTER_CURSORS[shape]
+		if not ResourceLoader.exists(path):
+			continue
+		var tex: Texture2D = load(path)
+		Input.set_custom_mouse_cursor(tex, shape, tex.get_size() / 2.0)
 
 func _process(_delta: float) -> void:
 	# 브라우저가 자체적으로 전체화면을 해제한 직후의 ESC를 구분하기 위한 추적
