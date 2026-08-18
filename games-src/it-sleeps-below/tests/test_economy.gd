@@ -13,8 +13,18 @@ func test_upgrade_cost_curve_and_cap() -> void:
 func test_track_tables() -> void:
 	assert_int(Economy.bag_slots(1)).is_equal(8)
 	assert_int(Economy.bag_slots(4)).is_equal(20)
-	assert_int(Economy.max_hearts(3)).is_equal(5)
-	assert_int(Economy.fall_tolerance(2)).is_equal(4)
+
+func test_boots_speed_track() -> void:
+	# 장화는 걷기·등반 시간을 줄인다 — Lv3에서 등반 0.35 -> 0.28초
+	assert_float(Economy.climb_time(1)).is_equal_approx(0.35, 0.001)
+	assert_float(Economy.climb_time(3)).is_equal_approx(0.28, 0.001)
+	assert_float(Economy.walk_time(1)).is_equal_approx(0.15, 0.001)
+	assert_float(Economy.walk_time(3)).is_equal_approx(0.12, 0.001)
+
+func test_helmet_glow_track() -> void:
+	# 헬멧은 램프 오프 잔광 반경을 넓힌다 — 암흑 등반의 시야
+	assert_float(Economy.glow_radius(1)).is_equal_approx(Tuning.LIGHT_OFF_RADIUS, 0.001)
+	assert_float(Economy.glow_radius(3)).is_equal_approx(1.75, 0.001)
 
 func test_strata_gate() -> void:
 	assert_bool(Economy.dig_allowed(1, 20)).is_true()    # 표토

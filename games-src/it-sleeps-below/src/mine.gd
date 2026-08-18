@@ -29,7 +29,6 @@ var ppos := Vector2i(8, 0)
 var busy := false
 var lamp_on := true
 var oil := 0.0
-var hearts := 3
 var held_dir := Vector2i.ZERO
 var _held_key := KEY_NONE
 var _held_mouse := false
@@ -56,7 +55,6 @@ func _ready() -> void:
 	journal_spots = g.journal_spots
 	relic_spot = g.relic_spot
 	oil = GameState.run.oil
-	hearts = GameState.run.hearts
 
 	view = MineView.new()
 	view.cells = cells
@@ -83,7 +81,8 @@ func _ready() -> void:
 	add_child(anomalies)
 
 func light_radius() -> float:
-	return Oil.radius(oil, Oil.tank(GameState.profile.upgrades.lamp), lamp_on)
+	return Oil.radius(oil, Oil.tank(GameState.profile.upgrades.lamp), lamp_on,
+		Economy.glow_radius(GameState.profile.upgrades.helmet))
 
 func is_open_cell(p: Vector2i) -> bool:
 	if p.x < 0 or p.x >= WorldGen.W or p.y < 0 or p.y >= WorldGen.DEPTH:
@@ -122,7 +121,7 @@ func _process(delta: float) -> void:
 	if not finale_mode:
 		# 피날레 중에는 FinaleDirector가 심장 펄스로만 반경을 구동한다 — 여기서 덮어쓰면 펄스가 씹힌다
 		light_rig.set_radius_tiles(cur_light_radius)
-	hud.update_state(oil / Oil.tank(GameState.profile.upgrades.lamp), lamp_on, hearts,
+	hud.update_state(oil / Oil.tank(GameState.profile.upgrades.lamp), lamp_on,
 		GameState.run.bag.size(), Economy.bag_slots(GameState.profile.upgrades.bag), ppos.y)
 	if ppos.y >= Tuning.LURKER_MIN_DEPTH:
 		director = LurkerLogic.director_step(director, delta, ppos.y)
@@ -192,13 +191,15 @@ func _step(target: Vector2i, act: int) -> void:
 	player.set_anim("climb" if act == MoveRules.A_CLIMB else "walk")
 	if act == MoveRules.A_CLIMB:
 		Sfx.play("climb")
-	var dur := Tuning.CLIMB_TIME if act == MoveRules.A_CLIMB else Tuning.WALK_TIME
+	var boots: int = GameState.profile.upgrades.boots
+	var dur := Economy.climb_time(boots) if act == MoveRules.A_CLIMB else Economy.walk_time(boots)
+	var descended := target.y > ppos.y
 	var tw := create_tween()
 	tw.tween_property(player, "position", Vector2(target * 16) + Vector2(8, 8), dur)
 	await tw.finished
 	ppos = target
 	GameState.run.depth = maxi(GameState.run.depth, ppos.y)
-	_after_move()
+	_after_move(descended)
 
 func _dig(target: Vector2i) -> void:
 	busy = true
@@ -217,7 +218,7 @@ func _dig(target: Vector2i) -> void:
 		var s: int = mini(WorldGen.strata_of(strata_row), 3)
 		last_dig_sfx = ["dig_dirt", "dig_rock", "dig_rock", "dig_flesh"][s]
 		Sfx.play(last_dig_sfx)
-	_after_move()
+	_after_move(false)
 
 func _collect(target: Vector2i) -> bool:
 	# false를 반환하면 채굴이 셀을 비우지 않는다 — 가방이 가득 찬 광석은 그대로 남아 다음에 다시 캘 수 있다
@@ -258,21 +259,21 @@ func _collect(target: Vector2i) -> bool:
 		finale.start()
 	return true
 
-func _after_move() -> void:
+func _after_move(descended: bool) -> void:
 	player.set_anim("idle")
-	# 금 간 타일 — 머리 위가 CRACK이면 0.4초 뒤 붕괴 (그 자리에 있으면 데미지)
+	# 금 간 타일 — 머리 위가 CRACK이면 0.4초 뒤 붕괴.
+	# 데미지 대신 큰 소음을 낸다: 심층이면 러커가 그 소리를 듣고 온다 (얕은 곳은 소리만 남는다)
 	var above := ppos + Vector2i(0, -1)
 	if above.y >= 0 and cells[WorldGen.idx(above.x, above.y)] == WorldGen.T_CRACK:
 		var crack_pos := above
-		var stood_at := ppos
 		get_tree().create_timer(0.4).timeout.connect(func() -> void:
 			if cells[WorldGen.idx(crack_pos.x, crack_pos.y)] != WorldGen.T_CRACK:
 				return
 			cells[WorldGen.idx(crack_pos.x, crack_pos.y)] = WorldGen.T_EMPTY
 			view.cells = cells
 			Sfx.play("rockfall")
-			if ppos == stood_at and alive:
-				_damage(1, "death_fall"))
+			if alive:
+				noise_event.emit(crack_pos, Tuning.CRACK_NOISE))
 	# 지표 복귀 — 중력보다 먼저 판정 (수직갱 정상에서 도로 떨어지지 않도록).
 	# 단, 실제로 내려갔다 온 경우만(run.depth > 0) — 시작 지점이 곧 0m 행이라
 	# 이 가드가 없으면 첫 행동 직후 즉시 귀환 처리된다.
@@ -282,28 +283,19 @@ func _after_move() -> void:
 		busy = false
 		run_ended.emit("finale_escaped" if finale_mode else "surfaced", GameState.run.depth)
 		return
-	# 중력 — 좌우 벽을 짚을 수 있으면(침니) 버틴다. 넓은 공동에서만 낙하
-	if not MoveRules.braced(cells, ppos):
-		var land := MoveRules.fall_landing(cells, ppos)
-		if land != ppos:
-			var fall := land.y - ppos.y
-			var tw := create_tween()
-			tw.tween_property(player, "position", Vector2(land * 16) + Vector2(8, 8), Tuning.FALL_TIME * fall)
-			await tw.finished
-			ppos = land
-			GameState.run.depth = maxi(GameState.run.depth, ppos.y)
-			Sfx.play("land")
-			if fall > Economy.fall_tolerance(GameState.profile.upgrades.boots):
-				_damage(1, "death_fall")
+	# 중력 — 스스로 아래로 내려갔을 때만 낙하가 이어진다.
+	# 오르거나 옆으로 간 뒤에는 허공이라도 그 자리에 붙는다 (벽타기 무조건 자유)
+	var land := MoveRules.fall_from(cells, ppos, descended)
+	if land != ppos:
+		var fall := land.y - ppos.y
+		var tw := create_tween()
+		tw.tween_property(player, "position", Vector2(land * 16) + Vector2(8, 8), Tuning.FALL_TIME * fall)
+		await tw.finished
+		ppos = land
+		GameState.run.depth = maxi(GameState.run.depth, ppos.y)
+		Sfx.play("land")
 	_sync_positions(false)
 	busy = false
-
-func _damage(n: int, reason: String) -> void:
-	hearts = maxi(0, hearts - n)
-	GameState.run.hearts = hearts
-	Sfx.play("fall_hurt")
-	if hearts <= 0:
-		die(reason)
 
 func die(reason: String) -> void:
 	if not alive:

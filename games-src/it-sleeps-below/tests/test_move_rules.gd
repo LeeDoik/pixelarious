@@ -38,17 +38,18 @@ func test_fall_landing() -> void:
 	assert_that(MoveRules.fall_landing(c, Vector2i(7, 10))).is_equal(Vector2i(7, 19))
 	assert_that(MoveRules.fall_landing(_world(), Vector2i(5, 12))).is_equal(Vector2i(5, 12))
 
-func test_braced_chimney_rules() -> void:
+func test_fall_only_when_moving_down() -> void:
 	var c := _world()
-	# 1칸 폭 수직갱 — 양쪽이 벽: 짚고 버틴다 (클라이밍 후 낙하 금지)
-	assert_bool(MoveRules.braced(c, Vector2i(5, 11))).is_true()
-	# 3칸 폭 × 2칸 깊이 공동의 상단 중앙 — 좌우·대각 아래 전부 빈 칸: 낙하 대상
-	for x in range(4, 7):
-		for y in range(20, 22):
+	# 5×10 짜리 넓은 공동 — 붙잡을 벽이 전혀 없는 한가운데를 만든다
+	for x in range(3, 8):
+		for y in range(20, 30):
 			c[WorldGen.idx(x, y)] = WorldGen.T_EMPTY
-	assert_bool(MoveRules.braced(c, Vector2i(5, 20))).is_false()
-	# 가장자리 — 옆벽을 짚는다
-	assert_bool(MoveRules.braced(c, Vector2i(4, 20))).is_true()
-	# 모서리 잡기 — 옆은 비었어도 대각 아래가 벽이면 버틴다 (구덩이 가장자리 옆걸음)
-	c[WorldGen.idx(4, 21)] = WorldGen.T_DIRT
-	assert_bool(MoveRules.braced(c, Vector2i(5, 20))).is_true()
+
+	# 오르거나 옆으로 갔으면 허공 한가운데라도 그 자리에 붙는다 (벽타기 무조건 자유)
+	assert_that(MoveRules.fall_from(c, Vector2i(5, 25), false)).is_equal(Vector2i(5, 25))
+	# 스스로 아래로 내려갔을 때만 바닥까지 이어진다
+	assert_that(MoveRules.fall_from(c, Vector2i(5, 25), true)).is_equal(Vector2i(5, 29))
+
+func test_fall_from_solid_ground_is_noop() -> void:
+	# 발밑이 단단하면 아래로 움직였어도 제자리
+	assert_that(MoveRules.fall_from(_world(), Vector2i(5, 12), true)).is_equal(Vector2i(5, 12))

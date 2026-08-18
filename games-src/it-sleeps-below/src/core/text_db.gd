@@ -10,6 +10,9 @@ func _ready() -> void:
 	if OS.has_feature("web"):
 		var req := HTTPRequest.new()
 		add_child(req)
+		# 웹에서는 브라우저가 Content-Encoding을 이미 처리해 넘긴다 —
+		# accept_gzip을 켜두면 Godot이 압축 해제된 본문을 한 번 더 풀려다 실패하고 본문이 비어버린다
+		req.accept_gzip = false
 		req.request_completed.connect(_on_http)
 		# JS eval에서 상대 URL이 나오는 것을 막는다 — Godot의 relative request()는 웹 빌드에서
 		# ERR_INVALID_PARAMETER로 실패한다(실측 확인). eval이 null/빈 문자열을 주면 상대 경로로 폴백.

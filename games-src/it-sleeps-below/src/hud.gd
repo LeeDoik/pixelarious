@@ -7,7 +7,6 @@ signal pause_pressed
 
 var oil_bar := ColorRect.new()
 var oil_back := ColorRect.new()
-var hearts_label := Label.new()
 var bag_label := Label.new()
 var depth_label := Label.new()
 var strata_banner := Label.new()
@@ -30,13 +29,12 @@ func _ready() -> void:
 	oil_bar.position = Vector2(86, 7)
 	oil_bar.size = Vector2(98, 8)
 	add_child(oil_bar)
-	for l in [hearts_label, bag_label, depth_label, strata_banner]:
+	for l in [bag_label, depth_label, strata_banner]:
 		l.add_theme_font_override("font", _font)
 		l.add_theme_font_size_override("font_size", 8)
 		add_child(l)
-	hearts_label.position = Vector2(6, 4)
 	bag_label.position = Vector2(210, 4)
-	depth_label.position = Vector2(232, 230)
+	depth_label.position = Vector2(6, 4)
 	strata_banner.position = Vector2(0, 100)
 	strata_banner.size = Vector2(270, 20)
 	strata_banner.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -73,12 +71,11 @@ func lie_bag_plus(sec: float) -> void:
 	_bag_lie = true
 	get_tree().create_timer(sec).timeout.connect(func() -> void: _bag_lie = false)
 
-func update_state(oil_ratio: float, lamp_on: bool, hearts: int, bag: int, slots: int, depth: int) -> void:
+func update_state(oil_ratio: float, lamp_on: bool, bag: int, slots: int, depth: int) -> void:
 	if _oil_lie:
 		oil_ratio = 0.0
 	oil_bar.size.x = 98.0 * clampf(oil_ratio, 0.0, 1.0)
 	oil_bar.color = Color("#FFEC27").darkened(clampf(1.0 - oil_ratio, 0.0, 0.6)) if lamp_on else Color(0.4, 0.4, 0.4)
-	hearts_label.text = "♥".repeat(hearts)
 	bag_label.text = "%d/%d" % [bag + (1 if _bag_lie else 0), slots]
 	depth_label.text = "%dm" % (_depth_lie if _depth_lie >= 0 else depth)
 

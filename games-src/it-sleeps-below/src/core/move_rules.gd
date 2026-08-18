@@ -22,18 +22,12 @@ static func classify(cells: PackedInt32Array, pos: Vector2i, dir: Vector2i, pick
 		return A_BLOCKED
 	return A_DIG
 
-static func braced(cells: PackedInt32Array, pos: Vector2i) -> bool:
-	# 침니 클라이밍 — 좌우 벽, 또는 좌하/우하 모서리를 짚을 수 있으면 버틴다
-	# (스펙 §2 "벽을 짚고 오른다" + 구덩이 가장자리 모서리 잡기).
-	# 1칸 폭 수직갱은 항상 braced; 구덩이 가장자리도 모서리를 잡아 옆걸음이 안전하다.
-	# 잡을 것이 전혀 없는 허공(넓은 공동 한가운데)에서만 낙하한다.
-	for off: Vector2i in [Vector2i(-1, 0), Vector2i(1, 0), Vector2i(-1, 1), Vector2i(1, 1)]:
-		var n := pos + off
-		if n.x < 0 or n.x >= WorldGen.W or n.y >= WorldGen.DEPTH:
-			continue
-		if not passable(cells[WorldGen.idx(n.x, n.y)]):
-			return true
-	return false
+static func fall_from(cells: PackedInt32Array, pos: Vector2i, moved_down: bool) -> Vector2i:
+	# 벽타기는 무조건 자유 — 오르거나 옆으로 갔으면 잡을 것이 없어도 그 자리에 붙는다.
+	# 낙하는 스스로 아래로 내려갔을 때만 이어진다 (하강이 빠른 비대칭은 유지).
+	if not moved_down:
+		return pos
+	return fall_landing(cells, pos)
 
 static func fall_landing(cells: PackedInt32Array, pos: Vector2i) -> Vector2i:
 	var p := pos

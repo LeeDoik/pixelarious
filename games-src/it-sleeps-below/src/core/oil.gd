@@ -9,11 +9,12 @@ static func drain(oil: float, dt: float, lamp_on: bool) -> float:
 		return oil
 	return maxf(0.0, oil - dt)
 
-static func radius(oil: float, tank_size: float, lamp_on: bool) -> float:
+static func radius(oil: float, tank_size: float, lamp_on: bool,
+		off_radius: float = Tuning.LIGHT_OFF_RADIUS) -> float:
 	if not lamp_on or oil <= 0.0:
-		return Tuning.LIGHT_OFF_RADIUS
+		return off_radius
 	var ratio := oil / tank_size
 	for stage in Tuning.LIGHT_STAGES:
 		if ratio > stage[0]:
 			return stage[1]
-	return Tuning.LIGHT_OFF_RADIUS
+	return off_radius
