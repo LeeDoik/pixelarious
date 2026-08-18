@@ -24,6 +24,35 @@ const BODY_FONT := "res://assets/fonts/neodgm.ttf"
 const BODY_FONT_SIZE := 16
 const FALLBACK_FONT := "res://assets/fonts/Galmuri11.ttf"
 const HOME_URL := "portal.nurinet.co.kr"
+const DEFAULT_SKIN := "system"
+## 본문 칼럼 폭 = 가장 넓은 페이지(84칸 × 8px) + 좌우 여백.
+## 창을 넓히면 남는 자리는 사이트색 바탕으로 남아 2002년 사이트처럼 보인다.
+const COLUMN_W := 688
+
+## 사이트별 껍데기. 새빛 관문이 카페 스킨을 그대로 쓰는 건 의도다 —
+## 저 사람들이 평범한 포털 카페 안에 있었다는 게 이 페이지의 서늘함이다.
+const SKINS := {
+	"portal": {
+		"name": "누리넷", "icon": "portal",
+		"ground": "c3d3ea", "band": "1f4fa0", "band_ink": "ffffff",
+		"column": "fafcff", "ink": "101418", "link": "1440a0",
+	},
+	"cafe": {
+		"name": "누리넷 카페", "icon": "cafe",
+		"ground": "dde5c8", "band": "4c7a34", "band_ink": "ffffff",
+		"column": "f8faec", "ink": "14180f", "link": "2a5f2a",
+	},
+	"myhome": {
+		"name": "누리넷 마이홈", "icon": "myhome",
+		"ground": "c6dcee", "band": "8fb4d2", "band_ink": "14304a",
+		"column": "f5fafd", "ink": "14181c", "link": "2f6a9c",
+	},
+	"system": {
+		"name": "누리넷", "icon": "portal",
+		"ground": "cdcdc7", "band": "63635c", "band_ink": "ffffff",
+		"column": "fafaf5", "ink": "101418", "link": "3f5f7f",
+	},
+}
 const ALLOWED := "abcdefghijklmnopqrstuvwxyz0123456789.-/:"
 const SAVED_PATTERN := "저장\\s*([0-9]{4}-[0-9]{2}-[0-9]{2}(?:\\s+[0-9]{2}:[0-9]{2})?)"
 
@@ -33,6 +62,14 @@ var _scroll: ScrollContainer
 var _status_left: Label
 var _status_right: Label
 var _cache_icon: TextureRect
+var _band: PanelContainer
+var _band_icon: TextureRect
+var _band_name: Label
+var _band_note: Label
+var _ground: Panel
+var _column: Panel
+var _footer: Panel
+var _skin := DEFAULT_SKIN
 var _back_btn: Button
 var _fwd_btn: Button
 var _dialog: OSDialog
@@ -171,9 +208,21 @@ func _build_page() -> Control:
 	var field := PanelContainer.new()
 	field.theme_type_variation = "NuriField"
 	field.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	var col := VBoxContainer.new()
+	col.add_theme_constant_override("separation", 0)
+	col.add_child(_build_band())
+	_ground = Panel.new()
+	_ground.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	var row := HBoxContainer.new()
+	row.set_anchors_preset(Control.PRESET_FULL_RECT)
+	row.add_theme_constant_override("separation", 0)
+	row.add_child(_gutter())
+	_column = Panel.new()
+	_column.custom_minimum_size = Vector2(COLUMN_W, 0)
 	var pad := MarginContainer.new()
+	pad.set_anchors_preset(Control.PRESET_FULL_RECT)
 	for side in ["left", "right", "top", "bottom"]:
-		pad.add_theme_constant_override("margin_" + side, 6)
+		pad.add_theme_constant_override("margin_" + side, 8)
 	_scroll = ScrollContainer.new()
 	_grid = TextGrid.new()
 	_grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -185,8 +234,82 @@ func _build_page() -> Control:
 	_grid.link_hovered.connect(_on_link_hovered)
 	_scroll.add_child(_grid)
 	pad.add_child(_scroll)
-	field.add_child(pad)
+	_column.add_child(pad)
+	row.add_child(_column)
+	row.add_child(_gutter())
+	_ground.add_child(row)
+	col.add_child(_ground)
+	_footer = Panel.new()
+	_footer.custom_minimum_size = Vector2(0, 6)
+	col.add_child(_footer)
+	field.add_child(col)
 	return field
+
+func _gutter() -> Control:
+	## 사이트색이 드러나는 양옆 여백. 창이 좁으면 0까지 줄어들고 본문이 자리를 다 쓴다.
+	var c := Control.new()
+	c.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	c.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return c
+
+func _build_band() -> Control:
+	# 사이트 이름 띠. 브라우저 크롬이 아니라 "지금 어느 사이트에 있는가"를 말한다.
+	_band = PanelContainer.new()
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 7)
+	_band_icon = TextureRect.new()
+	_band_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_band_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_band_icon.custom_minimum_size = Vector2(16, 16)
+	_band_icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	row.add_child(_band_icon)
+	_band_name = Label.new()
+	_band_name.add_theme_font_size_override("font_size", 15)
+	_band_name.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(_band_name)
+	_band_note = Label.new()
+	_band_note.add_theme_font_size_override("font_size", 14)
+	row.add_child(_band_note)
+	_band.add_child(row)
+	return _band
+
+func _apply_skin(skin_id: String, note: String) -> void:
+	_skin = skin_id if SKINS.has(skin_id) else DEFAULT_SKIN
+	var s: Dictionary = SKINS[_skin]
+	var band_bg := StyleBoxFlat.new()
+	band_bg.bg_color = Color(String(s["band"]))
+	band_bg.border_color = Color(String(s["band"])).darkened(0.35)
+	band_bg.border_width_bottom = 1
+	band_bg.content_margin_left = 8
+	band_bg.content_margin_right = 8
+	band_bg.content_margin_top = 3
+	band_bg.content_margin_bottom = 3
+	_band.add_theme_stylebox_override("panel", band_bg)
+	_band_icon.texture = _texture(ICON[String(s["icon"])])
+	_band_name.text = String(s["name"])
+	_band_note.text = note
+	for l in [_band_name, _band_note]:
+		l.add_theme_color_override("font_color", Color(String(s["band_ink"])))
+	var ground_bg := StyleBoxFlat.new()
+	ground_bg.bg_color = Color(String(s["ground"]))
+	_ground.add_theme_stylebox_override("panel", ground_bg)
+	var col_bg := StyleBoxFlat.new()
+	col_bg.bg_color = Color(String(s["column"]))
+	col_bg.border_color = Color(String(s["ground"])).darkened(0.25)
+	col_bg.set_border_width_all(1)
+	_column.add_theme_stylebox_override("panel", col_bg)
+	var foot := StyleBoxFlat.new()
+	foot.bg_color = Color(String(s["band"]))
+	_footer.add_theme_stylebox_override("panel", foot)
+	_grid.ink_color = Color(String(s["ink"]))
+	_grid.link_color = Color(String(s["link"]))
+	_grid.queue_redraw()
+
+func skin_id() -> String:
+	return _skin
+
+func band_text() -> String:
+	return "%s %s" % [_band_name.text, _band_note.text]
 
 func _build_status_bar() -> Control:
 	var bar := PanelContainer.new()
@@ -236,6 +359,7 @@ func _render(url: String) -> Dictionary:
 		return {}
 	if String(page.get("requires", "")) == "puzzle3":
 		GameState.try_answer("puzzle3", u)
+	_apply_skin(String(page.get("skin", DEFAULT_SKIN)), String(page.get("band", "")))
 	_title = String(page["title"])
 	_grid.grid_text = String(page["body"])
 	_set_window_title(_title)
@@ -250,6 +374,7 @@ func _render(url: String) -> Dictionary:
 
 func _show_not_cached(u: String) -> void:
 	# 캐시에 없는 주소. 퍼즐3에서 주소를 더듬는 플레이어에게 이 화면이 피드백이 된다.
+	_apply_skin("system", "")
 	_title = "캐시에 없는 주소"
 	_grid.grid_text = """■ 캐시에 없는 주소입니다
 

@@ -17,6 +17,7 @@ const HOST_PATTERN := "[a-zA-Z0-9][a-zA-Z0-9\\-]*(\\.[a-zA-Z0-9\\-]+)+(/[a-zA-Z0
 const MIN_HOST_DOTS := 2
 
 @export var link_color := Color("1b4d8f")
+@export var ink_color := Color("101418")
 
 var grid_text := "":
 	set(value):
@@ -108,7 +109,7 @@ func _draw() -> void:
 	if _font == null:
 		return
 	var ascent := _font.get_ascent(_font_size)
-	var body := get_theme_color("font_color", "Label")
+	var body := ink_color
 	for row in _lines.size():
 		var line := _lines[row]
 		var cols := _line_cols[row] if row < _line_cols.size() else PackedInt32Array()

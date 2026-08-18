@@ -87,3 +87,48 @@ func test_gate_url_is_not_linked_anywhere() -> void:
 		for link in b._grid.links():
 			assert_str(String(link["url"])).override_failure_message(
 				"%s 페이지가 /gate를 링크로 노출한다" % url).is_not_equal("cafe.nurinet.co.kr/saebit/gate")
+
+func test_every_page_declares_a_known_skin() -> void:
+	# 스킨이 없거나 오타가 나면 조용히 시스템 스킨으로 떨어져 사이트 구분이 사라진다
+	var raw: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://content/web.json"))
+	for url in raw["pages"]:
+		var skin := String(raw["pages"][url].get("skin", ""))
+		assert_bool(BrowserApp.SKINS.has(skin)).override_failure_message(
+			"%s 페이지의 skin이 없거나 모르는 값이다: '%s'" % [url, skin]).is_true()
+
+func test_each_site_looks_different() -> void:
+	# 띠 색이 겹치면 사이트가 갈리지 않는다
+	var seen := {}
+	for id in BrowserApp.SKINS:
+		var band := String(BrowserApp.SKINS[id]["band"])
+		assert_bool(seen.has(band)).override_failure_message(
+			"스킨 %s의 띠 색이 다른 스킨과 같다: #%s" % [id, band]).is_false()
+		seen[band] = true
+
+func test_skin_follows_the_page() -> void:
+	var b: Control = auto_free(BrowserApp.new())
+	add_child(b)
+	b.navigate("portal.nurinet.co.kr")
+	assert_str(b.skin_id()).is_equal("portal")
+	assert_str(b.band_text()).contains("누리넷")
+	b.navigate("myhome.nurinet.co.kr/sj2002")
+	assert_str(b.skin_id()).is_equal("myhome")
+	assert_str(b.band_text()).contains("마이홈")
+
+func test_the_cult_gate_wears_the_ordinary_cafe_shell() -> void:
+	# 연출 의도: 저 사람들은 평범한 포털 카페 안에 있었다.
+	# 관문만 따로 무섭게 칠하면 그 사실이 흐려진다.
+	var b: Control = auto_free(BrowserApp.new())
+	add_child(b)
+	b.navigate("cafe.nurinet.co.kr/gongsi9")
+	var ordinary: String = b.skin_id()
+	b.navigate("cafe.nurinet.co.kr/saebit/gate")
+	assert_str(b.skin_id()).is_equal(ordinary)
+	assert_str(b.band_text()).contains("정회원 전용")
+
+func test_uncached_page_falls_back_to_the_system_skin() -> void:
+	var b: Control = auto_free(BrowserApp.new())
+	add_child(b)
+	b.navigate("myhome.nurinet.co.kr/sj2002")
+	b.navigate("nowhere.nurinet.co.kr/x")
+	assert_str(b.skin_id()).is_equal("system")
