@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { getGames, getGame, validate } from './games'
+import { getGames, getGame, getVisibleGames, validate } from './games'
 
 const valid = {
   slug: 'system-check',
@@ -44,6 +44,33 @@ describe('games registry', () => {
       'last-login',
       'system-check',
     ])
+  })
+
+  it('hides flagged cartridges from the public lineup but keeps them in the registry', () => {
+    const visible = getVisibleGames().map((g) => g.slug)
+    expect(visible).not.toContain('it-sleeps-below')
+    expect(visible).not.toContain('pixel-pong-exe')
+    expect(getGames().map((g) => g.slug)).toEqual(
+      expect.arrayContaining(['it-sleeps-below', 'pixel-pong-exe']),
+    )
+  })
+
+  it('visible lineup is exactly the expected slugs, still order-sorted', () => {
+    expect(getVisibleGames().map((g) => g.slug)).toEqual([
+      'starfall-drift',
+      'last-login',
+      'system-check',
+    ])
+  })
+
+  it('keeps a hidden cartridge reachable by slug so /play still resolves', () => {
+    expect(getGame('it-sleeps-below')?.playPath).toBe('/games/it-sleeps-below/index.html')
+  })
+
+  it('rejects a non-boolean hidden flag and keeps the field optional', () => {
+    expect(() => validate({ ...valid, hidden: 'yes' }, 'x.json')).toThrow()
+    expect(() => validate({ ...valid, hidden: true }, 'x.json')).not.toThrow()
+    expect(() => validate({ ...valid }, 'x.json')).not.toThrow()
   })
 
   it('rejects a slug with a double hyphen', () => {

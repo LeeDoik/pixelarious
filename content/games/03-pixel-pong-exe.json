@@ -10,5 +10,6 @@
     "1-DAY JAM"
   ],
   "coverScene": "pong",
-  "playPath": null
+  "playPath": null,
+  "hidden": true
 }

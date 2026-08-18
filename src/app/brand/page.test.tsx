@@ -6,7 +6,7 @@ vi.mock('next/navigation', () => ({
   },
 }))
 
-vi.mock('@/lib/games', () => ({ getGames: () => [] }))
+vi.mock('@/lib/games', () => ({ getVisibleGames: () => [] }))
 
 describe('/brand page', () => {
   it('404s outside development so the tool never ships (NODE_ENV=test here)', async () => {
