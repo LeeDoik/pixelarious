@@ -135,4 +135,66 @@ for by in (2, 6, 10):
     d.line([7, by + 1, 14, by + 1], fill=NAVY)
 save(img, "view_details.png")
 
+
+# ── 위젯 글리프 (2026-08-18 OS 테마 패스) ─────────────────────────────────
+# 체크박스·슬라이더 손잡이는 테마가 아이콘으로 받는다(스타일박스로는 못 그린다).
+
+def _bevel_box(w, h, sunken):
+    """2픽셀 베벨 상자. sunken이면 빛 방향이 뒤집힌다 (NuriTheme._bevel과 같은 규칙)."""
+    lit_out, lit_in = (BEVEL_DIM_HARD, BEVEL_DIM) if sunken else (BEVEL_LIT, BEVEL_LIT_SOFT)
+    dim_out, dim_in = (BEVEL_LIT, BEVEL_LIT_SOFT) if sunken else (BEVEL_DIM_HARD, BEVEL_DIM)
+    face = FIELD if sunken else FACE
+    im = canvas(max(w, h))
+    im = Image.new("RGBA", (w, h), face)
+    d = ImageDraw.Draw(im)
+    d.line([(0, 0), (w - 1, 0)], fill=lit_out); d.line([(0, 0), (0, h - 1)], fill=lit_out)
+    d.line([(1, 1), (w - 2, 1)], fill=lit_in);  d.line([(1, 1), (1, h - 2)], fill=lit_in)
+    d.line([(0, h - 1), (w - 1, h - 1)], fill=dim_out); d.line([(w - 1, 0), (w - 1, h - 1)], fill=dim_out)
+    d.line([(1, h - 2), (w - 2, h - 2)], fill=dim_in);  d.line([(w - 2, 1), (w - 2, h - 2)], fill=dim_in)
+    return im
+
+BEVEL_LIT = (251, 249, 242, 255)
+BEVEL_LIT_SOFT = (236, 232, 220, 255)
+BEVEL_DIM = (110, 106, 96, 255)
+BEVEL_DIM_HARD = (56, 53, 46, 255)
+FIELD = (253, 253, 248, 255)
+FACE = (216, 212, 200, 255)
+
+# 체크박스 — 파인 흰 상자, 켜지면 검은 체크
+for on in (False, True):
+    img = _bevel_box(14, 14, sunken=True); d = ImageDraw.Draw(img)
+    if on:
+        for x, y in [(3,7),(4,8),(5,9),(6,8),(7,7),(8,6),(9,5),(10,4)]:
+            d.point((x, y), fill=(24, 28, 34)); d.point((x, y + 1), fill=(24, 28, 34))
+    save(img, "check_on.png" if on else "check_off.png")
+
+# 슬라이더 손잡이 — 튀어나온 세로 막대
+save(_bevel_box(12, 22, sunken=False), "slider_grabber.png")
+
+# 트레이 볼륨 — 어두운 작업표시줄 위에 얹힌다. 16px에서는 PIL의 arc/polygon이
+# 뭉개져서 실루엣을 픽셀 집합으로 직접 정의하고 테두리는 팽창으로 만든다.
+SPK = (238, 238, 230)
+SPK_EDGE = (22, 38, 32)
+
+SPEAKER = set()
+for y, xs in [(3, [8]), (4, [7, 8]), (5, [6, 7, 8]),
+              (6, range(2, 9)), (7, range(2, 9)), (8, range(2, 9)), (9, range(2, 9)),
+              (10, [6, 7, 8]), (11, [7, 8]), (12, [8])]:
+    for x in xs:
+        SPEAKER.add((x, y))
+WAVES = [(10, 5), (11, 6), (11, 7), (11, 8), (10, 9),
+         (12, 3), (13, 4), (14, 5), (14, 6), (14, 7), (14, 8), (13, 9), (12, 10)]
+
+img = canvas(16); d = ImageDraw.Draw(img)
+for (x, y) in SPEAKER:                       # 테두리 = 실루엣 팽창
+    for dy in (-1, 0, 1):
+        for dx in (-1, 0, 1):
+            if (x + dx, y + dy) not in SPEAKER and 0 <= x + dx < 16 and 0 <= y + dy < 16:
+                d.point((x + dx, y + dy), fill=SPK_EDGE)
+for (x, y) in SPEAKER:
+    d.point((x, y), fill=SPK)
+for (x, y) in WAVES:                          # 파형은 이어진 픽셀 사슬이라야 곡선으로 읽힌다
+    d.point((x, y), fill=SPK)
+save(img, "tray_volume.png")
+
 print("ok")

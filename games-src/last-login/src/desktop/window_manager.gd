@@ -10,6 +10,7 @@ const OS_WINDOW := preload("res://src/desktop/os_window.tscn")
 var _apps: Dictionary = {}     # id -> {title, builder}
 var _windows: Dictionary = {}  # id -> OSWindow
 var _titles: Dictionary = {}   # id -> 창 제목 (작업표시줄 표기)
+var _win_icons: Dictionary = {}  # id -> 아이콘 경로 (작업표시줄 표기)
 var _cascade := 0
 
 func _init() -> void:
@@ -58,6 +59,7 @@ func open_window(id: String, title: String, content: Control, win_size: Vector2 
 	w.focused.connect(focus_app)
 	_windows[id] = w
 	_titles[id] = title
+	_win_icons[id] = icon
 	windows_changed.emit(open_ids())
 	app_focused.emit(id)
 	_update_active_states()
@@ -68,11 +70,23 @@ func close_app(id: String) -> void:
 	_windows[id].queue_free()
 	_windows.erase(id)
 	_titles.erase(id)
+	_win_icons.erase(id)
 	windows_changed.emit(open_ids())
 	_update_active_states()
 
 func window_title(id: String) -> String:
 	return String(_titles.get(id, id))
+
+func window_icon(id: String) -> String:
+	return String(_win_icons.get(id, ""))
+
+func active_id() -> String:
+	## 최상위의 보이는 창 — 작업표시줄이 눌린 상태로 표시할 대상
+	for i in range(get_child_count() - 1, -1, -1):
+		var c := get_child(i)
+		if c is OSWindow and (c as OSWindow).visible and not c.is_queued_for_deletion():
+			return (c as OSWindow).win_id
+	return ""
 
 func toggle_minimize(id: String) -> void:
 	if not _windows.has(id):
@@ -110,15 +124,10 @@ func focus_app(id: String) -> void:
 
 func _update_active_states() -> void:
 	# 최상위의 보이는 창만 활성 타이틀바, 나머지는 비활성(회색조)
-	var top: OSWindow = null
-	for i in range(get_child_count() - 1, -1, -1):
-		var c := get_child(i)
-		if c is OSWindow and (c as OSWindow).visible and not c.is_queued_for_deletion():
-			top = c
-			break
+	var top := active_id()
 	for id in _windows:
 		var w: OSWindow = _windows[id]
-		w.set_active(w == top)
+		w.set_active(String(id) == top)
 
 func is_open(id: String) -> bool:
 	return _windows.has(id)

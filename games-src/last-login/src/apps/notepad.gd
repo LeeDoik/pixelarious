@@ -21,11 +21,7 @@ func _ready() -> void:
 	_text.selection_enabled = true
 	_text.scroll_active = true
 	_text.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	var field := NuriTheme.sunken(NuriTheme.FIELD)
-	field.set_content_margin_all(8)
-	_text.add_theme_stylebox_override("normal", field)
-	_text.add_theme_color_override("default_color", NuriTheme.TEXT)
-	_text.add_theme_color_override("selection_color", NuriTheme.SELECT)
+	# 종이 표면·글자색·선택색은 공용 테마의 RichTextLabel 항목이 준다
 	_text.text = body_text
 	col.add_child(_text)
 

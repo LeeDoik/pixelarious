@@ -167,3 +167,46 @@ func test_edge_cursor_matches_drag_direction() -> void:
 		w._update_resize_cursor(w._zone_at(point))
 		assert_int(w.mouse_default_cursor_shape).override_failure_message(
 			"wrong cursor at %s" % point).is_equal(cases[point])
+
+func test_maximize_fills_the_desktop_and_restores_exactly() -> void:
+	var wm := _make()
+	wm.size = Vector2(1024, 732)
+	wm.open_app("memo")
+	var w: OSWindow = wm.get_child(wm.get_child_count() - 1)
+	var before := Rect2(w.position, w.size)
+	w.toggle_maximize()
+	assert_bool(w.is_maximized()).is_true()
+	assert_bool(w.position.is_equal_approx(Vector2.ZERO)).is_true()
+	assert_bool(w.size.is_equal_approx(wm.size)).is_true()
+	w.toggle_maximize()
+	assert_bool(w.is_maximized()).is_false()
+	assert_bool(w.position.is_equal_approx(before.position)).is_true()
+	assert_bool(w.size.is_equal_approx(before.size)).is_true()
+
+func test_maximized_window_does_not_offer_resize_edges() -> void:
+	# 최대화된 창의 가장자리가 계속 잡히면 화면 밖으로 끌려 나간다
+	var wm := _make()
+	wm.size = Vector2(1024, 732)
+	wm.open_app("memo")
+	var w: OSWindow = wm.get_child(wm.get_child_count() - 1)
+	w.toggle_maximize()
+	var e := InputEventMouseMotion.new()
+	e.position = Vector2(w.size.x - 2.0, w.size.y - 2.0)
+	w._on_body_input(e)
+	assert_int(w.mouse_default_cursor_shape).is_equal(Control.CURSOR_ARROW)
+
+func test_taskbar_knows_which_window_is_in_front() -> void:
+	var wm := _make()
+	wm.open_app("memo")
+	wm.open_app("mail")
+	assert_str(wm.active_id()).is_equal("mail")
+	wm.focus_app("memo")
+	assert_str(wm.active_id()).is_equal("memo")
+	wm.toggle_minimize("memo")           # 최소화된 창은 활성이 아니다
+	assert_str(wm.active_id()).is_equal("mail")
+
+func test_window_icon_is_remembered_for_the_taskbar() -> void:
+	var wm := _make()
+	wm.register_app("photo", "사진", func() -> Control: return Label.new(), "res://assets/img/icons/photo.png")
+	wm.open_app("photo")
+	assert_str(wm.window_icon("photo")).is_equal("res://assets/img/icons/photo.png")
