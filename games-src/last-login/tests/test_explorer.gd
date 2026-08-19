@@ -132,3 +132,15 @@ func test_type_labels_come_from_extension() -> void:
 	assert_str(Explorer.type_label({"type": "doc", "name": "낙방 수기.txt"})).is_equal("텍스트 문서")
 	assert_str(Explorer.type_label({"type": "image", "name": "봄이_첫날.jpg"})).is_equal("JPEG 이미지")
 	assert_str(Explorer.type_label({"type": "doc", "name": "danjjak_temp.dat"})).is_equal("DAT 파일")
+
+func test_selection_survives_a_view_switch() -> void:
+	# 보기를 바꿨는데 선택이 풀리면 상태표시줄엔 파일 이름이 남고 목록은 텅 빈 채가 된다
+	var e := _make()
+	e._show_selection("f_essay")
+	e.set_view_mode(Explorer.ViewMode.DETAILS)
+	assert_str(e.selected_id()).is_equal("f_essay")
+	var row: TreeItem = e._tree.get_selected()
+	assert_object(row).is_not_null()
+	assert_str(String(row.get_metadata(0))).is_equal("f_essay")
+	e.set_view_mode(Explorer.ViewMode.ICONS)
+	assert_array(e._list.get_selected_items()).is_not_empty()

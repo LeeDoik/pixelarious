@@ -5,6 +5,7 @@ const SFX := {
 	"msg": "res://assets/sfx/msg.wav", "unlock": "res://assets/sfx/unlock.wav",
 	"click": "res://assets/sfx/click.wav", "boot": "res://assets/sfx/boot.wav",
 	"startup": "res://assets/sfx/startup.wav",
+	"error": "res://assets/sfx/error.wav",
 }
 const LAYERS := ["res://assets/sfx/amb_fan.wav", "res://assets/sfx/amb_hum.wav", "res://assets/sfx/amb_drone.wav"]
 

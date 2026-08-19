@@ -22,6 +22,8 @@ const GUIDE := Color("cfcabb")     # 목록 구분선
 const TEXT_DIM := Color("5a574e")
 const TOOLTIP_FACE := Color("fdfbd0")  # 2002년 풍선도움말 특유의 연노랑
 
+const PROGRESS := Color("2f5fae")   # 진행률 칸 (선택 하이라이트와 같은 계열)
+
 const SCROLLBAR_THICKNESS := 14.0
 
 const ICON := {
@@ -54,6 +56,7 @@ static func build() -> Theme:
 	_build_tabs(t)
 	_build_popups(t)
 	_build_scrollbars(t)
+	_build_progress(t)
 	_build_variations(t)
 	return t
 
@@ -224,6 +227,29 @@ static func _build_scrollbars(t: Theme) -> void:
 		t.set_stylebox("grabber", type, raised(FACE))
 		t.set_stylebox("grabber_highlight", type, raised(FACE.lightened(0.06)))
 		t.set_stylebox("grabber_pressed", type, sunken(FACE.darkened(0.06)))
+
+static func _build_progress(t: Theme) -> void:
+	# 이 시대 진행률 표시줄은 이어진 막대가 아니라 네모 칸이 하나씩 차오르는 물건이었다.
+	# 휴지통 복원이 이걸 쓴다 — 손상된 파일에서 중간에 멈추는 게 보여야 한다.
+	var trough := sunken(FACE.darkened(0.04))
+	trough.set_content_margin_all(3)
+	t.set_stylebox("background", "ProgressBar", trough)
+	t.set_stylebox("fill", "ProgressBar", _progress_blocks())
+	t.set_color("font_color", "ProgressBar", TEXT)
+	t.set_font_size("font_size", "ProgressBar", 14)
+
+static func _progress_blocks() -> StyleBoxTexture:
+	## 6픽셀 칸 + 2픽셀 틈을 가로로 타일링한다. 값이 늘면 칸이 하나씩 더 그려진다.
+	var img := Image.create(8, 4, false, Image.FORMAT_RGBA8)
+	img.fill(Color(0, 0, 0, 0))
+	for x in 6:
+		for y in 4:
+			img.set_pixel(x, y, PROGRESS if x < 5 else PROGRESS.darkened(0.28))
+	var s := StyleBoxTexture.new()
+	s.texture = ImageTexture.create_from_image(img)
+	s.axis_stretch_horizontal = StyleBoxTexture.AXIS_STRETCH_MODE_TILE
+	s.axis_stretch_vertical = StyleBoxTexture.AXIS_STRETCH_MODE_STRETCH
+	return s
 
 static func _build_variations(t: Theme) -> void:
 	# 앱이 골라 쓰는 이름 있는 판 — 도구모음/상태표시줄/입력칸 테두리

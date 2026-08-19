@@ -14,6 +14,7 @@ var records_source: Callable = func() -> Array:
 
 var _flags: Dictionary = {}
 var _read: Dictionary = {}  # cid -> true
+var _restored: Dictionary = {}  # 휴지통에서 원래 자리로 되돌린 파일 id -> true
 
 func set_flag(name: String) -> void:
 	if _flags.has(name):
@@ -54,6 +55,17 @@ func records_count() -> int:
 			n += 1
 	return n
 
+func restore_node(id: String) -> void:
+	## 휴지통에서 꺼낸 파일. 어느 폴더에 있느냐는 콘텐츠가 아니라 진행 상태다 —
+	## ContentDB는 여기 물어보고 부모를 정한다.
+	if _restored.has(id):
+		return
+	_restored[id] = true
+	save_game()
+
+func is_restored(id: String) -> bool:
+	return _restored.has(id)
+
 func try_answer(puzzle_id: String, input: String) -> bool:
 	var p: Dictionary = puzzle_source.call(puzzle_id)
 	if p.is_empty():
@@ -70,7 +82,7 @@ func save_game() -> void:
 		return
 	var flags_to_save := _flags.duplicate()
 	flags_to_save.erase("ending_start")
-	f.store_string(JSON.stringify({"flags": flags_to_save, "read": _read}))
+	f.store_string(JSON.stringify({"flags": flags_to_save, "read": _read, "restored": _restored}))
 	f.close()
 
 func has_save() -> bool:
@@ -84,6 +96,7 @@ func load_game() -> bool:
 		return false
 	_flags = data.get("flags", {})
 	_read = data.get("read", {})
+	_restored = data.get("restored", {})
 	_flags.erase("ending_start")
 	act_changed.emit(current_act())
 	return true
@@ -91,6 +104,7 @@ func load_game() -> bool:
 func reset() -> void:
 	_flags = {}
 	_read = {}
+	_restored = {}
 	act_changed.emit(current_act())
 	if has_save():
 		DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE_PATH))

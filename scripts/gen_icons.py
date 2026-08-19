@@ -471,3 +471,91 @@ save(_ascii([
 ], {"#": (86, 92, 104), "o": (222, 226, 234)}), "cache.png")
 
 print("ok")
+
+# ── 휴지통 (2026-08-19 UI 개선) ───────────────────────────────────────────
+# 휴지통 창은 탐색기 껍데기를 쓴다 — 도구모음의 복원/비우기, 주소줄의 통,
+# 복원 실패 대화상자의 경고 표지가 여기서 나온다.
+
+BIN_FACE = (166, 172, 182)
+BIN_RIB = (128, 134, 146)
+BIN_LIT = (214, 218, 226)
+BIN_EDGE = (62, 66, 74)
+RED = (198, 46, 46)
+RED_EDGE = (108, 18, 18)
+GREEN = (86, 166, 78)
+GREEN_LIT = (168, 216, 150)
+GREEN_EDGE = (26, 82, 30)
+
+def _bin16():
+    """16px 휴지통 — 주소줄과 비우기 버튼이 같은 통을 쓴다."""
+    im = canvas(16); d = ImageDraw.Draw(im)
+    d.rectangle([6, 0, 9, 1], fill=BIN_FACE, outline=BIN_EDGE)     # 뚜껑 손잡이
+    d.rectangle([2, 2, 13, 4], fill=BIN_FACE, outline=BIN_EDGE)    # 뚜껑
+    d.polygon([(3, 5), (12, 5), (11, 15), (4, 15)], fill=BIN_FACE, outline=BIN_EDGE)
+    for x in (6, 8, 10):
+        d.line([x, 7, x - 1, 14], fill=BIN_RIB)                    # 통의 세로 홈 (아래로 좁아진다)
+    d.line([4, 6, 4, 14], fill=BIN_LIT)                            # 왼쪽 하이라이트
+    return im
+
+save(_bin16(), "trash_bin.png")
+
+# 복원 = 위로 꺼내는 화살표 + 바닥 선. 비우기와 한눈에 갈려야 한다.
+save(_ascii([
+    "................",
+    ".......##.......",
+    "......#gG#......",
+    ".....#gGGG#.....",
+    "....#gGGGGG#....",
+    "...#gGGGGGGG#...",
+    "..#gGGGGGGGGG#..",
+    "..###gGGGGG###..",
+    "....#gGGGGG#....",
+    "....#gGGGGG#....",
+    "....#gGGGGG#....",
+    "....########....",
+    "................",
+    "..############..",
+    "..#LLLLLLLLLL#..",
+    "..############..",
+], {"#": GREEN_EDGE, "G": GREEN, "g": GREEN_LIT, "L": (196, 228, 186)}), "restore.png")
+
+# 휴지통 비우기 = 통 + 붉은 X 배지 (통만 두면 주소줄 아이콘과 구별이 안 된다)
+img = canvas(16); d = ImageDraw.Draw(img)
+d.rectangle([4, 0, 6, 1], fill=BIN_FACE, outline=BIN_EDGE)          # 뚜껑 손잡이
+d.rectangle([0, 2, 10, 4], fill=BIN_FACE, outline=BIN_EDGE)         # 뚜껑
+d.polygon([(1, 5), (9, 5), (8, 14), (2, 14)], fill=BIN_FACE, outline=BIN_EDGE)
+for x in (4, 6):
+    d.line([x, 7, x, 13], fill=BIN_RIB)
+d.line([2, 6, 3, 13], fill=BIN_LIT)
+# 배지는 두 픽셀 두께라야 16px에서 X로 읽힌다 — 어두운 테두리로 통에서 떼어놓는다
+for i in range(7):
+    for dx, dy in ((0, 0), (1, 0), (0, 1)):
+        d.point((9 + i + dx, 9 + i + dy), fill=RED_EDGE)
+        d.point((15 - i + dx, 9 + i + dy), fill=RED_EDGE)
+for i in range(6):
+    d.point((10 + i, 10 + i), fill=RED)
+    d.point((15 - i, 10 + i), fill=RED)
+save(img, "purge.png")
+
+# 복원 실패 대화상자의 경고 표지 (32px — OSDialog 아이콘 자리)
+img = canvas(32); d = ImageDraw.Draw(img)
+d.polygon([(16, 2), (31, 29), (1, 29)], fill=(120, 86, 10))
+d.polygon([(16, 4), (29, 28), (3, 28)], fill=(246, 206, 58))
+d.polygon([(16, 6), (27, 27), (5, 27)], outline=(254, 236, 152))
+d.rectangle([14, 12, 17, 21], fill=(28, 22, 4))
+d.rectangle([14, 23, 17, 26], fill=(28, 22, 4))
+save(img, "warn.png")
+
+# 바탕화면 휴지통 32px 다시 그리기 — 예전 것은 회색 상자 두 개였다
+img = canvas(32); d = ImageDraw.Draw(img)
+# 뚜껑 밑에서 비스듬히 삐져나온 종이 한 장 (똑바로 세우면 별개 상자로 읽힌다)
+d.polygon([(17, 9), (22, 0), (30, 4), (25, 10)], fill=PAGE, outline=PAGE_EDGE)
+d.line([21, 4, 26, 6], fill=INK); d.line([20, 6, 24, 8], fill=INK)
+d.rectangle([13, 2, 18, 4], fill=BIN_FACE, outline=BIN_EDGE)                   # 뚜껑 손잡이
+d.rectangle([4, 5, 27, 9], fill=BIN_FACE, outline=BIN_EDGE)                    # 뚜껑
+d.line([5, 6, 26, 6], fill=BIN_LIT)
+d.polygon([(6, 10), (25, 10), (22, 30), (9, 30)], fill=BIN_FACE, outline=BIN_EDGE)
+for x, x2 in ((11, 12), (15, 15), (19, 18)):
+    d.line([x, 12, x2, 28], fill=BIN_RIB)
+d.line([8, 12, 10, 28], fill=BIN_LIT)
+save(img, "trash.png")

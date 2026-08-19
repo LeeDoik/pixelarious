@@ -18,6 +18,8 @@ const REQUIRED_STYLEBOXES := [
 	["TabBar", "tab_selected"],
 	["PopupMenu", "panel"],            # LineEdit 우클릭 메뉴가 이걸 쓴다
 	["TooltipPanel", "panel"],         # 탐색기 아이콘 보기의 전체 이름 풍선
+	["ProgressBar", "background"],    # 휴지통 복원 진행률
+	["ProgressBar", "fill"],
 	["HSlider", "slider"],
 	["VScrollBar", "grabber"],
 	["HScrollBar", "grabber"],

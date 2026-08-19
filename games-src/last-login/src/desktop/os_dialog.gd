@@ -5,7 +5,10 @@ extends Control
 ## 한쪽만 손보다가 결이 갈라진다.
 
 signal submitted(text: String)
+signal confirmed()
 signal closed()
+
+enum Mode { MESSAGE, PASSWORD, CONFIRM }
 
 const ALNUM := "abcdefghijklmnopqrstuvwxyz0123456789"
 const BOX_MIN_W := 420
@@ -16,9 +19,10 @@ var _body: Label
 var _error: Label
 var _icon: TextureRect
 var _edit: LineEdit
+var _ok: Button
 var _cancel: Button
 var _message := ""
-var _password_mode := false
+var _mode := Mode.MESSAGE
 
 func _ready() -> void:
 	set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -98,31 +102,38 @@ func _build_buttons() -> Control:
 	var row := HBoxContainer.new()
 	row.alignment = BoxContainer.ALIGNMENT_END
 	row.add_theme_constant_override("separation", 8)
-	var ok := Button.new()
-	ok.text = "확인"
-	ok.custom_minimum_size = Vector2(80, 0)
-	ok.pressed.connect(_on_ok)
+	_ok = Button.new()
+	_ok.custom_minimum_size = Vector2(80, 0)
+	_ok.pressed.connect(_on_ok)
 	_cancel = Button.new()
-	_cancel.text = "취소"
 	_cancel.custom_minimum_size = Vector2(80, 0)
 	_cancel.pressed.connect(close)
-	row.add_child(ok)
+	row.add_child(_ok)
 	row.add_child(_cancel)
 	return row
 
 func ask_password(title: String, body: String, icon_path: String = "") -> void:
-	_password_mode = true
-	_open(title, body, icon_path)
+	_mode = Mode.PASSWORD
+	_open(title, body, icon_path, "확인", "취소")
 	_edit.visible = true
 	_edit.text = ""
 	_cancel.visible = true
 	_edit.grab_focus()
 
 func show_message(title: String, body: String, icon_path: String = "") -> void:
-	_password_mode = false
-	_open(title, body, icon_path)
+	_mode = Mode.MESSAGE
+	_open(title, body, icon_path, "확인", "")
 	_edit.visible = false
 	_cancel.visible = false
+
+func ask_confirm(title: String, body: String, icon_path: String = "",
+		ok_text: String = "예", cancel_text: String = "아니오") -> void:
+	## 되돌릴 수 없는 일을 묻는다 — 휴지통 비우기가 이걸 쓴다. 확인을 누르면
+	## 창을 먼저 닫고 confirmed를 보낸다 (받는 쪽이 곧바로 다른 대화상자를 열 수 있게).
+	_mode = Mode.CONFIRM
+	_open(title, body, icon_path, ok_text, cancel_text)
+	_edit.visible = false
+	_cancel.visible = true
 
 func show_error(text: String) -> void:
 	_error.text = text
@@ -133,7 +144,7 @@ func close() -> void:
 	if not visible:
 		return
 	visible = false
-	_password_mode = false
+	_mode = Mode.MESSAGE
 	closed.emit()
 
 func is_open() -> bool:
@@ -145,7 +156,13 @@ func last_message() -> String:
 func input_text() -> String:
 	return _edit.text
 
-func _open(title: String, body: String, icon_path: String) -> void:
+func mode() -> Mode:
+	return _mode
+
+func _open(title: String, body: String, icon_path: String,
+		ok_text: String, cancel_text: String) -> void:
+	_ok.text = ok_text
+	_cancel.text = cancel_text
 	_title.text = title
 	_body.text = body
 	_message = body
@@ -154,10 +171,14 @@ func _open(title: String, body: String, icon_path: String) -> void:
 	visible = true
 
 func _on_ok() -> void:
-	if _password_mode:
-		submitted.emit(_edit.text)
-	else:
-		close()
+	match _mode:
+		Mode.PASSWORD:
+			submitted.emit(_edit.text)
+		Mode.CONFIRM:
+			close()
+			confirmed.emit()
+		_:
+			close()
 
 func _filter(t: String) -> void:
 	# 스펙 §3: 플레이어 입력은 영숫자만 (한글 IME 금지)

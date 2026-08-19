@@ -1,6 +1,9 @@
 extends Node
 ## content/*.json 로드와 스키마 검증. 게임의 모든 서사 데이터 접근 창구.
 
+const TRASH_ID := "trash"
+const PURGED_ID := "__purged"   # 영구 삭제된 파일이 가는 자리 (어떤 폴더도 아니다)
+
 var _d: Dictionary = {}
 
 func _ready() -> void:
@@ -111,9 +114,22 @@ func validate(raw: Dictionary) -> Array[String]:
 func fs_children(parent_id: String) -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
 	for n in _d["fs"]["nodes"]:
-		if n.get("parent") == parent_id:
+		if effective_parent(n) == parent_id:
 			out.append(n)
 	return out
+
+func effective_parent(n: Dictionary) -> String:
+	## 휴지통 안의 파일만 자리가 고정이 아니다 — 복원하면 원래 폴더로 옮겨가고,
+	## 휴지통을 비우면 손상된 것들은 어디에도 없어진다. 그 상태는 콘텐츠가 아니라
+	## 진행 상태라서 GameState가 갖고, 여기서는 물어보기만 한다.
+	var parent := String(n.get("parent", ""))
+	if parent != TRASH_ID:
+		return parent
+	if GameState.is_restored(String(n["id"])):
+		return String(n.get("origin", "mydocs"))
+	if n.get("corrupt", false) and GameState.has_flag("trash_purged"):
+		return PURGED_ID
+	return parent
 
 func fs_node(id: String) -> Dictionary:
 	for n in _d["fs"]["nodes"]:
@@ -122,7 +138,7 @@ func fs_node(id: String) -> Dictionary:
 	return {}
 
 func trash_items() -> Array[Dictionary]:
-	return fs_children("trash")
+	return fs_children(TRASH_ID)
 
 func doc(cid: String) -> Dictionary:
 	return _d["docs"].get(cid, {})

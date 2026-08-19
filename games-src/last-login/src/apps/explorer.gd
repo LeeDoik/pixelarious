@@ -21,6 +21,7 @@ const DRIVE := "C:"
 const GRID_COLUMN_W := 148.0
 
 var _cwd := "mydocs"
+var _selected := ""          # 보기를 바꿔도 유지할 선택
 var _pending_locked := ""      # 암호 대기 중인 폴더 id
 var _history: Array[String] = []
 var _view_mode := ViewMode.ICONS
@@ -185,6 +186,31 @@ func set_view_mode(mode: ViewMode) -> void:
 	_details_btn.button_pressed = not icons
 	if icons:
 		_relayout_grid()
+	_apply_selection()
+
+func _apply_selection() -> void:
+	## 아이콘 ↔ 자세히를 오갈 때 고른 파일이 풀리면, 상태표시줄에는 이름이 남아 있는데
+	## 목록에는 아무것도 안 눌린 창이 된다 (휴지통도 같은 규칙을 쓴다)
+	if _selected == "":
+		return
+	if _view_mode == ViewMode.ICONS:
+		for i in _list.item_count:
+			if String(_list.get_item_metadata(i)) == _selected:
+				_list.select(i)
+				_list.ensure_current_is_visible()
+				return
+		return
+	var row := _tree.get_root()
+	row = row.get_first_child() if row != null else null
+	while row != null:
+		if String(row.get_metadata(0)) == _selected:
+			row.select(0)
+			_tree.scroll_to_item(row)
+			return
+		row = row.get_next()
+
+func selected_id() -> String:
+	return _selected
 
 func view_mode() -> ViewMode:
 	return _view_mode
@@ -202,7 +228,8 @@ func _refresh() -> void:
 	var entries := ContentDB.fs_children(_cwd)
 	_fill_grid(entries)
 	_fill_details(entries)
-	_addr.text = _path_text(_cwd)
+	_selected = ""
+	_addr.text = path_text(_cwd)
 	var here := ContentDB.fs_node(_cwd)
 	_addr_icon.texture = _texture(ICON["folder"] if here.is_empty() else _icon_path(here))
 	_back_btn.disabled = _history.is_empty()
@@ -233,7 +260,7 @@ func _fill_details(entries: Array[Dictionary]) -> void:
 		row.set_text(3, format_mtime(String(n.get("mtime", ""))))
 		row.set_metadata(0, n["id"])
 
-func _path_text(id: String) -> String:
+static func path_text(id: String) -> String:
 	if id == ROOT_ID:
 		return ROOT_LABEL
 	var parts: PackedStringArray = []
@@ -316,6 +343,7 @@ func _show_selection(id: String) -> void:
 	var n := ContentDB.fs_node(id)
 	if n.is_empty():
 		return
+	_selected = id
 	_status_left.text = "%s — %s" % [String(n["name"]), type_label(n)]
 	_status_right.text = "" if n["type"] == "folder" else size_text(n)
 

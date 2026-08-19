@@ -34,9 +34,9 @@
   {"id": "l_debt", "parent": "locked", "name": "빚 정리.txt", "type": "doc", "cid": "doc:debt_note", "size": 498, "mtime": "2002-10-25 23:57"},
   {"id": "l_letter", "parent": "locked", "name": "슬기에게(부치지못함).txt", "type": "doc", "cid": "doc:letter_unsent", "size": 1202, "mtime": "2002-11-01 04:16"},
 
-  {"id": "t1", "parent": "trash", "name": "backup_1102.txt", "type": "doc", "cid": "doc:diary_final", "record": true, "size": 1454, "mtime": "2002-11-02 03:47"},
-  {"id": "t2", "parent": "trash", "name": "backup_0930.txt", "type": "doc", "cid": "doc:corrupt_0930", "corrupt": true, "size": 0, "mtime": "2002-09-30 23:58"},
-  {"id": "t3", "parent": "trash", "name": "backup_1015.txt", "type": "doc", "cid": "doc:corrupt_1015", "corrupt": true, "size": 4096, "mtime": "2002-10-15 01:33"},
-  {"id": "t4", "parent": "trash", "name": "필사_4_초안.txt", "type": "doc", "cid": "doc:corrupt_doctrine4", "corrupt": true, "size": 1024, "mtime": "2002-09-15 22:07"},
-  {"id": "t5", "parent": "trash", "name": "danjjak_temp.dat", "type": "doc", "cid": "doc:corrupt_temp", "corrupt": true, "size": 12288, "mtime": "2002-11-02 03:51"}
+  {"id": "t1", "parent": "trash", "name": "backup_1102.txt", "type": "doc", "cid": "doc:diary_final", "record": true, "size": 1454, "mtime": "2002-11-02 03:47", "origin": "mydocs", "deleted": "2002-11-02 03:49"},
+  {"id": "t2", "parent": "trash", "name": "backup_0930.txt", "type": "doc", "cid": "doc:corrupt_0930", "corrupt": true, "size": 0, "mtime": "2002-09-30 23:58", "origin": "mydocs", "deleted": "2002-10-01 00:03", "error": "0x0000001E"},
+  {"id": "t3", "parent": "trash", "name": "backup_1015.txt", "type": "doc", "cid": "doc:corrupt_1015", "corrupt": true, "size": 4096, "mtime": "2002-10-15 01:33", "origin": "mydocs", "deleted": "2002-10-15 01:40", "error": "0x00000024"},
+  {"id": "t4", "parent": "trash", "name": "필사_4_초안.txt", "type": "doc", "cid": "doc:corrupt_doctrine4", "corrupt": true, "size": 1024, "mtime": "2002-09-15 22:07", "origin": "saebit", "deleted": "2002-09-15 22:11", "error": "0x0000002C"},
+  {"id": "t5", "parent": "trash", "name": "danjjak_temp.dat", "type": "doc", "cid": "doc:corrupt_temp", "corrupt": true, "size": 12288, "mtime": "2002-11-02 03:51", "origin_path": "C:\\WINDOWS\\Temp", "deleted": "2002-11-02 03:52", "error": "0x00000031"}
 ]}

@@ -4,7 +4,7 @@ extends SceneTree
 ##
 ##   godot --path . -s tools/shot.gd -- <출력경로> [시나리오]
 ##
-## 시나리오: explorer(기본) | details | locked | notepad | desktop | stack | settings | boot | splash | start | maximize | shutdown | msg | msgchoice | msglogs | mail | maillock | web | webmyhome | webportal | web404 | webgate
+## 시나리오: explorer(기본) | details | locked | notepad | desktop | stack | settings | boot | splash | start | maximize | shutdown | msg | msgchoice | msglogs | mail | maillock | web | webmyhome | webportal | web404 | webgate | trash | trashdetails | trashfail | trashpurge | trashblocked | trashdone
 ##
 ## 주의: `-s`로 실행되는 스크립트는 오토로드가 등록되기 전에 컴파일된다.
 ## 여기서 프로젝트 클래스를 정적 타입으로 참조하면 그 스크립트가 딸려 컴파일되면서
@@ -71,6 +71,26 @@ func _run() -> void:
 		elif scenario == "webgate":
 			target = "cafe.nurinet.co.kr/saebit/gate"
 		br.navigate(target)
+		await _settle()
+	elif scenario in ["trash", "trashdetails", "trashfail", "trashpurge", "trashblocked", "trashdone"]:
+		wm.open_app("trash")
+		await _settle()
+		var tr = _find_by_script(wm, "res://src/apps/trash.gd")
+		if scenario == "trashdetails":
+			tr.set_view_mode(VIEW_DETAILS)
+			tr.select("t1")
+		elif scenario == "trashfail":
+			tr.restore_sec = 0.05
+			tr._begin_restore("t2")      # 손상 파일 — 막대가 멈추고 오류창이 겹친다
+			await _settle(90)
+		elif scenario == "trashpurge":
+			tr.ask_purge()
+		elif scenario == "trashblocked":
+			tr.purge()                   # 비운 뒤: 손상된 넷은 사라지고 유서 한 장만 남는다
+		elif scenario == "trashdone":
+			tr.restore("t1")             # 복원 뒤: 목록 4개 + 메모장 창
+		else:
+			tr.select("t1")
 		await _settle()
 	elif scenario == "shutdown":
 		root.get_node("/root/GameState").set_flag("ending_start")
