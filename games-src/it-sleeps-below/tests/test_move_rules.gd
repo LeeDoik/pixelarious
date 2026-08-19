@@ -61,17 +61,31 @@ func test_tap_dir_accepts_only_adjacent_tiles() -> void:
 	assert_vector(MoveRules.tap_dir(Vector2(8 * 16 + 8, 21 * 16 + 8), p)).is_equal(Vector2i(0, 1))
 	assert_vector(MoveRules.tap_dir(Vector2(7 * 16 + 8, 20 * 16 + 8), p)).is_equal(Vector2i(-1, 0))
 	assert_vector(MoveRules.tap_dir(Vector2(9 * 16 + 8, 20 * 16 + 8), p)).is_equal(Vector2i(1, 0))
-	# 제 칸, 대각선, 두 칸 밖은 무시 — 비인접 탭은 아무 일도 일으키지 않는다 (스펙 §11)
+	# 제 칸과 먼 곳은 무시 — 먼 곳을 눌러 이동하는 게임이 아니다 (스펙 §11)
 	assert_vector(MoveRules.tap_dir(Vector2(8 * 16 + 8, 20 * 16 + 8), p)).is_equal(Vector2i.ZERO)
-	assert_vector(MoveRules.tap_dir(Vector2(9 * 16 + 8, 21 * 16 + 8), p)).is_equal(Vector2i.ZERO)
-	assert_vector(MoveRules.tap_dir(Vector2(8 * 16 + 8, 22 * 16 + 8), p)).is_equal(Vector2i.ZERO)
+	assert_vector(MoveRules.tap_dir(Vector2(8 * 16 + 8, 24 * 16 + 8), p)).is_equal(Vector2i.ZERO)
+	# 대각선은 무시가 아니라 축으로 스냅한다 — test_tap_dir_snaps_near_misses_to_one_axis 참고
 
 func test_tap_dir_handles_tile_edges_and_negative_coords() -> void:
 	var p := Vector2i(8, 20)
 	# 타일 경계 바로 안쪽도 그 타일이다
 	assert_vector(MoveRules.tap_dir(Vector2(9 * 16, 20 * 16), p)).is_equal(Vector2i(1, 0))
 	assert_vector(MoveRules.tap_dir(Vector2(9 * 16 + 15, 20 * 16 + 15), p)).is_equal(Vector2i(1, 0))
-	# 두 칸 밖은 경계 픽셀이라도 무시
-	assert_vector(MoveRules.tap_dir(Vector2(10 * 16, 20 * 16), p)).is_equal(Vector2i.ZERO)
+	# 사거리 밖은 경계 픽셀이라도 무시
+	assert_vector(MoveRules.tap_dir(Vector2(11 * 16, 20 * 16), p)).is_equal(Vector2i.ZERO)
 	# 화면 위쪽(음수 y)은 int() 절삭이면 0행으로 접혀 오판한다 — floori라 -1행으로 간다
 	assert_vector(MoveRules.tap_dir(Vector2(0 * 16 + 8, -8), Vector2i(0, 0))).is_equal(Vector2i(0, -1))
+
+func test_tap_dir_snaps_near_misses_to_one_axis() -> void:
+	var p := Vector2i(8, 20)
+	# 대각선 탭 — 정확히 인접이 아니지만 의도는 분명하다. 축으로 스냅한다.
+	assert_vector(MoveRules.tap_dir(Vector2(9 * 16 + 8, 21 * 16 + 8), p)).is_equal(Vector2i(0, 1))
+	assert_vector(MoveRules.tap_dir(Vector2(7 * 16 + 8, 19 * 16 + 8), p)).is_equal(Vector2i(0, -1))
+	# 한 축으로 더 벗어났으면 그 축을 고른다
+	assert_vector(MoveRules.tap_dir(Vector2(6 * 16 + 8, 20 * 16 + 8), p)).is_equal(Vector2i(-1, 0))
+	assert_vector(MoveRules.tap_dir(Vector2(6 * 16 + 8, 21 * 16 + 8), p)).is_equal(Vector2i(-1, 0))
+	# 사거리(2.3타일) 밖은 무시 — 세 칸 옆, 대각으로 크게 벗어난 곳
+	assert_vector(MoveRules.tap_dir(Vector2(11 * 16 + 8, 20 * 16 + 8), p)).is_equal(Vector2i.ZERO)
+	assert_vector(MoveRules.tap_dir(Vector2(10 * 16 + 8, 22 * 16 + 8), p)).is_equal(Vector2i.ZERO)
+	# 제 칸은 아무 일도 하지 않는다
+	assert_vector(MoveRules.tap_dir(Vector2(8 * 16 + 8, 20 * 16 + 8), p)).is_equal(Vector2i.ZERO)

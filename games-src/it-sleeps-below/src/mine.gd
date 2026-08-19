@@ -102,6 +102,7 @@ func _process(delta: float) -> void:
 		GameState.run.bottles -= 1
 		oil = Oil.tank(GameState.profile.upgrades.lamp) * Tuning.OIL_PICKUP_RATIO
 		Sfx.play("lamp_toggle")
+		hud.flash_oil_refill()  # 보험이 쓰인 순간을 눈으로도 알린다
 	GameState.run.oil = oil
 	var cur_light_radius := light_radius()
 	# 기름 소모로 빛 반경 단계가 내려갈 때만 경고음 — 램프 수동 토글로 인한 변화는 제외
@@ -127,7 +128,7 @@ func _process(delta: float) -> void:
 		light_rig.set_radius_tiles(cur_light_radius)
 	# 기름병이 먹은 칸까지 반영한 실제 용량을 보여준다 — 판정(_collect)과 표시가 같아야 한다
 	hud.update_state(oil / Oil.tank(GameState.profile.upgrades.lamp), lamp_on,
-		GameState.run.bag.size(), bag_capacity(), ppos.y)
+		GameState.run.bag.size(), bag_capacity(), ppos.y, GameState.run.bottles)
 	if ppos.y >= Tuning.LURKER_MIN_DEPTH:
 		director = LurkerLogic.director_step(director, delta, ppos.y)
 		_update_lurker(delta)
