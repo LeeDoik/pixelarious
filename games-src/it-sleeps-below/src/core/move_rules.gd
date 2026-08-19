@@ -9,6 +9,15 @@ const A_DIG := 3
 static func passable(c: int) -> bool:
 	return c == WorldGen.T_EMPTY
 
+static func tap_dir(world_pos: Vector2, ppos: Vector2i) -> Vector2i:
+	## 화면 좌표 탭 → 인접 4방향 중 하나. 비인접·같은 칸은 Vector2i.ZERO (무시).
+	## floori를 쓴다 — int()는 0으로 절삭해서 음수 좌표가 한 칸 밀린다.
+	var tile := Vector2i(floori(world_pos.x / float(Tuning.TILE_PX)), floori(world_pos.y / float(Tuning.TILE_PX)))
+	var d := tile - ppos
+	if absi(d.x) + absi(d.y) == 1:
+		return d
+	return Vector2i.ZERO
+
 static func classify(cells: PackedInt32Array, pos: Vector2i, dir: Vector2i, pick_level: int) -> int:
 	var t := pos + dir
 	if t.x < 1 or t.x > WorldGen.W - 2 or t.y < 0 or t.y >= WorldGen.DEPTH:

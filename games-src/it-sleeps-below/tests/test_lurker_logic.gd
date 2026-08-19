@@ -46,3 +46,24 @@ func test_arrived_wander_switches_target() -> void:
 	s = LurkerLogic.arrived_wander(s, Vector2i(7, 7))
 	assert_that(s.target).is_equal(Vector2i(7, 7))
 	assert_bool(s.alert).is_false()
+
+func test_pick_wander_skips_unreachable_candidates() -> void:
+	var open := func(p: Vector2i) -> bool: return p.x == 5  # 5열만 파여 있다
+	var from := Vector2i(5, 10)
+	# 첫 후보가 벽이면 건너뛰고 갈 수 있는 곳을 고른다
+	var got := LurkerLogic.pick_wander(from, [Vector2i(9, 10), Vector2i(5, 14)], open)
+	assert_vector(got).is_equal(Vector2i(5, 14))
+	# 전부 벽이면 제자리 — 닿지 않는 목표를 들고 굳지 않는다
+	assert_vector(LurkerLogic.pick_wander(from, [Vector2i(9, 10), Vector2i(1, 3)], open)).is_equal(from)
+	assert_vector(LurkerLogic.pick_wander(from, [], open)).is_equal(from)
+
+func test_next_step_gives_up_instead_of_scanning_everything() -> void:
+	# 사방이 뚫린 넓은 공간에서 닿지 않는 목표(벽 안)를 주면 전수 탐색이 된다.
+	# 확장 상한에 걸려 제자리를 돌려주는지 — 걸음마다 맵을 훑지 않는다는 뜻이다
+	var visited := 0
+	var open := func(p: Vector2i) -> bool:
+		visited += 1
+		return p.x >= 0 and p.x < 16 and p.y >= 0 and p.y < 401
+	var got := LurkerLogic.next_step(Vector2i(8, 200), Vector2i(999, 999), open)
+	assert_vector(got).is_equal(Vector2i(8, 200))
+	assert_int(visited).is_less(LurkerLogic.PATH_MAX_NODES * 4 + 8)

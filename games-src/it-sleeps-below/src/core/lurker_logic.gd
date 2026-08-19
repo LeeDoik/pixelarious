@@ -36,19 +36,34 @@ static func hear(state: Dictionary, noise_pos: Vector2i, noise_level: float) -> 
 		out.alert = true
 	return out
 
+static func pick_wander(from: Vector2i, candidates: Array, is_open: Callable) -> Vector2i:
+	## 갈 수 있는 후보만 고른다. 벽이나 맵 밖을 목표로 잡으면 경로 탐색이 매번 전수 실패하고
+	## 러커는 제자리에 굳는다 (실측: 파낸 공간 전체를 걸음마다 훑는다).
+	for c: Vector2i in candidates:
+		if is_open.call(c):
+			return c
+	return from
+
 static func arrived_wander(state: Dictionary, rng_pick: Vector2i) -> Dictionary:
 	var out := state.duplicate()
 	out.target = rng_pick
 	out.alert = false
 	return out
 
+const PATH_MAX_NODES := 800
+
 static func next_step(lurker: Vector2i, target: Vector2i, is_open: Callable) -> Vector2i:
 	if lurker == target:
 		return lurker
-	# BFS — 파낸 공간만 통과. 그리드가 작아(16×401) 전수 탐색 허용.
+	# BFS — 파낸 공간만 통과. 목표가 닿지 않으면 전수 탐색이 되므로 확장 수를 막아둔다
+	# (러커는 플레이어 근처에 스폰하니 800칸이면 정상 경로는 다 잡힌다).
 	var q: Array[Vector2i] = [lurker]
 	var prev := {lurker: lurker}
+	var expanded := 0
 	while not q.is_empty():
+		expanded += 1
+		if expanded > PATH_MAX_NODES:
+			return lurker
 		var cur: Vector2i = q.pop_front()
 		if cur == target:
 			# 역추적으로 첫걸음 복원

@@ -125,8 +125,9 @@ func _process(delta: float) -> void:
 	if not finale_mode:
 		# 피날레 중에는 FinaleDirector가 심장 펄스로만 반경을 구동한다 — 여기서 덮어쓰면 펄스가 씹힌다
 		light_rig.set_radius_tiles(cur_light_radius)
+	# 기름병이 먹은 칸까지 반영한 실제 용량을 보여준다 — 판정(_collect)과 표시가 같아야 한다
 	hud.update_state(oil / Oil.tank(GameState.profile.upgrades.lamp), lamp_on,
-		GameState.run.bag.size(), Economy.bag_slots(GameState.profile.upgrades.bag), ppos.y)
+		GameState.run.bag.size(), bag_capacity(), ppos.y)
 	if ppos.y >= Tuning.LURKER_MIN_DEPTH:
 		director = LurkerLogic.director_step(director, delta, ppos.y)
 		_update_lurker(delta)
@@ -167,18 +168,26 @@ func _unhandled_input(event: InputEvent) -> void:
 		if event.keycode == _held_key:
 			held_dir = Vector2i.ZERO
 			_held_key = KEY_NONE
+	elif event is InputEventScreenTouch:
+		# 모바일 웹에서 탭을 마우스 에뮬레이션에 맡기지 않고 직접 받는다.
+		# 에뮬레이션은 켜둔 채다 — 끄면 상점·수첩·램프 같은 Button이 터치에 반응하지 않는다.
+		# 따라서 한 탭이 터치+마우스로 두 번 들어오지만, 아래 처리는 같은 값을 두 번 쓸 뿐이라 무해하다.
+		_pointer((event as InputEventScreenTouch).position, event.pressed)
 	elif event is InputEventMouseButton:
-		if event.pressed:
-			var world := get_canvas_transform().affine_inverse() * (event as InputEventMouseButton).position
-			var tile := Vector2i(int(world.x / 16.0), int(world.y / 16.0))
-			var d := tile - ppos
-			if abs(d.x) + abs(d.y) == 1:
-				held_dir = d
-				_held_mouse = true
-				_held_key = KEY_NONE
-		elif _held_mouse:
+		_pointer((event as InputEventMouseButton).position, event.pressed)
+
+func _pointer(screen_pos: Vector2, pressed: bool) -> void:
+	if not pressed:
+		if _held_mouse:
 			held_dir = Vector2i.ZERO
 			_held_mouse = false
+		return
+	var world := get_canvas_transform().affine_inverse() * screen_pos
+	var d := MoveRules.tap_dir(world, ppos)
+	if d != Vector2i.ZERO:
+		held_dir = d
+		_held_mouse = true
+		_held_key = KEY_NONE
 
 func _try_move(dir: Vector2i) -> void:
 	var act := MoveRules.classify(cells, ppos, dir, GameState.profile.upgrades.pick)
