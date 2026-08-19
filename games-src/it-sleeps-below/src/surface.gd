@@ -48,6 +48,7 @@ var journal_label := Label.new()
 var bottles_label := Label.new()
 var relic_label := Label.new()
 var campfire: Sprite2D
+var gear_row: Node2D
 
 var _font: FontFile
 var _shop_rows: Dictionary = {}
@@ -221,11 +222,21 @@ func _build_status_bar() -> void:
 	_build_gear_pips(STATUS_TOP + 29)
 
 func _build_gear_pips(y: float) -> void:
-	# 상점을 열지 않고도 장비 상태가 보인다 — 칸이 다 차면 만렙
+	# 상점을 열지 않고도 장비 상태가 보인다 — 칸이 다 차면 만렙.
+	# 상점에서 사면 그 자리에서 다시 그려야 하므로 통째로 갈아끼울 수 있게 담아둔다.
+	if is_instance_valid(gear_row):
+		gear_row.queue_free()
+	gear_row = Node2D.new()
+	add_child(gear_row)
 	var x := 8.0
 	for g: Dictionary in Camp.gear_pips(GameState.profile.upgrades):
-		var lbl := _make_label(7, Vector2(x, y), Vector2(26, 10))
+		var lbl := Label.new()
+		lbl.add_theme_font_override("font", _font)
+		lbl.add_theme_font_size_override("font_size", 7)
+		lbl.position = Vector2(x, y)
+		lbl.size = Vector2(26, 10)
 		lbl.text = g.label
+		gear_row.add_child(lbl)
 		var px := x + 26.0
 		for i in range(g.max):
 			var dot := ColorRect.new()
@@ -233,7 +244,7 @@ func _build_gear_pips(y: float) -> void:
 			dot.position = Vector2(px, y + 2)
 			dot.size = Vector2(3, 5)
 			dot.mouse_filter = Control.MOUSE_FILTER_IGNORE
-			add_child(dot)
+			gear_row.add_child(dot)
 			px += 5.0
 		x += 52.0
 
@@ -409,7 +420,12 @@ func _build_shop_panel() -> void:
 	_refresh_shop()
 
 func _refresh_gold() -> void:
-	gold_label.text = "%d G" % GameState.profile.gold
+	gold_label.text = Camp.gold_tag(GameState.profile.gold)
+
+func _refresh_status_bar() -> void:
+	# 상점에서 사면 상태 바가 그대로 굳어 있었다 — 구매 경로에서 같이 갱신한다
+	bottles_label.text = Camp.oil_tag(GameState.profile.oil_bottles)
+	_build_gear_pips(STATUS_TOP + 29)
 
 func _refresh_shop() -> void:
 	for track in TRACK_ORDER:
@@ -443,6 +459,7 @@ func _buy(track: String) -> void:
 	GameState.save()
 	Sfx.play("settle")
 	_refresh_shop()
+	_refresh_status_bar()
 
 func _buy_oil() -> void:
 	if GameState.profile.oil_bottles >= Tuning.OIL_BOTTLE_CARRY_MAX:
@@ -454,6 +471,7 @@ func _buy_oil() -> void:
 	GameState.save()
 	Sfx.play("settle")
 	_refresh_shop()
+	_refresh_status_bar()
 
 # ── 수첩 ──
 
