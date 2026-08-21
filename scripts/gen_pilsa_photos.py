@@ -154,16 +154,44 @@ def vow_lines(body):
 
 
 def draw_stamp(canvas, x, y):
-    """인주 지장 — 동심 결 무늬가 뭉개진 붉은 자국."""
-    st = Image.new("RGBA", (150, 170), (0, 0, 0, 0))
-    d = ImageDraw.Draw(st)
-    for i in range(9):
-        rx, ry = 26 + i * 4, 34 + i * 5
-        start = random.randint(0, 120)
-        d.arc([75 - rx, 85 - ry, 75 + rx, 85 + ry], start,
-              start + random.randint(140, 300),
-              fill=(186, 42, 36, random.randint(110, 185)), width=3)
-    st = st.filter(ImageFilter.GaussianBlur(1.2))
+    """인주 지장 — 거의 꽉 찬 붉은 타원에 융선이 결로 비치고,
+    마디 주름이 가로지르며, 가장자리가 고르지 않게 뜩긴다."""
+    W2, H2 = 150, 180
+    mask = Image.new("L", (W2, H2), 0)
+    d = ImageDraw.Draw(mask)
+    cx, cy, rx, ry = 72, 92, 40, 60
+    d.ellipse([cx - rx, cy - ry, cx + rx, cy + ry], fill=138)        # 바탕은 통짜로
+    for i in range(2, 14):                                           # 융선 결 — 진한 금과 옆은 금
+        erx, ery = rx * i / 14.0, ry * i / 14.0
+        for _ in range(random.randint(2, 4)):
+            a0 = random.randint(0, 360)
+            d.arc([cx - erx, cy - ery, cx + erx, cy + ery], a0,
+                  a0 + random.randint(40, 130), fill=random.randint(190, 235), width=2)
+        for _ in range(random.randint(1, 3)):
+            a0 = random.randint(0, 360)
+            d.arc([cx - erx, cy - ery, cx + erx, cy + ery], a0,
+                  a0 + random.randint(30, 90), fill=random.randint(50, 85), width=2)
+    for _ in range(2):                                               # 마디 주름
+        yy = cy + random.randint(-24, 36)
+        d.line([cx - rx - 5, yy, cx + rx + 5, yy + random.randint(-9, 9)],
+               fill=random.randint(0, 30), width=random.randint(3, 4))
+    for _ in range(130):                                             # 가장자리 뜩김
+        a = random.uniform(0.0, 6.283)
+        rr = random.uniform(0.94, 1.10)
+        px_ = cx + math.cos(a) * rx * rr
+        py_ = cy + math.sin(a) * ry * rr
+        r2 = random.uniform(1.5, 5.0)
+        d.ellipse([px_ - r2, py_ - r2, px_ + r2, py_ + r2], fill=0)
+    for _ in range(70):                                              # 속의 잖은 빈 점
+        a = random.uniform(0.0, 6.283)
+        rr = random.uniform(0.0, 0.9) ** 0.5
+        px_ = cx + math.cos(a) * rx * rr
+        py_ = cy + math.sin(a) * ry * rr
+        r2 = random.uniform(0.8, 2.2)
+        d.ellipse([px_ - r2, py_ - r2, px_ + r2, py_ + r2], fill=random.randint(30, 70))
+    mask = mask.filter(ImageFilter.GaussianBlur(0.7))
+    st = Image.new("RGBA", (W2, H2), (172, 38, 30, 255))
+    st.putalpha(mask)
     st = st.rotate(random.uniform(-14, 10), resample=Image.BICUBIC)
     canvas.alpha_composite(st, (int(x), int(y)))
 
