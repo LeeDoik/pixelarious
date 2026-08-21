@@ -15,6 +15,7 @@ func _ready() -> void:
 		b.position = Vector2(10.0 + i * 15.0, 12.0)
 		b.size = Vector2(11.0, 8.0)
 		b.color = _seg_color(i)
+		b.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		add_child(b)
 		_blocks.append(b)
 	_mult = _make_label(12, Vector2(228, 8), Color("#FFEC27"))

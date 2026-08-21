@@ -71,12 +71,14 @@ func _build_backdrop() -> void:
 	wall.position = Vector2(0, 150)
 	wall.size = Vector2(Tuning.VIEW_W, 190)
 	wall.z_index = -10
+	wall.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(wall)
 	var floor_rect := ColorRect.new()
 	floor_rect.color = Color("#141127")
 	floor_rect.position = Vector2(0, 340)
 	floor_rect.size = Vector2(Tuning.VIEW_W, Tuning.VIEW_H - 340)
 	floor_rect.z_index = -10
+	floor_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(floor_rect)
 
 func _on_beat(_b: int) -> void:

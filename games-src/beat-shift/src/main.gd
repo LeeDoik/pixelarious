@@ -67,7 +67,7 @@ func _process(_delta: float) -> void:
 	if GameState.phase != GameState.Phase.PLAYING or _paused:
 		return
 	var t := Conductor.song_time()
-	for m in judge.advance(t):
+	for m in judge.advance(t + Tuning.INPUT_OFFSET):
 		GameState.register_fail("miss")
 		scene_stage.on_result("miss", m)
 		Sfx.play("miss")
@@ -141,14 +141,18 @@ func _game_over() -> void:
 	)
 
 func _resume() -> void:
-	# 박자 어긋남 방지 — 현재 마디 처음부터 다시 (루프 = 1마디라 시킹 불필요)
+	# 박자 어긋남 방지 — 현재 마디 처음부터 다시 (루프 = 1마디라 시킹 불필요).
+	# 노트 목록을 미처리분으로 재구성하고 큐 커서를 lead만큼 되돌려
+	# 유령 큐(이미 처리된 노트 재큐)와 무음 미스(마디 초입 노트 큐 누락)를 막는다.
 	_paused = false
 	overlay.clear()
 	var bar := int(floor(Conductor.song_beats() / float(Tuning.BEATS_PER_BAR)))
 	var bar_start := ConductorMath.time_from_beats(float(bar * Tuning.BEATS_PER_BAR), Conductor.bpm)
+	var lead := ConductorMath.time_from_beats(Tuning.CUE_LEAD_BEATS, Conductor.bpm)
 	scene_stage.clear_cues()
-	judge = NoteJudge.new(judge.remaining_after(bar_start), Tuning.PERFECT_WIN, Tuning.GOOD_WIN)
-	_cue_cursor = bar_start
+	_note_times = judge.remaining_after(bar_start)
+	judge = NoteJudge.new(_note_times, Tuning.PERFECT_WIN, Tuning.GOOD_WIN)
+	_cue_cursor = bar_start - lead
 	Conductor.resume_at_bar(bar)
 
 func _notification(what: int) -> void:

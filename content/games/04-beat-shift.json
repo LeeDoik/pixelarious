@@ -8,7 +8,8 @@
     "2D",
     "RHYTHM",
     "ONE BUTTON",
-    "MOBILE OK"
+    "MOBILE",
+    "PC"
   ],
   "coverScene": "beatshift",
   "playPath": "/games/beat-shift/index.html",

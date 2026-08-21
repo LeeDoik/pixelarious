@@ -2078,3 +2078,13 @@ git commit -m "feat(beatshift): playtest tuning pass"
 - **스펙 §3 대비 조정 1건**: 섹션 앞 인트로 1마디 추가(첫 노트의 2박 예비 큐 성립을 위해). 스펙의 "장면 전환 시 +10 회복"은 1단계에서 "섹션 클리어 시 +10"으로 대응(장면이 1개이므로 동일 지점).
 - **타입 일관성**: `NoteJudge.on_tap` 반환 `{"result","note_time"}`(Task 3 정의 ↔ 9 사용), `ForgeScene.spawn_cue(note_time, cue_time)/on_result/set_heat/clear_cues/ingot_count`(Task 8 정의 ↔ 9 사용), `Conductor.start_section/resume_at_bar/song_time/song_beats/bpm`(Task 6 정의 ↔ 8·9 사용), `GameState.register_hit/register_fail/register_section_clear/is_dead/mult/groove`(Task 5 정의 ↔ 9 사용), `Patterns.section_notes` 반환은 비트 배열이고 초 변환·인트로 오프셋은 Main이 담당(Task 4 명시 ↔ 9 구현) 확인.
 - **알려진 주의점**: PixelLab 응답 스키마는 기존 `scripts/gen_pixellab.py`가 검증된 정본 — 다르면 그쪽을 따른다(Task 7). gdUnit에서 오디오 재생 위치 전진에 의존하는 단언 금지 — Conductor 테스트는 상태·클램프만 검증(Task 6). 헤드리스에서 `_process` 자동 구동에 의존하지 않도록 판정 로직은 `NoteJudge` 수동 호출로 테스트(Task 3).
+
+## 구현 정오표 (2026-08-22 최종 리뷰 반영 — 2~4단계에서 이 플랜의 코드 블록을 템플릿으로 쓸 때 주의)
+
+- 배경·HUD의 ColorRect는 `mouse_filter = Control.MOUSE_FILTER_IGNORE` 필수 — Control 기본값 STOP이 탭(마우스/터치)을 삼킨다
+- `_resume()`은 `_note_times`를 `judge.remaining_after(bar_start)`로 재구성하고 `_cue_cursor`를 `bar_start - lead`로 되돌린다 — 유령 큐·무음 미스 방지
+- `judge.advance()`에도 `Tuning.INPUT_OFFSET`을 더한다 — 탭과 동일한 판정 시간축
+- Conductor 루프 길이는 BPM에서 유도한다 — WAV가 QOA로 임포트되어 `data.size()` 기반 계산은 틀린다
+- 사망 타이머는 `create_timer(Tuning.DEATH_SLOWMO_SEC, true, false, true)` — ignore_time_scale이라 배율 곱은 이중 보정
+- 와이드 뷰포트에서 270×480 영역 중앙 정렬: world Node2D 오프셋 + CanvasLayer.offset (`_update_layout`)
+- 카트리지 태그는 스펙 §10대로 `MOBILE`/`PC` (MOBILE OK 아님)
