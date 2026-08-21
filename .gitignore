@@ -14,4 +14,5 @@ games-src/*/reports/
 .superpowers/
 
 scripts/audio_preview/
+scripts/pixellab_out/
 scripts/__pycache__/
