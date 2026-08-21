@@ -42,6 +42,7 @@ describe('games registry', () => {
       'starfall-drift',
       'it-sleeps-below',
       'last-login',
+      'beat-shift',
       'system-check',
     ])
   })

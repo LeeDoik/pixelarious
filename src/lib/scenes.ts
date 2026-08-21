@@ -1,5 +1,5 @@
-export type CoverScene = 'starfall' | 'cave' | 'pong' | 'system' | 'lastlogin'
-export const COVER_SCENES: CoverScene[] = ['starfall', 'cave', 'pong', 'system', 'lastlogin']
+export type CoverScene = 'starfall' | 'cave' | 'pong' | 'system' | 'lastlogin' | 'beatshift'
+export const COVER_SCENES: CoverScene[] = ['starfall', 'cave', 'pong', 'system', 'lastlogin', 'beatshift']
 export type Palette = 'night' | 'dmg'
 
 interface ScenePalette {
@@ -18,6 +18,7 @@ export const PALETTES: Record<Palette, Record<CoverScene, ScenePalette>> = {
     pong: { sky: '#0C0A1C', far: '#1D2B53', star: '#8E99D9', hi: '#FFEC27', obj: '#FFF1E8', obj2: '#FF77A8' },
     system: { sky: '#0C0A1C', far: '#1D2B53', star: '#8E99D9', hi: '#FFEC27', obj: '#FF77A8', obj2: '#29ADFF' },
     lastlogin: { sky: '#0C0A1C', far: '#1D2B53', star: '#8E99D9', hi: '#FFEC27', obj: '#FFF1E8', obj2: '#29ADFF' },
+    beatshift: { sky: '#0C0A1C', far: '#1D2B53', star: '#8E99D9', hi: '#FFEC27', obj: '#FF77A8', obj2: '#29ADFF' },
   },
   dmg: {
     starfall: { sky: '#081820', far: '#346856', star: '#E0F8D0', hi: '#E0F8D0', obj: '#88C070', obj2: '#E0F8D0' },
@@ -25,10 +26,11 @@ export const PALETTES: Record<Palette, Record<CoverScene, ScenePalette>> = {
     pong: { sky: '#081820', far: '#346856', star: '#88C070', hi: '#E0F8D0', obj: '#E0F8D0', obj2: '#88C070' },
     system: { sky: '#081820', far: '#346856', star: '#88C070', hi: '#E0F8D0', obj: '#88C070', obj2: '#E0F8D0' },
     lastlogin: { sky: '#081820', far: '#346856', star: '#88C070', hi: '#E0F8D0', obj: '#E0F8D0', obj2: '#88C070' },
+    beatshift: { sky: '#081820', far: '#346856', star: '#88C070', hi: '#E0F8D0', obj: '#88C070', obj2: '#E0F8D0' },
   },
 }
 
-const SEEDS: Record<CoverScene, number> = { starfall: 7, cave: 23, pong: 41, system: 77, lastlogin: 59 }
+const SEEDS: Record<CoverScene, number> = { starfall: 7, cave: 23, pong: 41, system: 77, lastlogin: 59, beatshift: 91 }
 
 /** mulberry32 시드 기반 PRNG — 커버가 렌더마다 같게 유지된다 */
 export function rng(seed: number) {
@@ -129,6 +131,21 @@ export function drawScene(canvas: MinimalCanvas, scene: CoverScene, palette: Pal
 
     // 전원 표시등
     px(63, 29, 2, 2, p.hi)
+  }
+
+  if (scene === 'beatshift') {
+    // 대장간 — 모루 위 망치, 박자 불티와 음표
+    for (let i = 0; i < 18; i++) px((r() * W) | 0, (r() * (H - 14)) | 0, 1, 1, p.star)
+    px(0, H - 5, W, 5, p.far)
+    px(40, H - 16, 24, 4, p.star)
+    px(46, H - 12, 12, 7, p.far)
+    px(60, 10, 3, 12, p.obj)
+    px(55, 6, 13, 6, p.star)
+    for (let i = 0; i < 8; i++) px(44 + ((r() * 20) | 0), H - 24 + ((r() * 8) | 0), 1, 1, p.hi)
+    px(20, 10, 2, 5, p.obj2)
+    px(18, 13, 3, 3, p.obj2)
+    px(80, 16, 2, 4, p.obj2)
+    px(78, 18, 3, 3, p.obj2)
   }
 }
 

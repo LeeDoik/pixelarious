@@ -1,0 +1,16 @@
+{
+  "slug": "beat-shift",
+  "order": 50,
+  "title": "BEAT SHIFT",
+  "description": "픽셀 장면이 곧 악보인 원버튼 리듬 아케이드.\n조수가 던진 쇳덩이가 모루에 닿는 순간, 탭 — 성공음이 멜로디를 완성합니다.\n템포는 계속 빨라집니다. 그루브가 꺼지기 전까지.",
+  "tags": [
+    "GODOT 4",
+    "2D",
+    "RHYTHM",
+    "ONE BUTTON",
+    "MOBILE OK"
+  ],
+  "coverScene": "beatshift",
+  "playPath": "/games/beat-shift/index.html",
+  "hidden": true
+}
