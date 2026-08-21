@@ -71,3 +71,16 @@ func test_the_will_does_not_claim_a_second_visit() -> void:
 	assert_str(will).override_failure_message(
 		"유서가 간판을 다시 봤다고 말한다 — 코퍼스 어디에도 두 번째 방문이 없다"
 	).not_contains("간판을 이번엔")
+
+## 이미지 노드가 가리키는 파일이 실제로 있어야 한다 — 탐색기에서 열면 빈 창이 된다
+func test_every_image_node_has_its_asset() -> void:
+	var nodes: Array = JSON.parse_string(
+		FileAccess.get_file_as_string("res://content/fs.json"))["nodes"]
+	var seen := 0
+	for n in nodes:
+		if String(n.get("type", "")) != "image":
+			continue
+		seen += 1
+		assert_bool(FileAccess.file_exists(String(n.get("image", "")))).override_failure_message(
+			"%s의 이미지 파일이 없다: %s" % [n.get("name"), n.get("image")]).is_true()
+	assert_int(seen).is_equal(8)   # 기존 5장 + 필사 3장

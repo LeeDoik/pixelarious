@@ -27,6 +27,9 @@
   {"id": "s_review", "parent": "saebit", "name": "수련회 후기_초안.txt", "type": "doc", "cid": "doc:retreat_review", "size": 1141, "mtime": "2002-08-06 21:18"},
   {"id": "s_notes", "parent": "saebit", "name": "수첩 옮겨적기.txt", "type": "doc", "cid": "doc:retreat_notes", "size": 843, "mtime": "2002-09-01 20:44"},
   {"id": "s_vow", "parent": "saebit", "name": "서원문.txt", "type": "doc", "cid": "doc:vow", "size": 581, "mtime": "2002-09-30 22:14"},
+  {"id": "s_photo1", "parent": "saebit", "name": "필사_1_제출본.jpg", "type": "image", "cid": "img:pilsa_1", "image": "res://assets/img/photos/pilsa_1.png", "size": 262646, "mtime": "2002-07-28 22:41"},
+  {"id": "s_photo2", "parent": "saebit", "name": "필사_2_제출본.jpg", "type": "image", "cid": "img:pilsa_2", "image": "res://assets/img/photos/pilsa_2.png", "size": 282440, "mtime": "2002-08-11 23:05"},
+  {"id": "s_photo3", "parent": "saebit", "name": "필사_3_제출본.jpg", "type": "image", "cid": "img:pilsa_3", "image": "res://assets/img/photos/pilsa_3.png", "size": 258506, "mtime": "2002-09-22 23:18"},
 
   {"id": "l_ledger", "parent": "locked", "name": "입금내역.txt", "type": "doc", "cid": "doc:donation_ledger", "record": true, "size": 1531, "mtime": "2002-11-01 23:26"},
   {"id": "l_quit", "parent": "locked", "name": "탈퇴하려면.txt", "type": "doc", "cid": "doc:quit_plan", "size": 949, "mtime": "2002-11-01 02:31"},
