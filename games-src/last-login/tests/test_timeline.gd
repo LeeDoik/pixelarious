@@ -144,7 +144,8 @@ const PHOTO_TAKEN := {
 	"p_window": "2002-10-29",
 	"s_photo1": "2002-07-28",    # 필사 1 제출 전 촬영 — 옮겨 적은 그 밤
 	"s_photo2": "2002-08-11",
-	"s_photo3": "2002-09-22",    # 봉고차가 집 앞에 서 있던 날
+	"s_photo3": "2002-09-22",
+	"s_photo4": "2002-09-30",   # 서원하러 가기 전에 찍어둔 원본    # 봉고차가 집 앞에 서 있던 날
 }
 
 func test_every_photo_is_dated_the_day_it_was_taken() -> void:

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""필사 1~3 손글씨 사진 생성 — 성진이 제출 전에 디카로 찍어둔 제출본.
+"""필사 1~3 + 서원문 손글씨 사진 생성 — 성진이 제출 전에 디카로 찍어둔 것.
 
 docs.json의 필사 본문에서 교리부만 뽑아(사적 주석 '(옮겨 적…)' 이후 제외)
 나눔손글씨 가람연꽃으로 줄공책에 앉히고, 디카 열화를 통과시킨다.
@@ -132,6 +132,82 @@ def paper_base(w, h):
     return img
 
 
+def vow_lines(body):
+    """서원문 원본에 적혀 있던 것 — ※ 각주(타이핑 사본에만 있는 말)는 뺀다.
+    한자 조항 번호(一~五)는 폰트에 없어 한글로 — 손으로 쓸 때 그렇게 썼다고 본다.
+    (인)은 글자가 아니라 지장이 찍힐 자리다."""
+    hanja = {"一.": "하나.", "二.": "둘.", "三.": "셋.", "四.": "넷.", "五.": "다섯."}
+    out = []
+    for ln in body.split("\n"):
+        t = ln.strip()
+        if t.startswith("※"):
+            break
+        for h, k in hanja.items():
+            if t.startswith(h):
+                t = k + t[len(h):]
+        out.append(t.replace("(인)", "").rstrip())
+    while out and out[0] == "":
+        out.pop(0)
+    while out and out[-1] == "":
+        out.pop()
+    return out
+
+
+def draw_stamp(canvas, x, y):
+    """인주 지장 — 동심 결 무늬가 뭉개진 붉은 자국."""
+    st = Image.new("RGBA", (150, 170), (0, 0, 0, 0))
+    d = ImageDraw.Draw(st)
+    for i in range(9):
+        rx, ry = 26 + i * 4, 34 + i * 5
+        start = random.randint(0, 120)
+        d.arc([75 - rx, 85 - ry, 75 + rx, 85 + ry], start,
+              start + random.randint(140, 300),
+              fill=(186, 42, 36, random.randint(110, 185)), width=3)
+    st = st.filter(ImageFilter.GaussianBlur(1.2))
+    st = st.rotate(random.uniform(-14, 10), resample=Image.BICUBIC)
+    canvas.alpha_composite(st, (int(x), int(y)))
+
+
+def make_vow_page(lines):
+    """민무늬 종이의 정식 문서 — 필사보다 또박또박, 셋으로 접었던 자국."""
+    W, LINE, TOP, SIZE = 1440, 86, 190, 46
+    title, rest = lines[0], lines[1:]
+    while rest and rest[0] == "":
+        rest.pop(0)
+    body_font = ImageFont.truetype(FONT, SIZE)
+    title_font = ImageFont.truetype(FONT, 66)
+    body = wrap_flow(body_font, rest, W - 160 - 130)
+    n = 3 + len(body)
+    H = TOP + n * LINE + 170
+    img = paper_base(W, H)
+    d = ImageDraw.Draw(img, "RGBA")
+    for fy in (H / 3.0, H * 2 / 3.0):   # 셋으로 접어 갖고 다닌 자국
+        y = fy + random.uniform(-14, 14)
+        d.line([30, y, W - 30, y], fill=(150, 138, 112, 34), width=2)
+        d.line([30, y + 2, W - 30, y + 2], fill=(255, 255, 252, 40), width=1)
+    canvas = img.convert("RGBA")
+    x = (W - measure(title_font, title)) / 2
+    draw_flow_text(canvas, title_font, title, x, TOP, 60)
+    row = 2
+    for ln in body:
+        y = TOP + row * LINE + int(3 * math.sin(row * 1.9))
+        if ln == "":
+            row += 1
+            continue
+        if ln.startswith("새빛력"):
+            x = (W - measure(body_font, ln) * 1.15) / 2      # 날짜는 가운데
+            row += 1
+        elif ln.startswith("서원자") or ln.startswith("입회인"):
+            x = W * 0.34                                     # 서명부는 들여서
+        else:
+            x = 160
+        x_end = draw_flow_text(canvas, body_font, ln, x, y, SIZE)
+        if ln.startswith("서원자"):
+            draw_stamp(canvas, x_end + 26, y - 118)          # (인) 자리의 지장
+        row += 1
+    return canvas.convert("RGB")
+
+
 def make_page(title, lines, sign):
     W, LINE, TOP, SIZE = 1440, 68, 150, 46
     body_font = ImageFont.truetype(FONT, SIZE)
@@ -198,6 +274,14 @@ def main():
         out = os.path.join(OUT, stem + ".png")
         degrade(page).save(out)
         print(stem, "->", out, os.path.getsize(out), "bytes")
+    # 서원문 — 제출 전에 찍어둔 원본. 교단이 가진 그 한 장을 그도 갖고 있었다.
+    random.seed(20020930)
+    page = make_vow_page(vow_lines(docs["doc:vow"]["body"]))
+    if clean_dir:
+        page.save(os.path.join(clean_dir, "vow_photo_clean.png"))
+    out = os.path.join(OUT, "vow_photo.png")
+    degrade(page).save(out)
+    print("vow_photo ->", out, os.path.getsize(out), "bytes")
     print("ok")
 
 
