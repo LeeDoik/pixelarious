@@ -13,6 +13,17 @@ const HIDDEN := [
 	"[알 수 없음]: 그 컴퓨터, 어디서 나셨어요?",
 ]
 
+## 시작할 때 슬기에게 주운 곳을 말했다면 그 말은 이 컴퓨터에 남아 있다.
+## 남은 것은 읽힌다 — 마지막 질문이 되돌아오는 이유다.
+## 입을 닫았던 플레이어에게는 돌아오지 않는다 — 그 경계가 옳았던 것이 된다.
+const HIDDEN_ECHO := "[알 수 없음]: 아, 아까 말씀하셨죠."
+
+static func hidden_lines() -> Array:
+	var lines := HIDDEN.duplicate()
+	if GameState.has_flag("pickup_told"):
+		lines.append(HIDDEN_ECHO)
+	return lines
+
 var line_delay := 1.4
 var shutdown_hold := 1.8
 
@@ -75,4 +86,4 @@ func _type_lines(label: RichTextLabel, lines: Array, then_hidden: bool) -> void:
 	if then_hidden and should_show_hidden():
 		await get_tree().create_timer(2.0).timeout
 		AudioDirector.play_sfx("msg")
-		_type_lines(label, HIDDEN, false)
+		_type_lines(label, hidden_lines(), false)

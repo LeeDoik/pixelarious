@@ -168,3 +168,11 @@ func test_epilogue_types_all_lines_and_hidden_when_gated() -> void:
 	var text := label.get_parsed_text()
 	assert_str(text).contains("LAST LOGIN")
 	assert_str(text).contains("어디서 나셨어요")
+
+func test_hidden_ending_echoes_only_what_the_player_said() -> void:
+	# 입을 닫았다면 돌아오지 않는다 — 그게 그 선택의 보상이다
+	assert_int(EndingScene.hidden_lines().size()).is_equal(EndingScene.HIDDEN.size())
+	GameState.set_flag("pickup_told")
+	var lines := EndingScene.hidden_lines()
+	assert_int(lines.size()).is_equal(EndingScene.HIDDEN.size() + 1)
+	assert_str(String(lines[-1])).contains("아까 말씀하셨죠")

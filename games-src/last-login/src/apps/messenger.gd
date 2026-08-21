@@ -23,6 +23,7 @@ var _choice_box: VBoxContainer
 var _scroll: ScrollContainer
 var _status_icon: TextureRect
 var _status_label: Label
+var _records_label: Label
 var _log_list: ItemList
 var _log_view: VBoxContainer
 var _log_scroll: ScrollContainer
@@ -84,6 +85,15 @@ func _build_contact_bar() -> Control:
 	_status_label.add_theme_font_size_override("font_size", 14)
 	_status_label.add_theme_color_override("font_color", NuriTheme.TEXT_DIM)
 	row.add_child(_status_label)
+	var spacer := Control.new()
+	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(spacer)
+	_records_label = Label.new()
+	_records_label.add_theme_font_size_override("font_size", 13)
+	_records_label.add_theme_color_override("font_color", NuriTheme.TEXT_DIM)
+	row.add_child(_records_label)
+	_refresh_records()
+	GameState.record_read.connect(func(_cid, _total): _refresh_records())
 	bar.add_child(row)
 	_set_online(true)
 	return bar
@@ -116,6 +126,17 @@ func _set_online(on: bool) -> void:
 	if ResourceLoader.exists(path):
 		_status_icon.texture = load(path)
 	_status_label.text = "· 접속중" if on else "· 접속 종료"
+
+## 기록물은 숨은 엔딩의 유일한 조건인데 지금까지 어디에도 보이지 않았다 —
+## 찾았는지도 얼마나 남았는지도 모른 채로 끝난다. 슬기가 부탁한 일이니 그녀의 창에서 센다.
+func _refresh_records() -> void:
+	if not is_instance_valid(_records_label):
+		return
+	var total := ContentDB.records().size()
+	_records_label.text = "오빠가 남긴 것 · %d / %d" % [GameState.records_count(), total]
+
+func records_text() -> String:
+	return _records_label.text if is_instance_valid(_records_label) else ""
 
 func status_text() -> String:
 	return _status_label.text
@@ -350,11 +371,31 @@ func choice_count() -> int:
 			n += 1
 	return n
 
+func line_texts() -> PackedStringArray:
+	var out := PackedStringArray()
+	for row in _chat_box.get_children():
+		for n in _walk_labels(row):
+			out.append(n.text)
+	return out
+
+func _walk_labels(node: Node) -> Array:
+	var found := []
+	if node is Label:
+		found.append(node)
+	for c in node.get_children():
+		found.append_array(_walk_labels(c))
+	return found
+
 func line_count() -> int:
 	return _chat_box.get_child_count()
 
+## 괄호로 감싼 선택지는 대사가 아니라 지문이다. 이 대화창은 이 컴퓨터에
+## 실제로 남는 로그이고 — 숨은 엔딩이 "그 로그를 누가 읽었다"에 기대고 있다 —
+## 말하지 않기로 한 것이 발화로 찍혀 있으면 안 된다.
 func _on_choice(i: int) -> void:
-	_bubble("player", _cp.current()["choices"][i]["text"])
+	var said := String(_cp.current()["choices"][i]["text"])
+	if not (said.begins_with("(") and said.ends_with(")")):
+		_bubble("player", said)
 	_cp.choose(i)
 	_show_current()
 

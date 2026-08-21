@@ -79,3 +79,29 @@ func test_every_log_speaker_is_known_to_the_renderer() -> void:
 					"시스템 줄이 일반 발화로 그려진다: " + who).is_true()
 			else:
 				assert_bool(m._is_system(who)).is_false()
+
+## 숨은 엔딩의 유일한 조건이 화면에 안 보이면 아무도 그 엔딩을 보지 못한다
+func test_records_counter_is_visible_and_counts_up() -> void:
+	var m := _make()
+	var total := ContentDB.records().size()
+	assert_int(total).is_greater(0)
+	assert_str(m.records_text()).contains("0 / %d" % total)
+	GameState.mark_read(String(ContentDB.records()[0]))
+	assert_str(m.records_text()).contains("1 / %d" % total)
+
+## "(대답하지 않는다)"는 지문이다 — 이 컴퓨터에 남는 로그에 발화로 찍히면 안 된다
+func test_unspoken_choice_leaves_no_line_in_the_log() -> void:
+	var m := _make()
+	m._auto_pending = false
+	m._try_continue()                 # n02
+	m._on_choice(1)                   # (대답하지 않는다)
+	for line in m.line_texts():
+		assert_str(line).not_contains("대답하지 않는다")
+
+func test_spoken_choice_still_lands_in_the_log() -> void:
+	var m := _make()
+	m._auto_pending = false
+	m._try_continue()
+	m._on_choice(0)                   # 이 컴퓨터 주운 사람인데요
+	var joined := "".join(m.line_texts())
+	assert_str(joined).contains("주운 사람인데요")

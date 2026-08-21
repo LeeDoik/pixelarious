@@ -36,8 +36,27 @@
   "n03": {
    "from": "seulgi",
    "text": "주웠다고요..\n어디서요",
-   "next": "n04",
-   "delay_ms": 1400
+   "delay_ms": 1400,
+   "choices": [
+    {
+     "text": "아파트 뒤 재활용 수거장에서요",
+     "next": "n04",
+     "set": [
+      "pickup_told"
+     ]
+    },
+    {
+     "text": "고물상에 쌓여 있던 걸 얻었어요",
+     "next": "n04",
+     "set": [
+      "pickup_told"
+     ]
+    },
+    {
+     "text": "(어디서 주웠는지는 말하지 않는다)",
+     "next": "n04"
+    }
+   ]
   },
   "n04": {
    "from": "seulgi",
