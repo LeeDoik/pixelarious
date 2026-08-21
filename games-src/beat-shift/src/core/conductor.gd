@@ -23,8 +23,8 @@ func start_section(bpm_step: int) -> void:
 	var stream: AudioStreamWAV = load("res://assets/sfx/loop_%d.wav" % int(bpm))
 	stream.loop_mode = AudioStreamWAV.LOOP_FORWARD
 	stream.loop_begin = 0
-	stream.loop_end = stream.data.size() / 2
-	_loop_len = float(stream.data.size() / 2) / float(stream.mix_rate)
+	_loop_len = ConductorMath.time_from_beats(float(Tuning.BEATS_PER_BAR), bpm)
+	stream.loop_end = int(round(_loop_len * float(stream.mix_rate)))
 	_player.stream = stream
 	_loop_count = 0
 	_last_pos = 0.0
