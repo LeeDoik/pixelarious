@@ -117,7 +117,7 @@ func _game_over() -> void:
 	scene_stage.clear_cues()
 	Sfx.play("gameover")
 	Engine.time_scale = Tuning.DEATH_SLOWMO
-	var timer := get_tree().create_timer(Tuning.DEATH_SLOWMO_SEC * Tuning.DEATH_SLOWMO, true, false, true)
+	var timer := get_tree().create_timer(Tuning.DEATH_SLOWMO_SEC, true, false, true)
 	timer.timeout.connect(func() -> void:
 		Engine.time_scale = 1.0
 		_dying = false
