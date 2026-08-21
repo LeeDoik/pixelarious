@@ -1,9 +1,18 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import type { Game } from '@/lib/games'
 import { CoverCanvas } from './CoverCanvas'
+
+/** Touch-first device? Decided at click time so SSR/hydration never disagree. */
+function isCoarsePointer(): boolean {
+  return (
+    typeof window !== 'undefined' &&
+    typeof window.matchMedia === 'function' &&
+    window.matchMedia('(pointer: coarse)').matches
+  )
+}
 
 export function Cartridge({
   game,
@@ -15,7 +24,17 @@ export function Cartridge({
   defaultOpen?: boolean
 }) {
   const [open, setOpen] = useState(defaultOpen)
+  const [pcNotice, setPcNotice] = useState(false)
   const toggle = () => setOpen((o) => !o)
+
+  useEffect(() => {
+    if (!pcNotice) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setPcNotice(false)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [pcNotice])
 
   return (
     <article className={open ? 'cart open' : 'cart'}>
@@ -53,7 +72,16 @@ export function Cartridge({
               ))}
             </ul>
             {game.playPath ? (
-              <Link className="btn" href={`/play/${game.slug}`}>
+              <Link
+                className="btn"
+                href={`/play/${game.slug}`}
+                onClick={(e) => {
+                  if (game.pcRecommended && isCoarsePointer()) {
+                    e.preventDefault()
+                    setPcNotice(true)
+                  }
+                }}
+              >
                 ▶ PLAY
               </Link>
             ) : (
@@ -64,6 +92,34 @@ export function Cartridge({
           </div>
         </div>
       </div>
+      {pcNotice && (
+        <div className="pc-notice-overlay" onClick={() => setPcNotice(false)}>
+          <div
+            className="pc-notice"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={`pc-notice-title-${game.slug}`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h4 id={`pc-notice-title-${game.slug}`} className="pc-notice-title">
+              ! NOTICE !
+            </h4>
+            <p className="pc-notice-body">
+              이 게임은 마우스 조작을 전제로 만들어졌습니다.
+              <br />
+              PC 환경에서 플레이하시는 것을 권장합니다.
+            </p>
+            <div className="pc-notice-foot">
+              <button type="button" className="btn pc-notice-cancel" onClick={() => setPcNotice(false)}>
+                돌아가기
+              </button>
+              <Link className="btn" href={`/play/${game.slug}`}>
+                ▶ 그래도 플레이
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
     </article>
   )
 }

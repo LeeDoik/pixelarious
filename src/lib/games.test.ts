@@ -73,6 +73,16 @@ describe('games registry', () => {
     expect(() => validate({ ...valid }, 'x.json')).not.toThrow()
   })
 
+  it('rejects a non-boolean pcRecommended flag and keeps the field optional', () => {
+    expect(() => validate({ ...valid, pcRecommended: 'yes' }, 'x.json')).toThrow()
+    expect(() => validate({ ...valid, pcRecommended: true }, 'x.json')).not.toThrow()
+    expect(() => validate({ ...valid }, 'x.json')).not.toThrow()
+  })
+
+  it('last-login is flagged pcRecommended so touch devices get the PC notice', () => {
+    expect(getGame('last-login')?.pcRecommended).toBe(true)
+  })
+
   it('rejects a slug with a double hyphen', () => {
     expect(() => validate({ ...valid, slug: 'a--b' }, 'x.json')).toThrow()
   })

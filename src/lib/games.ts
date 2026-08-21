@@ -15,6 +15,9 @@ export interface Game {
   /** Keeps the cartridge out of the public lineup. The record and its /play
    *  route stay intact — this only hides it from the listing. */
   hidden?: boolean
+  /** Built for mouse/keyboard. On touch devices the PLAY button first shows
+   *  a notice recommending a PC — the player can still continue. */
+  pcRecommended?: boolean
 }
 
 export const GAMES_DIR = path.join(process.cwd(), 'content', 'games')
@@ -44,6 +47,8 @@ export function validate(raw: Record<string, unknown>, file: string): Game {
     if (!fs.existsSync(abs)) fail(`playPath file missing: ${raw.playPath}`)
   }
   if (raw.hidden !== undefined && typeof raw.hidden !== 'boolean') fail('hidden must be a boolean')
+  if (raw.pcRecommended !== undefined && typeof raw.pcRecommended !== 'boolean')
+    fail('pcRecommended must be a boolean')
   return raw as unknown as Game
 }
 
