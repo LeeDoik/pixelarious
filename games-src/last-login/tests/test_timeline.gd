@@ -40,6 +40,8 @@ const WRITTEN := {
 	"doc:corrupt_1015": "",
 	"doc:corrupt_doctrine4": "",
 	"doc:corrupt_temp": "",
+	"doc:sweep_checklist": "2003-01-31",  # 침입자의 회수 확인 — 마지막 접속 석 달 뒤
+	"doc:corrupt_wiper": "",
 }
 
 ## 성진이 이 컴퓨터를 마지막으로 쓴 순간. 대화 로그의 시스템 줄과 같아야 한다.

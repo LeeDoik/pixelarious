@@ -285,7 +285,9 @@ func _start_script() -> void:
 	GameState.flag_changed.connect(func(_n):
 		_hints.set_gate(_current_gate())
 		if not _auto_pending:
-			call_deferred("_try_continue"))
+			call_deferred("_try_continue")
+		# 휴지통에서 점검표를 복원하고 돌아온 경우 — 열려 있던 선택지에 조건부가 나타난다
+		call_deferred("_refresh_choices"))
 	_hints.set_gate(_current_gate())
 	_catching_up = GameState.has_flag("met_seulgi")
 	_show_current()
@@ -326,13 +328,23 @@ func _render_choices(n: Dictionary) -> void:
 		c.queue_free()
 	if n.has("choices"):
 		for i in n["choices"].size():
-			_choice_box.add_child(_choice_row(String(n["choices"][i]["text"]), i))
+			var c: Dictionary = n["choices"][i]
+			# 조건이 안 찬 선택지는 아예 없다 — 회색 잠금은 '뭔가 있다'는 스포일러다.
+			# 걸러도 원 인덱스를 넘기므로 ChatPlayer.choose와 어긋나지 않는다.
+			var req := String(c.get("require", ""))
+			if req != "" and not GameState.has_flag(req):
+				continue
+			_choice_box.add_child(_choice_row(String(c["text"]), i))
 	elif n.has("next"):
 		_auto_pending = true
 		_choice_box.add_child(_waiting_row())
 		get_tree().create_timer((n.get("delay_ms", 900) if not _catching_up else 50) / 1000.0).timeout.connect(func():
 			_auto_pending = false
 			_try_continue())
+
+func _refresh_choices() -> void:
+	if _cp != null and is_instance_valid(_choice_box) and _cp.current().has("choices"):
+		_render_choices(_cp.current())
 
 func _choice_row(text: String, index: int) -> Button:
 	var b := Button.new()

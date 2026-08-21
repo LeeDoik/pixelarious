@@ -18,10 +18,16 @@ const HIDDEN := [
 ## 입을 닫았던 플레이어에게는 돌아오지 않는다 — 그 경계가 옳았던 것이 된다.
 const HIDDEN_ECHO := "[알 수 없음]: 아, 아까 말씀하셨죠."
 
+## 점검표를 찾은 플레이어에게는 한 줄이 더 온다. 새 정보는 없다 —
+## 그들이 지운 것을 이쪽이 주웠다는 사실을, 그들이 안다는 것만 온다.
+const HIDDEN_INTRUDER := "[알 수 없음]: 휴지통은 비우고 쓰셔야죠."
+
 static func hidden_lines() -> Array:
 	var lines := HIDDEN.duplicate()
 	if GameState.has_flag("pickup_told"):
 		lines.append(HIDDEN_ECHO)
+	if GameState.has_flag("intruder_found"):
+		lines.append(HIDDEN_INTRUDER)
 	return lines
 
 var line_delay := 1.4

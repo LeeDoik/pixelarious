@@ -105,3 +105,15 @@ func test_spoken_choice_still_lands_in_the_log() -> void:
 	m._on_choice(0)                   # 이 컴퓨터 주운 사람인데요
 	var joined := "".join(m.line_texts())
 	assert_str(joined).contains("주운 사람인데요")
+
+## 조건이 안 찬 선택지는 보이지 않는다 — 점검표를 찾은 사람에게만 그 질문이 생긴다
+func test_gated_choice_appears_only_with_its_flag() -> void:
+	var m := _make()
+	var node := {"from": "seulgi", "text": "t", "choices": [
+		{"text": "a", "next": "x"},
+		{"text": "b", "next": "y", "require": "intruder_found"}]}
+	m._render_choices(node)
+	assert_int(m.choice_count()).is_equal(1)
+	GameState.set_flag("intruder_found")
+	m._render_choices(node)
+	assert_int(m.choice_count()).is_equal(2)

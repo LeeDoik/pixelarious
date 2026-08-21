@@ -39,3 +39,20 @@ func test_staying_silent_about_where_leaves_no_trace() -> void:
 	cp.choose(0)
 	cp.choose(2)   # (어디서 주웠는지는 말하지 않는다)
 	assert_bool(GameState.has_flag("pickup_told")).is_false()
+
+## 침입자 분기가 종반 허브 양쪽에 걸려 있고, 그 끝이 엔딩 선택지에 닿는지
+func test_intruder_branch_is_wired_into_the_finale() -> void:
+	var nodes: Dictionary = ContentDB.chat_thread()["nodes"]
+	for hub in ["g4l", "g4m"]:
+		var found := false
+		for c in nodes[hub]["choices"]:
+			if String(c.get("require", "")) == "intruder_found":
+				found = true
+				assert_str(String(c["next"])).is_equal("iq1")
+		assert_bool(found).override_failure_message(
+			hub + "에 침입자 선택지가 없다").is_true()
+	var endings := 0
+	for c in nodes["iq4"]["choices"]:
+		if Array(c.get("set", [])).has("ending_start"):
+			endings += 1
+	assert_int(endings).is_equal(2)

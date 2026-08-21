@@ -444,14 +444,20 @@ func _begin_restore(node_id: String) -> void:
 
 func restore(node_id: String) -> bool:
 	## 퍼즐4의 판정과 복원 자체. 성공하면 파일은 휴지통을 떠나 원래 폴더로 간다.
+	## 유서(t1)만 퍼즐이다. restorable이 붙은 파일은 판정 없이 복원된다 —
+	## 침입자가 지운 점검표가, 성진이 믿었던 바로 그 트릭으로 돌아온다.
 	var n := ContentDB.fs_node(node_id)
 	if n.is_empty() or n.get("corrupt", false):
 		return false
-	if not GameState.try_answer("puzzle4", node_id):
+	var is_answer := GameState.try_answer("puzzle4", node_id)
+	if not is_answer and not n.get("restorable", false):
 		return false
 	GameState.restore_node(node_id)
 	GameState.mark_read(String(n["cid"]))
-	GameState.set_flag("final_diary_read")
+	if is_answer:
+		GameState.set_flag("final_diary_read")
+	if String(n.get("cid", "")) == "doc:sweep_checklist":
+		GameState.set_flag("intruder_found")
 	AudioDirector.play_sfx("unlock")
 	if is_instance_valid(_list):
 		_refresh()

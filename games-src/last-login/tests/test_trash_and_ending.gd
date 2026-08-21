@@ -38,10 +38,10 @@ func test_restored_file_leaves_the_trash_for_my_documents() -> void:
 	# '복원'이라는 말이 거짓이 아니어야 한다 — 파일은 실제로 원래 폴더에 가 있어야 하고,
 	# 나중에 탐색기에서 다시 열 수 있어야 한다.
 	var t := _trash()
-	assert_int(ContentDB.trash_items().size()).is_equal(5)
+	assert_int(ContentDB.trash_items().size()).is_equal(7)
 	assert_bool(t.restore("t1")).is_true()
-	assert_int(ContentDB.trash_items().size()).is_equal(4)
-	assert_int(t.item_count()).is_equal(4)
+	assert_int(ContentDB.trash_items().size()).is_equal(6)
+	assert_int(t.item_count()).is_equal(6)
 	var names := PackedStringArray()
 	for n in ContentDB.fs_children("mydocs"):
 		names.append(String(n["name"]))
@@ -64,21 +64,26 @@ func test_emptying_the_trash_cannot_take_the_last_file() -> void:
 	var t := _trash()
 	assert_bool(t.purge()).is_false()
 	var left := ContentDB.trash_items()
-	assert_int(left.size()).is_equal(1)
-	assert_str(String(left[0]["id"])).is_equal("t1")
+	assert_int(left.size()).is_equal(2)   # 유서 + 침입자의 점검표, 둘 다 비손상
+	var ids := PackedStringArray()
+	for n in left:
+		ids.append(String(n["id"]))
+	assert_bool(ids.has("t1") and ids.has("t6")).override_failure_message(
+		"비우기에서 살아남아야 할 두 파일이 다르다: " + str(ids)).is_true()
 	assert_str(t.last_message()).contains("사용 중")
-	assert_int(t.item_count()).is_equal(1)
+	assert_int(t.item_count()).is_equal(2)
 
 func test_emptying_after_restoring_leaves_nothing() -> void:
 	var t := _trash()
 	assert_bool(t.restore("t1")).is_true()
+	assert_bool(t.restore("t6")).is_true()
 	assert_bool(t.purge()).is_true()
 	assert_int(ContentDB.trash_items().size()).is_equal(0)
 	assert_bool(t.is_empty_shown()).is_true()
 
 func test_details_view_lists_where_each_file_came_from() -> void:
 	var t := _trash()
-	assert_int(t.detail_row_count()).is_equal(5)
+	assert_int(t.detail_row_count()).is_equal(7)
 	# 원래 위치는 탐색기와 같은 경로 표기를 쓴다 (두 창이 같은 OS로 보여야 한다)
 	assert_str(TrashApp.origin_text(ContentDB.fs_node("t1"))).is_equal("C:\\내 문서")
 	assert_str(TrashApp.origin_text(ContentDB.fs_node("t4"))).is_equal("C:\\내 문서\\새빛수련회")
@@ -176,3 +181,44 @@ func test_hidden_ending_echoes_only_what_the_player_said() -> void:
 	var lines := EndingScene.hidden_lines()
 	assert_int(lines.size()).is_equal(EndingScene.HIDDEN.size() + 1)
 	assert_str(String(lines[-1])).contains("아까 말씀하셨죠")
+
+## 침입자가 지운 점검표는 퍼즐 없이 복원된다 — 성진이 믿었던 트릭이
+## 그들의 기록에도 적용된다. 유서의 플래그(final_diary_read)와 섞이면 안 된다.
+func test_checklist_restores_without_the_puzzle_and_marks_the_intruder() -> void:
+	var t := _trash()
+	assert_bool(GameState.has_flag("intruder_found")).is_false()
+	assert_bool(t.restore("t6")).is_true()
+	assert_bool(GameState.has_flag("intruder_found")).is_true()
+	assert_bool(GameState.has_flag("final_diary_read")).is_false()
+	assert_bool(GameState.has_flag("puzzle4_solved")).is_false()
+
+func test_hidden_ending_acknowledges_the_recovered_checklist() -> void:
+	GameState.set_flag("intruder_found")
+	var lines := EndingScene.hidden_lines()
+	assert_int(lines.size()).is_equal(EndingScene.HIDDEN.size() + 1)
+	assert_str(String(lines[-1])).contains("휴지통은 비우고")
+	GameState.set_flag("pickup_told")
+	assert_int(EndingScene.hidden_lines().size()).is_equal(EndingScene.HIDDEN.size() + 2)
+
+## 점검표와 방명록은 서로를 인용한다 — 한쪽만 고치는 사고는 눈으로 안 잡힌다
+func test_checklist_and_guestbook_tell_the_same_story() -> void:
+	var body := String(ContentDB.doc("doc:sweep_checklist")["body"])
+	var guest := String(ContentDB.web_page("myhome.nurinet.co.kr/sj2002/guest")["body"])
+	assert_str(body).contains("여덟")
+	assert_int(guest.count("슬기   200")).override_failure_message(
+		"방명록의 슬기 글 수가 점검표의 '여덟'과 다르다").is_equal(8)
+	assert_str(guest).contains("컴퓨터만 찾으면")
+	assert_str(body).contains("컴퓨터만 찾으면")
+
+## 2003-01-31 캐시는 정확히 두 페이지 — 침입자의 발자국이 늘거나 줄면 잡는다
+func test_only_two_pages_were_cached_by_the_intruder() -> void:
+	var pages: Dictionary = JSON.parse_string(
+		FileAccess.get_file_as_string("res://content/web.json"))["pages"]
+	var intruded := PackedStringArray()
+	for url in pages:
+		if String(pages[url].get("body", "")).contains("2003-01-31"):
+			intruded.append(String(url))
+	intruded.sort()
+	assert_int(intruded.size()).is_equal(2)
+	assert_str(String(intruded[0])).is_equal("cafe.nurinet.co.kr/saebit")   # 폐쇄 안내
+	assert_str(String(intruded[1])).is_equal("myhome.nurinet.co.kr/sj2002/guest")
