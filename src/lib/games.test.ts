@@ -50,8 +50,9 @@ describe('games registry', () => {
     const visible = getVisibleGames().map((g) => g.slug)
     expect(visible).not.toContain('it-sleeps-below')
     expect(visible).not.toContain('pixel-pong-exe')
+    expect(visible).not.toContain('system-check')
     expect(getGames().map((g) => g.slug)).toEqual(
-      expect.arrayContaining(['it-sleeps-below', 'pixel-pong-exe']),
+      expect.arrayContaining(['it-sleeps-below', 'pixel-pong-exe', 'system-check']),
     )
   })
 
@@ -59,7 +60,6 @@ describe('games registry', () => {
     expect(getVisibleGames().map((g) => g.slug)).toEqual([
       'starfall-drift',
       'last-login',
-      'system-check',
     ])
   })
 
