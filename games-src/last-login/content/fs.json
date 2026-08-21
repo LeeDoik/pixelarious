@@ -16,7 +16,7 @@
   {"id": "f_bookmarks", "parent": "mydocs", "name": "즐겨찾기 백업.txt", "type": "doc", "cid": "doc:bookmarks_memo", "size": 492, "mtime": "2002-08-20 21:05"},
 
   {"id": "p_family", "parent": "photos", "name": "가족사진_2001설.jpg", "type": "image", "cid": "img:family_photo", "image": "res://assets/img/photos/family_photo.png", "record": true, "size": 96512, "mtime": "2001-01-24 13:05"},
-  {"id": "p_bomi", "parent": "photos", "name": "봄이_첫날.jpg", "type": "image", "cid": "img:bomi_day1", "image": "res://assets/img/photos/bomi_2002.png", "size": 61030, "mtime": "2002-03-19 18:22"},
+  {"id": "p_bomi", "parent": "photos", "name": "봄이_첫날.jpg", "type": "image", "cid": "img:bomi_day1", "image": "res://assets/img/photos/bomi_2002.png", "size": 61030, "mtime": "2002-03-16 18:22"},
   {"id": "p_desk", "parent": "photos", "name": "내 방_새벽.jpg", "type": "image", "cid": "img:desk_2002", "image": "res://assets/img/photos/desk_2002.png", "size": 48744, "mtime": "2002-02-11 04:26"},
   {"id": "p_retreat", "parent": "photos", "name": "수련회_단체_0804.jpg", "type": "image", "cid": "img:retreat_2002", "image": "res://assets/img/photos/retreat_2002.png", "size": 118390, "mtime": "2002-08-04 15:52"},
   {"id": "p_window", "parent": "photos", "name": "창밖_1029.jpg", "type": "image", "cid": "img:window_night", "image": "res://assets/img/photos/window_night.png", "size": 52218, "mtime": "2002-10-29 23:11"},

@@ -125,3 +125,48 @@ func test_every_node_carries_a_usable_timestamp() -> void:
 			"%s의 수정시각 '%s'이 'YYYY-MM-DD HH:MM' 꼴이 아니다 — 자세히 보기가 그대로 뱉는다"
 				% [n.get("name", n.get("id")), mtime]
 		).is_true()
+
+## 사진은 찍힌 날짜를 가진다. 다섯 장 중 네은 사건 당일이고 둘은 파일명에
+## 날짜가 박혀 있다(0804·1029). 탐색기 '자세히 보기'가 이 칸을 그대로 뿌리므로,
+## 한 장만 다른 날짜를 가지면 목록에서 바로 틄린다.
+##
+## 봄이 사진은 한때 03-19였다 — 03-16이 퍼준1의 정답이라 날짜 칸에서 답이
+## 읽힐까 봐 어긋낸 것이었다. 그런데 가리는 의미가 없었다 — `봄이 일지`는 잠기지
+## 않은 파일이고 첫 줄이 "2002. 3. 16 (토) 데려왔다"다. 정답은 이미 평문으로
+## 열려 있고, 남는 건 사진 한 장만 어긋난 모순뿐이었다. 그래서 맞췄다.
+const PHOTO_TAKEN := {
+	"p_family": "2001-01-24",    # 2001년 설
+	"p_desk": "2002-02-11",
+	"p_bomi": "2002-03-16",      # 봄이를 데려온 날 (= 퍼준1 정답)
+	"p_retreat": "2002-08-04",   # 수련회 마지막 날
+	"p_window": "2002-10-29",    # 봉고차가 집 앞에 서 있던 날
+}
+
+func test_every_photo_is_dated_the_day_it_was_taken() -> void:
+	var seen := 0
+	for n in _nodes():
+		var id := String(n["id"])
+		if not PHOTO_TAKEN.has(id):
+			assert_bool(String(n.get("type", "")) != "image").override_failure_message(
+				"새 사진 %s가 PHOTO_TAKEN 표에 없다 — 찍힌 날을 적어 넣을 것" % id).is_true()
+			continue
+		seen += 1
+		assert_str(String(n.get("mtime", "")).substr(0, 10)).override_failure_message(
+			"%s의 파일 날짜가 찍힌 날(%s)과 다르다" % [n.get("name", id), PHOTO_TAKEN[id]]
+		).is_equal(String(PHOTO_TAKEN[id]))
+	assert_int(seen).is_equal(PHOTO_TAKEN.size())
+
+## 파일명에 날짜가 박힌 사진은 그 날짜와 파일 날짜가 같아야 한다
+func test_photo_filename_dates_agree_with_the_file_date() -> void:
+	for n in _nodes():
+		if String(n.get("type", "")) != "image":
+			continue
+		var name := String(n.get("name", ""))
+		var mtime := String(n.get("mtime", ""))
+		var mmdd := mtime.substr(5, 2) + mtime.substr(8, 2)
+		for part in name.split("_"):
+			var digits := part.split(".")[0]
+			if digits.length() == 4 and digits.is_valid_int():
+				assert_str(digits).override_failure_message(
+					"%s의 이름이 %s를 가리키는데 파일 날짜는 %s다" % [name, digits, mtime]
+				).is_equal(mmdd)
