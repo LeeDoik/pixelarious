@@ -4,6 +4,7 @@ extends Node2D
 var scene_stage: ForgeScene
 var hud: Hud
 var overlay: Overlay
+var world: Node2D
 var rng := RandomNumberGenerator.new()
 
 var section := 0
@@ -17,18 +18,33 @@ var _dying := false
 
 func _ready() -> void:
 	rng.randomize()
+	world = Node2D.new()
+	add_child(world)
 	scene_stage = ForgeScene.new()
-	add_child(scene_stage)
+	world.add_child(scene_stage)
 	hud = Hud.new()
 	add_child(hud)
 	overlay = Overlay.new()
 	add_child(overlay)
+	get_viewport().size_changed.connect(_update_layout)
+	_update_layout()
 	if GameState.quick_restart:
 		GameState.quick_restart = false
 		_begin_run()
 	else:
 		GameState.phase = GameState.Phase.TITLE
 		overlay.show_title()
+
+func _update_layout() -> void:
+	# expand 스트레치로 넓어진 화면에서 270×480 플레이 영역을 중앙에 둔다
+	var vs := get_viewport_rect().size
+	var off := Vector2(
+		floorf(maxf((vs.x - Tuning.VIEW_W) * 0.5, 0.0)),
+		floorf(maxf((vs.y - Tuning.VIEW_H) * 0.5, 0.0))
+	)
+	world.position = off
+	hud.offset = off
+	overlay.offset = off
 
 func _begin_run() -> void:
 	overlay.clear()
