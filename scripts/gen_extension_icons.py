@@ -9,6 +9,7 @@ from PIL import Image
 import os
 
 OUT = os.path.join("extension", "starfall-drift", "icons")
+STORE = os.path.join("extension", "store-assets")
 SIZES = (16, 32, 48, 128)
 
 BG = (20, 17, 39, 255)       # 사이트 --bg #141127
@@ -60,8 +61,20 @@ def build_base() -> Image.Image:
     return img
 
 
+def store_icon(base: Image.Image) -> None:
+    """웹 스토어 리스팅용 128x128. 구글 가이드대로 그림은 96x96만 쓰고 사방 16px는 비운다
+    (스토어가 아이콘 주위에 여백을 가정하고 배치한다)."""
+    art = base.resize((96, 96), Image.NEAREST)
+    img = Image.new("RGBA", (128, 128), (0, 0, 0, 0))
+    img.alpha_composite(art, (16, 16))
+    path = os.path.join(STORE, "store-icon-128.png")
+    img.save(path)
+    print("wrote", path)
+
+
 def main() -> None:
     os.makedirs(OUT, exist_ok=True)
+    os.makedirs(STORE, exist_ok=True)
     base = build_base()
     for size in SIZES:
         assert size % 16 == 0 or size == 48, size
@@ -69,6 +82,7 @@ def main() -> None:
         path = os.path.join(OUT, f"icon{size}.png")
         img.save(path)
         print("wrote", path)
+    store_icon(base)
 
 
 if __name__ == "__main__":
