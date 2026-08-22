@@ -93,6 +93,10 @@ export interface MarkOptions {
 /**
  * 마크를 캔버스의 지정 영역에 그린다. 프로필도 배너도 워터마크도 전부 이 함수 하나를 쓴다.
  * contentScale은 내용을 영역보다 작게 잡는 비율 — 원형 크롭에는 0.707(내접 정사각형)을 넘긴다.
+ *
+ * plate는 글자 뒤에 까는 칠흑 판이다. 스크린샷 위의 워터마크처럼 무엇이 깔릴지 모르는
+ * 자리에서는 이 판이 가독성을 보장하지만, 이미 어두운 배경 아트 위에서는 글자보다 훨씬
+ * 큰 검은 사각형이 남아 이미지가 깨진 것처럼 보인다.
  */
 export function drawMarkInto(
   ctx: CanvasRenderingContext2D,
@@ -101,9 +105,12 @@ export function drawMarkInto(
   w: number,
   h: number,
   contentScale = 1,
+  plate = true,
 ): void {
-  ctx.fillStyle = BRAND.deep
-  ctx.fillRect(x, y, w, h)
+  if (plate) {
+    ctx.fillStyle = BRAND.deep
+    ctx.fillRect(x, y, w, h)
+  }
   const fontSize = pixelFontSize((Math.min(w, h) * contentScale) / 4.2)
   ctx.font = `${fontSize}px ${DISPLAY_FONT}`
   ctx.textBaseline = 'middle'
@@ -181,27 +188,70 @@ function inside(rect: Rect, x: number, y: number, size: number): boolean {
 }
 
 /**
- * 세로 방향 디더 그라데이션. densityAt(t)가 0이면 아무것도 안 그리고 1이면 꽉 채운다.
- * 배경색 위에 색 셀만 얹으므로 밀도가 낮은 구간은 순회 비용도 들지 않는다.
+ * 2D 값 노이즈. 성긴 격자에 난수를 놓고 부드럽게 이어 붙여 0~1을 돌려준다.
+ * 선형 보간은 격자점마다 기울기가 꺾여 마름모 자국을 남기므로 smoothstep으로 잇는다.
  */
-function drawDitherGradient(
+function noiseField(seed: number, gx: number, gy: number): (u: number, v: number) => number {
+  const r = rng(seed)
+  const grid: number[][] = []
+  for (let y = 0; y <= gy; y++) {
+    const row: number[] = []
+    for (let x = 0; x <= gx; x++) row.push(r())
+    grid.push(row)
+  }
+  const ease = (t: number) => t * t * (3 - 2 * t)
+  return (u, v) => {
+    const fx = Math.min(Math.max(u, 0), 1) * gx
+    const fy = Math.min(Math.max(v, 0), 1) * gy
+    const x0 = Math.min(Math.floor(fx), gx - 1)
+    const y0 = Math.min(Math.floor(fy), gy - 1)
+    const tx = ease(fx - x0)
+    const ty = ease(fy - y0)
+    const top = grid[y0][x0] + (grid[y0][x0 + 1] - grid[y0][x0]) * tx
+    const bot = grid[y0 + 1][x0] + (grid[y0 + 1][x0 + 1] - grid[y0 + 1][x0]) * tx
+    return top + (bot - top) * ty
+  }
+}
+
+/** 성운의 옅은 둘레가 짙은 속보다 얼마나 넓게 퍼지는가. 1이면 둘레가 없다. */
+const NEBULA_HALO = 1.9
+
+/**
+ * 디더 성운. shapeAt(u, v)이 성운이 앉을 자리를 0~1로 정하고 여기에 2D 노이즈를
+ * 곱해 뭉치고 흩어지게 한다. 세로 램프만 쓰면 밀도가 열과 무관해져서 Bayer 격자가
+ * 직조된 천처럼 드러나고, 띠가 시작되는 경계도 자로 그은 직선이 된다.
+ *
+ * 짙은 속은 surface, 그 둘레는 bg — 여덟 색으로 만들 수 있는 가장 부드러운 감쇠다.
+ * 배경색 위에 셀만 얹으므로 밀도가 0인 구간은 순회 비용도 들지 않는다.
+ */
+function drawNebula(
   ctx: CanvasRenderingContext2D,
   w: number,
   h: number,
   cell: number,
-  color: string,
-  densityAt: (t: number) => number,
+  seed: number,
+  shapeAt: (u: number, v: number) => number,
 ): void {
   const cols = Math.ceil(w / cell)
   const rows = Math.ceil(h / cell)
-  ctx.fillStyle = color
-  for (let ry = 0; ry < rows; ry++) {
-    const density = densityAt(rows > 1 ? ry / (rows - 1) : 0)
-    if (density <= 0) continue
-    const threshold = density * 16
-    const row = BAYER4[ry & 3]
-    for (let rx = 0; rx < cols; rx++) {
-      if (row[rx & 3] < threshold) ctx.fillRect(rx * cell, ry * cell, cell, cell)
+  const noise = noiseField(seed, 7, 5)
+  // 셀마다 색을 갈아 끼우면 fillStyle이 수만 번 바뀐다. 톤마다 한 번씩 훑고,
+  // 옅은 둘레를 먼저 깐 뒤 짙은 속으로 덮는다.
+  for (const [color, gain] of [
+    [BRAND.bg, NEBULA_HALO],
+    [BRAND.surface, 1],
+  ] as const) {
+    ctx.fillStyle = color
+    for (let ry = 0; ry < rows; ry++) {
+      const v = rows > 1 ? ry / (rows - 1) : 0
+      const row = BAYER4[ry & 3]
+      for (let rx = 0; rx < cols; rx++) {
+        const shape = shapeAt(cols > 1 ? rx / (cols - 1) : 0, v)
+        if (shape <= 0) continue
+        // 노이즈를 0.3~1.3배로 쓴다. 0을 곱할 수 있게 두면 성운에 구멍이 뚫린다.
+        const density = Math.min(1, shape * (0.3 + noise(cols > 1 ? rx / (cols - 1) : 0, v)) * gain)
+        if (row[rx & 3] < density * 16) ctx.fillRect(rx * cell, ry * cell, cell, cell)
+      }
     }
   }
 }
@@ -250,10 +300,8 @@ export function drawYouTubeBanner(canvas: BrandCanvas): void {
 
   ctx.fillStyle = BRAND.deep
   ctx.fillRect(0, 0, W, H)
-  // 아래쪽으로 갈수록 짙어지는 성운 띠. 하단 38%에서만 올라온다.
-  drawDitherGradient(ctx, W, H, unit, BRAND.surface, (t) =>
-    t < 0.62 ? 0 : ((t - 0.62) / 0.38) * 0.8,
-  )
+  // 아래로 갈수록 짙어지는 성운. 하단 40%에서만 올라온다.
+  drawNebula(ctx, W, H, unit, 13, (_u, v) => (v < 0.6 ? 0 : ((v - 0.6) / 0.4) ** 1.4))
   // 별은 안전 영역 바깥에만 둔다 — 가운데는 로고와 두 줄 문구가 들어갈 자리다.
   drawStarfield(ctx, W, H, unit, 7, [
     { x: left, y: top, w: YT_SAFE.w, h: YT_SAFE.h },
@@ -262,7 +310,7 @@ export function drawYouTubeBanner(canvas: BrandCanvas): void {
   // 마크 타일
   const tile = Math.round(YT_SAFE.h * 0.55)
   const tileY = Math.round(top + (YT_SAFE.h - tile) / 2)
-  drawMarkInto(ctx, left, tileY, tile, tile)
+  drawMarkInto(ctx, left, tileY, tile, tile, 1, false)
 
   // 워드마크와 태그라인 — 안전 영역 오른쪽 경계까지의 실제 여유폭을 실측해서 넘치면 줄인다
   const textX = left + tile + Math.round(tile * 0.22)
@@ -293,10 +341,8 @@ export function drawShortsCard(canvas: BrandCanvas, headline: string[]): void {
 
   ctx.fillStyle = BRAND.deep
   ctx.fillRect(0, 0, W, H)
-  // 위에서 아래로 내려가며 어둠이 깊어진다. 하단 55%는 완전히 비어 있다.
-  drawDitherGradient(ctx, W, H, unit, BRAND.surface, (t) =>
-    t > 0.45 ? 0 : ((0.45 - t) / 0.45) * 0.65,
-  )
+  // 위에서 아래로 내려가며 성운이 옅어진다. 하단 절반은 완전히 비어 있다.
+  drawNebula(ctx, W, H, unit, 29, (_u, v) => (v > 0.5 ? 0 : ((0.5 - v) / 0.5) ** 1.3))
   // 마크 자리(상단)와 앱 UI가 덮는 하단 25%에는 별을 두지 않는다.
   const markTile = Math.round(W * 0.26)
   drawStarfield(ctx, W, H, unit, 23, [
@@ -305,7 +351,7 @@ export function drawShortsCard(canvas: BrandCanvas, headline: string[]): void {
   ])
 
   const tile = Math.round(W * 0.26)
-  drawMarkInto(ctx, Math.round((W - tile) / 2), Math.round(H * 0.14), tile, tile)
+  drawMarkInto(ctx, Math.round((W - tile) / 2), Math.round(H * 0.14), tile, tile, 1, false)
 
   // 좌우 여백을 남긴 실사용 폭 안에 맞춘다(drawQuestion과 같은 방식) — 긴 헤드라인 한 줄이
   // 캔버스를 양옆으로 넘치는 사고를 막는다.
@@ -491,9 +537,7 @@ function drawFullBleed(
     const unit = unitFor(W, H)
     ctx.fillStyle = BRAND.deep
     ctx.fillRect(0, 0, W, H)
-    drawDitherGradient(ctx, W, H, unit, BRAND.surface, (t) =>
-      t > 0.55 ? 0 : ((0.55 - t) / 0.55) * 0.6,
-    )
+    drawNebula(ctx, W, H, unit, 41, (_u, v) => (v > 0.55 ? 0 : ((0.55 - v) / 0.55) ** 1.3))
     // 아래 40%에는 라벨·제목·워터마크가 앉는다.
     drawStarfield(ctx, W, H, unit, 41, [{ x: 0, y: H * 0.6, w: W, h: H * 0.4 }])
   }
