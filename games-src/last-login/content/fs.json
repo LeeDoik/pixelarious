@@ -31,6 +31,9 @@
   {"id": "s_photo2", "parent": "saebit", "name": "필사_2_제출본.jpg", "type": "image", "cid": "img:pilsa_2", "image": "res://assets/img/photos/pilsa_2.png", "size": 282440, "mtime": "2002-08-11 23:05"},
   {"id": "s_photo3", "parent": "saebit", "name": "필사_3_제출본.jpg", "type": "image", "cid": "img:pilsa_3", "image": "res://assets/img/photos/pilsa_3.png", "size": 258506, "mtime": "2002-09-22 23:18"},
   {"id": "s_photo4", "parent": "saebit", "name": "서원문_원본.jpg", "type": "image", "cid": "img:vow_photo", "image": "res://assets/img/photos/vow_photo.png", "size": 189573, "mtime": "2002-09-30 19:47"},
+  {"id": "s_photo5", "parent": "saebit", "name": "그릇기록_제출본.jpg", "type": "image",
+   "cid": "img:bowl_record_photo", "image": "res://assets/img/photos/bowl_record.png",
+   "size": 271104, "mtime": "2002-08-03 23:52"},
 
   {"id": "l_ledger", "parent": "locked", "name": "입금내역.txt", "type": "doc", "cid": "doc:donation_ledger", "record": true, "size": 1531, "mtime": "2002-11-01 23:26"},
   {"id": "l_quit", "parent": "locked", "name": "탈퇴하려면.txt", "type": "doc", "cid": "doc:quit_plan", "size": 949, "mtime": "2002-11-01 02:31"},

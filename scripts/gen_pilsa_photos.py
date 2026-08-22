@@ -15,7 +15,7 @@ docs.json의 필사 본문에서 교리부만 뽑아(사적 주석 '(옮겨 적�
 """
 import io as _io
 import json, math, os, random, sys
-from PIL import Image, ImageDraw, ImageFont, ImageFilter
+from PIL import Image, ImageDraw, ImageFont, ImageFilter, ImageChops
 
 FONT = os.path.join("scripts", "font_src", "garam_yeonkkot.ttf")
 DOCS = os.path.join("games-src", "last-login", "content", "docs.json")
@@ -35,6 +35,37 @@ PAGES = [
 ]
 
 PUNCT = ".,·\"'」)!?"   # 줄 머리에 오면 안 되는 것들
+
+# 제출본 전용 페이지: 본문을 docs.json에서 읽지 않는다.
+# 마지막 문단이 사본에 없다는 것이 퍼즐이라서, 여기가 그 문단의 유일한 출처다.
+BOWL_TEXT = [
+    "그릇 문답 기록",
+    "",
+    "그릇 문답을 했다. 조원 여섯이 둘러앉아서 한 사람씩 말한다.",
+    "조장님이 종이를 나눠 주면서, 오늘 말한 것을",
+    "자기 손으로 적어 두라고 하셨다.",
+    "",
+    "내 차례에서 어머니 얘기가 나왔다.",
+    "어머니가 조용한 분이셨다는 것.",
+    "기일이 음력 구월 열이틀이라는 것.",
+    "그런 얘기를 처음부터 끝까지 한 건 삼 년 만이다.",
+    "",
+    "나는 울었다. 우는 게 창피했는데 아무도 안 쳐다봐서 괜찮았다.",
+    "조장님이 잘했다고 하셨다. 그릇이 크다고 하셨다.",
+    "나는 그 말이 좋았다.",
+    "",
+    "내일은 각자 한 사람씩 맡아서 본다고 한다.",
+    "보는 게 아니라 기다려 주는 거라고 하셨다.",
+    "",
+    "○○ 님은 아직 어머니 얘기를 못 꺼내십니다.",
+    "조금 더 기다리면 될 것 같습니다.",
+]
+# 위 목록에서 이 인덱스부터가 사본에 없는 관찰 문단이다 (마지막 두 줄). bbox 출력에 쓴다.
+BOWL_OBSERVATION_FROM = 18
+
+RAW_PAGES = [
+    ("bowl_record", BOWL_TEXT, "새빛력 4년 8월 3일  성진", 20020803, BOWL_OBSERVATION_FROM),
+]
 
 
 def doctrine_lines(body):
@@ -301,6 +332,44 @@ def main():
             page.save(os.path.join(clean_dir, stem + "_clean.png"))
         out = os.path.join(OUT, stem + ".png")
         degrade(page).save(out)
+        print(stem, "->", out, os.path.getsize(out), "bytes")
+    # 그릇기록 제출본 — 마지막 두 줄은 사본에 없다.
+    # 히트 영역은 "관찰 문단이 있는 그림"과 "없는 그림"의 차이로 구한다.
+    # 지터가 random을 순서대로 먹으므로 앞부분은 두 장이 픽셀 단위로 같다.
+    #
+    # 주의: 관찰 문단을 통째로 리스트에서 잘라내면(lines[2:obs_from]) 본문 줄 수가
+    # 줄어들어 페이지 높이(H)가 달라진다. make_page는 종이 질감(paper_base)을
+    # 그리는 데 소비하는 random 호출 수가 w*h에 비례하므로, 높이가 다르면 관찰
+    # 문단보다 앞쪽— 종이 질감부터가— 이미 달라져서 두 그림이 통째로 어긋난다.
+    # 그래서 실제로 잘라내는 대신, 같은 글자 수의 다른 글자로 "바꿔치기"한다.
+    # draw_flow_char가 소비하는 random 호출 수는 글자가 무엇이든 항상 같으므로
+    # (공백/비공백 구성만 같으면) 페이지 높이와 이후의 서명 위치·지터까지 완전히
+    # 같게 유지되고, 오직 그 두 줄의 실제 글리프 모양만 달라진다.
+    def _swap(s):
+        return "".join(ch if ch == " " else "먹" for ch in s)
+
+    for stem, lines, sign, seed, obs_from in RAW_PAGES:
+        body_full = lines[2:]
+        body_short = body_full[:obs_from - 2] + [_swap(x) for x in body_full[obs_from - 2:]]
+        random.seed(seed)
+        full = make_page(lines[0], body_full, sign)
+        random.seed(seed)
+        short = make_page(lines[0], body_short, sign)
+        box = ImageChops.difference(full.convert("RGB"), short.convert("RGB")).getbbox()
+        if box is None:
+            raise SystemExit("관찰 문단이 그림에 안 나타났다 — BOWL_OBSERVATION_FROM 확인")
+        w, h = full.size
+        pad = 0.015
+        rx = max(0.0, box[0] / w - pad)
+        ry = max(0.0, box[1] / h - pad)
+        rw = min(1.0, box[2] / w + pad) - rx
+        rh = min(1.0, box[3] / h + pad) - ry
+        print("HIT_REGION %s = Rect2(%.3f, %.3f, %.3f, %.3f)" % (stem, rx, ry, rw, rh))
+        if clean_dir:
+            full.save(os.path.join(clean_dir, stem + "_clean.png"))
+        out = os.path.join(OUT, stem + ".png")
+        random.seed(seed)
+        degrade(make_page(lines[0], lines[2:], sign)).save(out)
         print(stem, "->", out, os.path.getsize(out), "bytes")
     # 서원문 — 제출 전에 찍어둔 원본. 교단이 가진 그 한 장을 그도 갖고 있었다.
     random.seed(20020930)

@@ -83,7 +83,7 @@ func test_every_image_node_has_its_asset() -> void:
 		seen += 1
 		assert_bool(FileAccess.file_exists(String(n.get("image", "")))).override_failure_message(
 			"%s의 이미지 파일이 없다: %s" % [n.get("name"), n.get("image")]).is_true()
-	assert_int(seen).is_equal(9)   # 기존 5장 + 필사 3장 + 서원문
+	assert_int(seen).is_equal(10)   # 기존 5장 + 필사 3장 + 서원문 + 그릇기록
 
 func test_bowl_record_is_hidden_inside_locked_folder() -> void:
 	var db := _make()
@@ -149,3 +149,12 @@ func test_validate_rejects_action_puzzle_without_three_hints() -> void:
 	}
 	var errors: Array = db.validate(bad)
 	assert_array(errors).contains(["puzzle x needs exactly 3 hints"])
+
+func test_bowl_record_photo_sits_with_the_other_submissions() -> void:
+	var db := _make()
+	var n: Dictionary = db.fs_node("s_photo5")
+	assert_dict(n).is_not_empty()
+	assert_str(String(n.get("parent", ""))).is_equal("saebit")
+	assert_str(String(n.get("cid", ""))).is_equal("img:bowl_record_photo")
+	assert_bool(n.get("hidden", false)).is_false()
+	assert_bool(FileAccess.file_exists(String(n.get("image", "")))).is_true()
