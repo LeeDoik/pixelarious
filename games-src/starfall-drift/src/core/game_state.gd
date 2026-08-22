@@ -51,6 +51,9 @@ func update_rise(px: float) -> void:
 func score() -> int:
 	return Scoring.height_score(_rise_px) + _bonus
 
+func collapse_active() -> bool:
+	return Scoring.collapse_active(score())
+
 func end_run() -> void:
 	phase = Phase.GAME_OVER
 	if score() > best:

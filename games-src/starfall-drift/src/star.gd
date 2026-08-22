@@ -55,6 +55,10 @@ func _process(delta: float) -> void:
 func tick(delta: float) -> void:
 	if not alive or not occupied or GameState.phase != GameState.Phase.PLAYING:
 		return
+	# 도입부 유예: 점수가 Tuning.COLLAPSE_GRACE_SCORE에 닿기 전까지는 게이지가 차지 않는다.
+	# 게이지가 0이므로 균열·흔들림·파편·경고음도 함께 꺼진 상태로 남는다.
+	if not GameState.collapse_active():
+		return
 	gauge += delta
 	var r := gauge_ratio()
 	_cracks.modulate.a = clampf((r - 0.25) / 0.75, 0.0, 1.0)

@@ -1,0 +1,30 @@
+{
+  "extName": {
+    "message": "STARFALL DRIFT",
+    "description": "툴바와 웹 스토어에 표시되는 확장 이름."
+  },
+  "extDesc": {
+    "message": "원 버튼 픽셀 아케이드 게임 STARFALL DRIFT를 크롬 사이드 패널에서 플레이하세요.",
+    "description": "스토어 짧은 설명."
+  },
+  "offlineTitle": {
+    "message": "신호 없음",
+    "description": "오프라인 폴백 화면 제목."
+  },
+  "offlineBody": {
+    "message": "이 카트리지는 pixelarious.online에서 불러옵니다. 연결 후 다시 시도하세요.",
+    "description": "오프라인 폴백 화면 본문."
+  },
+  "retry": {
+    "message": "다시 시도",
+    "description": "게임 프레임을 다시 불러오는 버튼."
+  },
+  "gameFrameTitle": {
+    "message": "STARFALL DRIFT 게임 화면",
+    "description": "게임 iframe 접근성 제목."
+  },
+  "siteLink": {
+    "message": "PIXELARIOUS \u2197",
+    "description": "사이트로 돌아가는 하단 링크."
+  }
+}

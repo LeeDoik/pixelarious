@@ -8,6 +8,7 @@ import { Footer } from '@/components/Footer'
 
 export default function Home() {
   const games = getVisibleGames()
+  const profile = getProfile()
   return (
     <>
       <PaletteSwap />
@@ -20,7 +21,7 @@ export default function Home() {
           <p className="sec-sub">Pick a cartridge from the shelf.</p>
           <Shelf games={games} />
         </section>
-        <Player1 profile={getProfile()} />
+        <Player1 profile={profile} />
       </main>
       <Footer />
     </>

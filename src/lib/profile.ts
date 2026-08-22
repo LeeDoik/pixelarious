@@ -6,11 +6,13 @@ export interface ProfileLink {
   href: string
 }
 
-/** The PLAYER 1 section: who runs the arcade, where to reach them. */
+/** The PLAYER 1 section: who runs the arcade, where to reach them.
+ *  donate is optional — with no address the coin slot simply doesn't appear. */
 export interface Profile {
   intro: string
   links: ProfileLink[]
   badges: string[]
+  donate?: string
 }
 
 export const PROFILE_FILE = path.join(process.cwd(), 'content', 'profile.json')
@@ -31,6 +33,9 @@ function validate(raw: Record<string, unknown>, file: string): Profile {
   }
   if (!Array.isArray(raw.badges) || !(raw.badges as unknown[]).every(filled))
     fail('badges must be non-empty strings')
+  // Present-but-blank is the dead-button case again: drop the key instead.
+  if (raw.donate !== undefined && !filled(raw.donate))
+    fail('donate must be a non-empty url, or be left out entirely')
 
   return raw as unknown as Profile
 }

@@ -1,5 +1,11 @@
 extends GdUnitTestSuite
 
+func test_collapse_grace_is_measured_in_displayed_score() -> void:
+	assert_bool(Scoring.collapse_active(0)).is_false()
+	assert_bool(Scoring.collapse_active(999)).is_false()
+	assert_bool(Scoring.collapse_active(1000)).is_true()
+	assert_bool(Scoring.collapse_active(5000)).is_true()
+
 func test_swift_hop_increments_combo_and_pays() -> void:
 	var r := Scoring.hop_result(0.30, 1)
 	assert_int(r.combo).is_equal(2)
