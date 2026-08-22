@@ -411,7 +411,9 @@ func open_file(node_id: String) -> void:
 	if n["type"] == "image":
 		# 사진은 실제 OS처럼 별도 뷰어 창으로 연다
 		if wm != null:
-			wm.open_window("photo:" + node_id, String(n["name"]), _photo_view(String(n["image"])),
+			var view := PhotoView.new()
+			view.image_path = String(n["image"])
+			wm.open_window("photo:" + node_id, String(n["name"]), view,
 				Vector2(560, 470), ICON["photo"])
 	elif wm != null:
 		# 문서도 마찬가지 — 메모장 창이 열려야 여러 기록을 나란히 놓고 볼 수 있다
@@ -423,17 +425,6 @@ func open_file(node_id: String) -> void:
 	if node_id == "l_bowl":
 		# 보기 설정을 켠 것만으로는 안 된다 — 이 게임의 판정은 언제나 "읽었는가"다
 		GameState.set_flag("bowl_record_found")
-
-func _photo_view(path: String) -> Control:
-	var frame := PanelContainer.new()
-	frame.theme_type_variation = "NuriField"
-	frame.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	var tr := TextureRect.new()
-	tr.texture = load(path)
-	tr.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	tr.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	frame.add_child(tr)
-	return frame
 
 # ── 암호 대화상자 ─────────────────────────────────────────────────────────
 
