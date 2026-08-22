@@ -4,6 +4,7 @@ import { PaletteSwap } from '@/components/PaletteSwap'
 import { Hero } from '@/components/Hero'
 import { Shelf } from '@/components/Shelf'
 import { Player1 } from '@/components/Player1'
+import { CoinSlot } from '@/components/CoinSlot'
 import { Footer } from '@/components/Footer'
 
 export default function Home() {
@@ -21,6 +22,7 @@ export default function Home() {
           <p className="sec-sub">Pick a cartridge from the shelf.</p>
           <Shelf games={games} />
         </section>
+        <CoinSlot href={profile.donate} />
         <Player1 profile={profile} />
       </main>
       <Footer />

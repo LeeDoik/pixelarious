@@ -624,3 +624,144 @@ body.dmg .console-screen{background:var(--bg-deep)}
   .insert-overlay[data-phase] .insert-skip{animation:none}
 }
 
+
+
+
+
+/* ================================================================
+   코인 억셉터 — 왼쪽 동전을 오른쪽 투입구로 끌어다 넣는다
+   ================================================================ */
+/* 위아래 섹션과 확실히 떨어뜨린다. .sec의 기본 여백(위 72 / 아래 96)에 더해져
+   진열장 아래 240px, PLAYER 1 제목 위 240px가 된다. 후원 칸은 게임과도
+   프로필과도 다른 성격이라 양쪽에서 충분히 떼어놓는다. */
+.coin-sec{padding:144px 0 168px; display:flex; justify-content:center}
+
+.coin-acceptor{
+  display:flex; align-items:center; justify-content:center;
+  gap:96px;   /* PC에서는 멀찍이 — 끌어가는 맛이 있어야 한다 */
+  /* touch-action은 동전에만 — 여기 걸면 이 위에서 페이지가 안 굴러간다 */
+}
+
+/* ---- 왼쪽: 동전 받침 ---- */
+.acceptor-tray{display:flex; flex-direction:column; align-items:center; gap:16px}
+.acceptor-credit{
+  font-family:var(--font-display); font-size:9px; letter-spacing:2px; color:var(--dim);
+  white-space:nowrap;
+}
+.acceptor-credit-n{color:var(--gold)}
+body.dmg .acceptor-credit-n{color:var(--text)}
+
+/* ---- 동전 ----
+   16x16 스프라이트를 정수배(4x)로 키운다. 배율이 정수가 아니면 픽셀 크기가
+   들쭉날쭉해진다. 그림자는 CSS가 아니라 바닥에 깔리는 별도 타원이다 —
+   캔버스가 투명이라 box-shadow를 쓰면 사각형 그림자가 나온다. */
+.coin-piece{
+  position:relative; display:block;
+  width:64px; height:64px; flex:none;
+  text-decoration:none; cursor:grab;
+  user-select:none; -webkit-user-select:none;
+  touch-action:none;
+}
+.coin-canvas{
+  display:block; width:100%; height:100%;
+  image-rendering:pixelated;
+}
+.coin-piece::after{      /* 바닥 그림자 */
+  content:''; position:absolute; left:14%; right:14%; bottom:-9px;
+  height:7px; border-radius:50%;
+  background:var(--shadow); opacity:.55;
+  transition:transform .18s ease-out, opacity .18s ease-out;
+}
+@media (hover:hover) and (pointer:fine){
+  .coin-piece:hover{transform:translateY(-4px)}
+  .coin-piece:hover::after{transform:translateY(4px) scaleX(.88); opacity:.4}
+}
+.coin-piece.dragging{cursor:grabbing; z-index:2}
+.coin-piece.dragging::after{transform:translateY(10px) scaleX(.72); opacity:.3}
+.coin-piece:not(.dragging){transition:transform .28s cubic-bezier(.2,.85,.3,1)}
+.coin-piece.accepted{
+  transition:transform .34s cubic-bezier(.4,.02,.3,1), opacity .34s ease-in .08s;
+  opacity:0; pointer-events:none;
+}
+.coin-piece:focus-visible{outline:3px dashed var(--accent); outline-offset:6px}
+
+/* ---- 오른쪽: 투입구 ---- */
+.acceptor-face{
+  position:relative;
+  display:grid; grid-template-columns:auto 1fr; align-items:center; gap:16px;
+  width:236px; padding:16px 18px;
+  background:var(--bg-deep);
+  border:4px solid var(--frame);
+  /* 하우징 모따기 — 위/왼쪽이 밝고 아래/오른쪽이 어둡다 */
+  box-shadow:
+    6px 6px 0 var(--shadow),
+    inset 3px 3px 0 rgba(255,241,232,.12),
+    inset -3px -3px 0 rgba(0,0,0,.5);
+}
+/* 하우징 나사 — 실제 코인 도어의 그 나사 */
+.acceptor-screw{
+  position:absolute; left:6px; width:6px; height:6px;
+  background:var(--surface);
+  box-shadow:inset 0 0 0 1px rgba(0,0,0,.55), 0 1px 0 rgba(255,241,232,.16);
+}
+.acceptor-screw-tl{top:6px}
+.acceptor-screw-bl{bottom:6px}
+
+/* 슬릿 베젤 — 슬릿을 감싸는 금속판과 투입 방향 화살표 */
+.acceptor-bezel{
+  display:flex; flex-direction:column; align-items:center; gap:5px;
+  padding:6px 5px 7px;
+  background:var(--surface);
+  border:2px solid var(--frame);
+  box-shadow:inset 0 2px 0 rgba(255,241,232,.18), inset 0 -2px 0 rgba(0,0,0,.4);
+}
+.acceptor-arrow{
+  font-size:8px; line-height:1; color:var(--dim);
+  transition:color .18s steps(2);
+}
+.acceptor-slit{
+  width:11px; height:70px; display:block;
+  background:var(--shadow);
+  border:2px solid var(--accent);
+  transition:border-color .18s steps(2), background .18s steps(2);
+}
+.acceptor-lines{
+  display:flex; flex-direction:column; align-items:center; gap:7px;
+  font-family:var(--font-display); line-height:1; color:var(--accent);
+  text-align:center;
+}
+.acceptor-lead{font-size:9px; letter-spacing:1px}
+.acceptor-play{font-size:15px; letter-spacing:1px; color:var(--gold)}
+/* 발광 패널의 주사선 */
+.acceptor-scan{
+  width:74%; height:5px;
+  background:repeating-linear-gradient(0deg, rgba(255,241,232,.22) 0 1px, transparent 1px 2px);
+}
+.acceptor-hint{font-size:6px; letter-spacing:1px; color:var(--dim)}
+
+/* 동전을 끌고 오면 투입구에 불이 들어온다 */
+.coin-acceptor.armed .acceptor-slit{background:var(--accent); border-color:var(--gold)}
+.coin-acceptor.armed .acceptor-arrow,
+.coin-acceptor.armed .acceptor-hint{color:var(--accent)}
+.coin-acceptor.taken .acceptor-slit{background:var(--gold); border-color:var(--gold)}
+
+/* DMG는 4계조라 분홍/금색이 없다 — 프레임 색으로 대신한다 */
+body.dmg .acceptor-slit{border-color:var(--frame)}
+body.dmg .acceptor-lines{color:var(--frame)}
+body.dmg .acceptor-play{color:var(--frame)}
+body.dmg .coin-acceptor.armed .acceptor-slit{background:var(--dim); border-color:var(--frame)}
+body.dmg .coin-acceptor.taken .acceptor-slit{background:var(--frame)}
+
+@media (max-width:640px){
+  .coin-acceptor{gap:22px}   /* 좁은 화면에서는 끌어갈 거리가 짧아야 한다 */
+  .acceptor-face{width:auto; max-width:196px; gap:11px; padding:13px 12px 13px 14px}
+  .acceptor-slit{height:60px; width:10px}
+  .acceptor-play{font-size:13px}
+  .coin-piece{width:48px; height:48px}   /* 16x16의 3배 */
+}
+@media (prefers-reduced-motion: reduce){
+  .coin-piece:not(.dragging),
+  .coin-piece.accepted,
+  .coin-piece::after{transition:none}
+  .acceptor-slit, .acceptor-arrow{transition:none}
+}
