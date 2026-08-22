@@ -772,3 +772,17 @@ body.dmg .coin-acceptor.taken .acceptor-slit{background:var(--frame)}
   .coin-piece::after{transition:none}
   .acceptor-slit, .acceptor-arrow{transition:none}
 }
+
+/* ================================================================
+   두 세계 공통 마감
+   ================================================================ */
+/* DMG에도 주사선을 깐다 — 초록 화면도 브라운관이다. 다만 4계조가 좁아
+   night와 같은 농도로 겹치면 화면이 탁해지므로 절반쯤으로 옅게 깐다. */
+body.dmg::before{
+  content:''; position:fixed; inset:0; z-index:90; pointer-events:none;
+  background:repeating-linear-gradient(0deg, rgba(8,24,32,.09) 0 1px, transparent 1px 3px);
+}
+
+/* 팔레트 전환은 왼쪽 위로. 목업 규칙(top-right)을 여기서 뒤집는다 —
+   위쪽 구역은 extract-mockup-css.py가 덮어쓰므로 직접 고치면 안 된다. */
+.swap{right:auto; left:14px}
