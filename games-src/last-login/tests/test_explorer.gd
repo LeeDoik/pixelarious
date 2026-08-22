@@ -144,3 +144,13 @@ func test_selection_survives_a_view_switch() -> void:
 	assert_str(String(row.get_metadata(0))).is_equal("f_essay")
 	e.set_view_mode(Explorer.ViewMode.ICONS)
 	assert_array(e._list.get_selected_items()).is_not_empty()
+
+func test_status_bar_counts_hidden_files_the_list_does_not_show() -> void:
+	## 상태표시줄이 목록보다 하나 더 안다 — 이것이 퍼즐5의 확인용 단서다
+	var e := _make()
+	assert_bool(e.submit_password("20020316")).is_false()
+	assert_bool(e.open_folder("locked")).is_false()
+	assert_bool(e.submit_password("20020316")).is_true()
+	assert_bool(e.open_folder("locked")).is_true()
+	assert_str(e.status_text()).is_equal("개체 6개")
+	assert_int(e.item_count()).is_equal(5)

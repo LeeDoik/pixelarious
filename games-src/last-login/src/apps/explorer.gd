@@ -234,7 +234,9 @@ func _refresh() -> void:
 	_addr_icon.texture = _texture(ICON["folder"] if here.is_empty() else _icon_path(here))
 	_back_btn.disabled = _history.is_empty()
 	_up_btn.disabled = _cwd == ROOT_ID
-	_status_left.text = "개체 %d개" % entries.size()
+	# 목록은 보이는 것만, 상태표시줄은 폴더에 있는 것 전부를 센다.
+	# 두 숫자가 어긋나는 순간이 '성진이만' 폴더에 딱 한 번 있다.
+	_status_left.text = "개체 %d개" % ContentDB.fs_children_all(_cwd).size()
 	_status_right.text = _folder_size_text(entries)
 
 func _fill_grid(entries: Array[Dictionary]) -> void:

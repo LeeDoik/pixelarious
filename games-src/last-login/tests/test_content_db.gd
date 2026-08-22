@@ -104,3 +104,28 @@ func test_evidence_memo_points_at_the_hidden_file() -> void:
 	var db := _make()
 	var body := String(db.doc("doc:evidence_memo").get("body", ""))
 	assert_str(body).contains("안 보이게 해놨다")
+
+func test_hidden_node_is_filtered_until_view_flag() -> void:
+	GameState.reset()
+	var db := _make()
+	var ids: Array[String] = []
+	for n: Dictionary in db.fs_children("locked"):
+		ids.append(String(n["id"]))
+	assert_array(ids).not_contains(["l_bowl"])
+	assert_int(db.fs_children_all("locked").size()).is_equal(ids.size() + 1)
+	GameState.set_flag("view_hidden")
+	ids = []
+	for n: Dictionary in db.fs_children("locked"):
+		ids.append(String(n["id"]))
+	assert_array(ids).contains(["l_bowl"])
+
+func test_clear_flag_hides_it_again() -> void:
+	GameState.reset()
+	GameState.set_flag("view_hidden")
+	GameState.clear_flag("view_hidden")
+	assert_bool(GameState.has_flag("view_hidden")).is_false()
+	var db := _make()
+	var ids: Array[String] = []
+	for n: Dictionary in db.fs_children("locked"):
+		ids.append(String(n["id"]))
+	assert_array(ids).not_contains(["l_bowl"])

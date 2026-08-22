@@ -27,6 +27,14 @@ func set_flag(name: String) -> void:
 		act_changed.emit(after)
 	save_game()
 
+func clear_flag(name: String) -> void:
+	## 보기 설정처럼 껐다 켰다 하는 플래그가 있다. 막(act)은 다시 계산하지 않는다 —
+	## 되돌릴 수 있는 설정이 이야기를 되감으면 안 된다.
+	if not _flags.has(name):
+		return
+	_flags.erase(name)
+	save_game()
+
 func has_flag(name: String) -> bool:
 	return _flags.has(name)
 

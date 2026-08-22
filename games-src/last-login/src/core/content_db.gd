@@ -112,6 +112,17 @@ func validate(raw: Dictionary) -> Array[String]:
 	return errors
 
 func fs_children(parent_id: String) -> Array[Dictionary]:
+	## 숨김 특성이 붙은 노드는 보기 설정을 켜야 목록에 나온다.
+	## effective_parent가 이미 GameState를 물어보고 있으므로 같은 결을 따른다.
+	var out: Array[Dictionary] = []
+	for n in fs_children_all(parent_id):
+		if n.get("hidden", false) and not GameState.has_flag("view_hidden"):
+			continue
+		out.append(n)
+	return out
+
+func fs_children_all(parent_id: String) -> Array[Dictionary]:
+	## 숨김 포함. 탐색기 상태표시줄만 이걸 쓴다 — 목록보다 하나 더 아는 자리다.
 	var out: Array[Dictionary] = []
 	for n in _d["fs"]["nodes"]:
 		if effective_parent(n) == parent_id:
