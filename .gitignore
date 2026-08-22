@@ -15,3 +15,5 @@ games-src/*/reports/
 
 scripts/audio_preview/
 scripts/__pycache__/
+
+extension/dist/

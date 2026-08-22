@@ -1,0 +1,30 @@
+{
+  "extName": {
+    "message": "STARFALL DRIFT",
+    "description": "Extension name shown in the toolbar and the Web Store."
+  },
+  "extDesc": {
+    "message": "Play STARFALL DRIFT, a one-button pixel arcade game, in your Chrome side panel.",
+    "description": "Short store description."
+  },
+  "offlineTitle": {
+    "message": "NO SIGNAL",
+    "description": "Heading of the offline fallback screen."
+  },
+  "offlineBody": {
+    "message": "This cartridge streams from pixelarious.online. Reconnect and try again.",
+    "description": "Body text of the offline fallback screen."
+  },
+  "retry": {
+    "message": "RETRY",
+    "description": "Button that reloads the game frame."
+  },
+  "gameFrameTitle": {
+    "message": "STARFALL DRIFT game",
+    "description": "Accessible title of the game iframe."
+  },
+  "siteLink": {
+    "message": "PIXELARIOUS \u2197",
+    "description": "Footer link back to the website."
+  }
+}

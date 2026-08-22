@@ -72,6 +72,8 @@ func test_collapse_drops_player_and_run_continues() -> void:
 	# 비행 여부와 무관하게 확실한 공전 상태를 만든 뒤, 그 별을 강제 붕괴 직전까지 보낸다
 	var star: Star = main.stars_root.get_children()[0]
 	main.player.attach_to(star, star.global_position + Vector2(star.orbit_r, 0), Vector2(0, 10))
+	# 붕괴는 점수 유예를 벗어난 뒤에만 진행된다
+	GameState.update_rise(Tuning.COLLAPSE_GRACE_SCORE * Tuning.PX_PER_M)
 	star.gauge = star.collapse_time - 0.001
 	await runner.simulate_frames(5)
 	assert_int(main.player.state).is_equal(Player.State.FLYING)   # 죽지 않고 낙하

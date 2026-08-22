@@ -1,0 +1,131 @@
+/* 사이트(src/app/globals.css)와 같은 팔레트·폰트. 폰트 파일은 public/fonts/에서
+   복사해 동봉 — 확장은 사이트 자산을 참조하지 않는다. */
+@font-face {
+  font-family: 'PS2P';
+  src: url('fonts/press-start-2p.woff2') format('woff2');
+  font-display: block;
+}
+@font-face {
+  font-family: 'NeoDGM';
+  src: url('fonts/neodgm.woff2') format('woff2');
+  font-display: block;
+}
+
+:root {
+  --bg: #141127;
+  --bg-deep: #0c0a1c;
+  --text: #fff1e8;
+  --dim: #8e99d9;
+  --accent: #ff77a8;
+  --gold: #ffec27;
+  --font-display: 'PS2P', 'NeoDGM', monospace;
+  --font-body: 'NeoDGM', 'Courier New', monospace;
+  --footer-h: 24px;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: none;
+  overflow: hidden;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+}
+
+#stage {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+#game {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: var(--bg-deep);
+}
+
+#game[hidden] { display: none; }
+
+#offline {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 24px 20px;
+  text-align: center;
+  background: var(--bg);
+}
+
+#offline[hidden] { display: none; }
+
+#offline .glyph {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 22px;
+  color: var(--accent);
+}
+
+#offline h1 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: 1px;
+  color: var(--gold);
+}
+
+#offline p:not(.glyph) {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--dim);
+}
+
+#retry {
+  margin-top: 6px;
+  padding: 10px 16px;
+  border: 2px solid var(--text);
+  border-radius: 0;
+  background: var(--gold);
+  color: var(--bg);
+  font-family: var(--font-display);
+  font-size: 10px;
+  letter-spacing: 1px;
+  cursor: pointer;
+}
+
+#retry:hover { background: var(--accent); color: var(--text); }
+#retry:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+footer {
+  flex: 0 0 var(--footer-h);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-top: 1px solid #2a2450;
+  background: var(--bg-deep);
+}
+
+footer a {
+  font-family: var(--font-display);
+  font-size: 8px;
+  letter-spacing: 1px;
+  color: var(--dim);
+  text-decoration: none;
+}
+
+footer a:hover { color: var(--gold); }
+footer a:focus-visible { outline: 1px solid var(--accent); outline-offset: 2px; }
