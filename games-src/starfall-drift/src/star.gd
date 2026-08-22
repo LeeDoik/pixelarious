@@ -36,14 +36,12 @@ func _ready() -> void:
 	add_child(_cracks)
 	add_child(_debris)
 
-func setup(t: String, collapse_mult: float, collapses: bool = true) -> void:
+func setup(t: String, collapse_mult: float) -> void:
 	type = t
 	var d: Dictionary = Tuning.STAR_TYPES[t]
 	orbit_r = d.orbit_r
 	ang_vel = d.ang_vel
-	# 도입부(Tuning.COLLAPSE_GRACE_H 아래)의 별은 영원히 버틴다 — 게이지가 차지 않으므로
-	# 균열·흔들림·경고음도 함께 꺼진다.
-	collapse_time = d.collapse / collapse_mult if collapses else INF
+	collapse_time = d.collapse / collapse_mult
 	_body.texture = load("res://assets/img/%s.png" % d.sprite)
 	_cracks.texture = load("res://assets/img/cracks.png")
 	_cracks.scale = Vector2.ONE * (d.size / 32.0)
@@ -56,6 +54,10 @@ func _process(delta: float) -> void:
 
 func tick(delta: float) -> void:
 	if not alive or not occupied or GameState.phase != GameState.Phase.PLAYING:
+		return
+	# 도입부 유예: 점수가 Tuning.COLLAPSE_GRACE_SCORE에 닿기 전까지는 게이지가 차지 않는다.
+	# 게이지가 0이므로 균열·흔들림·파편·경고음도 함께 꺼진 상태로 남는다.
+	if not GameState.collapse_active():
 		return
 	gauge += delta
 	var r := gauge_ratio()

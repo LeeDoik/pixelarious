@@ -7,13 +7,6 @@ func test_params_at_ground() -> void:
 	assert_float(p.giant_p).is_equal_approx(0.25, 0.001)
 	assert_float(p.collapse_mult).is_equal_approx(1.0, 0.001)
 	assert_float(p.asteroid_p).is_equal_approx(0.0, 0.001)
-	assert_bool(p.collapses).is_false()
-
-func test_stars_do_not_collapse_below_grace_height() -> void:
-	assert_bool(Spawner.params_for_height(0.0).collapses).is_false()
-	assert_bool(Spawner.params_for_height(9999.0).collapses).is_false()
-	assert_bool(Spawner.params_for_height(10000.0).collapses).is_true()
-	assert_bool(Spawner.params_for_height(20000.0).collapses).is_true()
 
 func test_params_at_ramp_max_and_clamped_beyond() -> void:
 	var p := Spawner.params_for_height(10000.0)

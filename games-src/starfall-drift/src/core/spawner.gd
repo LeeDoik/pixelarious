@@ -12,7 +12,6 @@ static func params_for_height(h: float) -> Dictionary:
 		"dwarf_p": Tuning.DWARF_P_BASE + Tuning.DWARF_P_RANGE * t,
 		"giant_p": Tuning.GIANT_P_BASE + Tuning.GIANT_P_RANGE * t,
 		"collapse_mult": 1.0 + Tuning.COLLAPSE_MULT_RANGE * clampf(h / Tuning.COLLAPSE_RAMP_H, 0.0, 1.0),
-		"collapses": h >= Tuning.COLLAPSE_GRACE_H,
 		"asteroid_p": asteroid_p,
 	}
 
