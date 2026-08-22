@@ -1,4 +1,4 @@
-import { describe, it, expect, afterEach } from 'vitest'
+import { describe, it, expect, afterEach, vi } from 'vitest'
 import { render, screen, fireEvent, cleanup } from '@testing-library/react'
 import { Cartridge } from './Cartridge'
 import type { Game } from '@/lib/games'
@@ -62,5 +62,67 @@ describe('Cartridge', () => {
   it('renders the 1-based zero-padded slot number', () => {
     render(<Cartridge game={base} index={0} />)
     expect(screen.getByText('01')).toBeDefined()
+  })
+})
+
+describe('PC-recommended notice', () => {
+  const playable: Game = {
+    ...base,
+    slug: 'last-login',
+    playPath: '/games/last-login/index.html',
+    pcRecommended: true,
+  }
+
+  const stubPointer = (coarse: boolean) =>
+    vi.stubGlobal('matchMedia', (query: string) => ({ matches: coarse, media: query }))
+  const swallowNav = (e: Event) => e.preventDefault()
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
+    window.removeEventListener('click', swallowNav)
+  })
+
+  it('intercepts PLAY on a coarse-pointer device and shows the notice', () => {
+    stubPointer(true)
+    render(<Cartridge game={playable} index={0} />)
+    fireEvent.click(screen.getByText('▶ PLAY'))
+    expect(screen.getByRole('dialog')).toBeDefined()
+    expect(screen.getByText(/PC 환경에서 플레이/)).toBeDefined()
+    const anyway = screen.getByText('▶ 그래도 플레이').closest('a')
+    expect(anyway?.getAttribute('href')).toBe('/play/last-login')
+  })
+
+  it('돌아가기 closes the notice', () => {
+    stubPointer(true)
+    render(<Cartridge game={playable} index={0} />)
+    fireEvent.click(screen.getByText('▶ PLAY'))
+    fireEvent.click(screen.getByText('돌아가기'))
+    expect(screen.queryByRole('dialog')).toBeNull()
+  })
+
+  it('Escape closes the notice', () => {
+    stubPointer(true)
+    render(<Cartridge game={playable} index={0} />)
+    fireEvent.click(screen.getByText('▶ PLAY'))
+    fireEvent.keyDown(window, { key: 'Escape' })
+    expect(screen.queryByRole('dialog')).toBeNull()
+  })
+
+  it('lets PLAY through untouched on a fine-pointer device', () => {
+    stubPointer(false)
+    window.addEventListener('click', swallowNav)
+    render(<Cartridge game={playable} index={0} />)
+    fireEvent.click(screen.getByText('▶ PLAY'))
+    expect(screen.queryByRole('dialog')).toBeNull()
+  })
+
+  it('never intercepts games without the flag, even on touch', () => {
+    stubPointer(true)
+    window.addEventListener('click', swallowNav)
+    render(
+      <Cartridge game={{ ...base, slug: 'starfall-drift', playPath: '/games/starfall-drift/index.html' }} index={0} />,
+    )
+    fireEvent.click(screen.getByText('▶ PLAY'))
+    expect(screen.queryByRole('dialog')).toBeNull()
   })
 })

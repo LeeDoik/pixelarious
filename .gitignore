@@ -12,3 +12,6 @@ games-src/*/reports/
 
 .claude/worktrees/
 .superpowers/
+
+scripts/audio_preview/
+scripts/__pycache__/

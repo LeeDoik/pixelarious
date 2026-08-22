@@ -6,10 +6,12 @@ signal windows_changed(open_ids: Array)
 signal app_focused(id: String)
 
 const OS_WINDOW := preload("res://src/desktop/os_window.tscn")
+const DEFAULT_WIN_SIZE := Vector2(640, 480)
 
 var _apps: Dictionary = {}     # id -> {title, builder}
 var _windows: Dictionary = {}  # id -> OSWindow
 var _titles: Dictionary = {}   # id -> 창 제목 (작업표시줄 표기)
+var _win_icons: Dictionary = {}  # id -> 아이콘 경로 (작업표시줄 표기)
 var _cascade := 0
 
 func _init() -> void:
@@ -30,15 +32,17 @@ func _input(e: InputEvent) -> void:
 func _ready() -> void:
 	add_to_group("window_manager")
 
-func register_app(id: String, title: String, builder: Callable, icon: String = "") -> void:
-	_apps[id] = {"title": title, "builder": builder, "icon": icon}
+func register_app(id: String, title: String, builder: Callable, icon: String = "",
+		win_size: Vector2 = DEFAULT_WIN_SIZE) -> void:
+	## win_size는 앱마다 다르다 — 5열 표를 쓰는 누리메일은 640x480이 빠듯하다
+	_apps[id] = {"title": title, "builder": builder, "icon": icon, "size": win_size}
 
 func open_app(id: String) -> void:
 	if _windows.has(id):
 		focus_app(id)
 		return
 	var app: Dictionary = _apps[id]
-	open_window(id, app["title"], app["builder"].call(), Vector2(640, 480), app.get("icon", ""))
+	open_window(id, app["title"], app["builder"].call(), app.get("size", DEFAULT_WIN_SIZE), app.get("icon", ""))
 
 func open_window(id: String, title: String, content: Control, win_size: Vector2 = Vector2(640, 480), icon: String = "") -> void:
 	## 등록된 앱 외의 동적 창(사진 뷰어 등)도 이 경로로 연다
@@ -58,6 +62,7 @@ func open_window(id: String, title: String, content: Control, win_size: Vector2 
 	w.focused.connect(focus_app)
 	_windows[id] = w
 	_titles[id] = title
+	_win_icons[id] = icon
 	windows_changed.emit(open_ids())
 	app_focused.emit(id)
 	_update_active_states()
@@ -68,11 +73,31 @@ func close_app(id: String) -> void:
 	_windows[id].queue_free()
 	_windows.erase(id)
 	_titles.erase(id)
+	_win_icons.erase(id)
 	windows_changed.emit(open_ids())
 	_update_active_states()
 
 func window_title(id: String) -> String:
 	return String(_titles.get(id, id))
+
+func set_window_title(id: String, title: String) -> void:
+	## 작업표시줄 글자도 같이 따라간다 (누리넷이 페이지 제목을 창 제목으로 쓴다)
+	if not _windows.has(id):
+		return
+	_titles[id] = title
+	(_windows[id] as OSWindow).set_title(title)
+	windows_changed.emit(open_ids())
+
+func window_icon(id: String) -> String:
+	return String(_win_icons.get(id, ""))
+
+func active_id() -> String:
+	## 최상위의 보이는 창 — 작업표시줄이 눌린 상태로 표시할 대상
+	for i in range(get_child_count() - 1, -1, -1):
+		var c := get_child(i)
+		if c is OSWindow and (c as OSWindow).visible and not c.is_queued_for_deletion():
+			return (c as OSWindow).win_id
+	return ""
 
 func toggle_minimize(id: String) -> void:
 	if not _windows.has(id):
@@ -110,15 +135,10 @@ func focus_app(id: String) -> void:
 
 func _update_active_states() -> void:
 	# 최상위의 보이는 창만 활성 타이틀바, 나머지는 비활성(회색조)
-	var top: OSWindow = null
-	for i in range(get_child_count() - 1, -1, -1):
-		var c := get_child(i)
-		if c is OSWindow and (c as OSWindow).visible and not c.is_queued_for_deletion():
-			top = c
-			break
+	var top := active_id()
 	for id in _windows:
 		var w: OSWindow = _windows[id]
-		w.set_active(w == top)
+		w.set_active(String(id) == top)
 
 func is_open(id: String) -> bool:
 	return _windows.has(id)

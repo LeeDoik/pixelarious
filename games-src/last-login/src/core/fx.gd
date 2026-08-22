@@ -6,8 +6,19 @@ const SETTINGS_PATH := "user://settings.json"
 const WARP_K := 0.03           # 곡면 강도 (셰이더 uniform과 입력 보정이 공유)
 const INJECTED_DEVICE := 4242  # 재주입 이벤트 식별용 센티널
 
+## 크기조절·분할선 커서. 전부 이미지 정중앙이 핫스팟이라 가로세로가 짝수여야 한다
+## (gen_cursor.py가 그 조건을 assert로 잡는다).
+const POINTER_CURSORS := {
+	Input.CURSOR_HSIZE: "res://assets/img/cursor_hsize.png",
+	Input.CURSOR_VSIZE: "res://assets/img/cursor_vsize.png",
+	Input.CURSOR_FDIAGSIZE: "res://assets/img/cursor_fdiag.png",
+	Input.CURSOR_BDIAGSIZE: "res://assets/img/cursor_bdiag.png",
+	Input.CURSOR_HSPLIT: "res://assets/img/cursor_hsplit.png",
+	Input.CURSOR_VSPLIT: "res://assets/img/cursor_vsplit.png",
+}
+
 var _warp: ColorRect
-var _menu: Panel
+var _menu: Control
 var _volume_slider: HSlider
 var _warp_check: CheckBox
 var _last_fs_ms := 0
@@ -28,6 +39,13 @@ func _apply_cursor() -> void:
 		Input.set_custom_mouse_cursor(arrow, Input.CURSOR_POINTING_HAND, Vector2.ZERO)
 	if ResourceLoader.exists("res://assets/img/cursor_ibeam.png"):
 		Input.set_custom_mouse_cursor(load("res://assets/img/cursor_ibeam.png"), Input.CURSOR_IBEAM, Vector2(5, 17))
+	# 창 가장자리·분할선 커서. 여기가 비면 창을 끄는 순간에만 호스트 OS의 커서가 튀어나온다
+	for shape in POINTER_CURSORS:
+		var path: String = POINTER_CURSORS[shape]
+		if not ResourceLoader.exists(path):
+			continue
+		var tex: Texture2D = load(path)
+		Input.set_custom_mouse_cursor(tex, shape, tex.get_size() / 2.0)
 
 func _process(_delta: float) -> void:
 	# 브라우저가 자체적으로 전체화면을 해제한 직후의 ESC를 구분하기 위한 추적
@@ -54,7 +72,7 @@ func _show_fullscreen_toast() -> void:
 	if is_instance_valid(_toast):
 		_toast.queue_free()
 	var p := PanelContainer.new()
-	p.theme = NuriTheme.build()
+	p.theme = NuriTheme.shared()
 	p.anchor_left = 0.5
 	p.anchor_right = 0.5
 	p.offset_left = -280.0
@@ -149,45 +167,71 @@ void fragment() {
 # --- ESC 설정 메뉴 ---
 
 func _build_menu() -> void:
-	_menu = Panel.new()
-	_menu.theme = NuriTheme.build()
+	# 시스템 대화상자도 창과 같은 규칙을 따른다 — 타이틀바가 있고, 뒤가 어두워지고, 바깥을 막는다
+	_menu = Control.new()
+	_menu.theme = NuriTheme.shared()
 	_menu.visible = false
-	_menu.set_anchors_preset(Control.PRESET_CENTER)
-	_menu.custom_minimum_size = Vector2(340, 190)
-	_menu.offset_left = -170
-	_menu.offset_top = -95
-	_menu.offset_right = 170
-	_menu.offset_bottom = 95
-	var box := VBoxContainer.new()
-	box.set_anchors_preset(Control.PRESET_FULL_RECT)
-	box.offset_left = 16
-	box.offset_top = 12
-	box.offset_right = -16
-	box.offset_bottom = -12
-	box.add_theme_constant_override("separation", 10)
-	var title := Label.new()
-	title.text = "시스템 설정"
-	box.add_child(title)
+	_menu.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_menu.mouse_filter = Control.MOUSE_FILTER_STOP
+	var scrim := ColorRect.new()
+	scrim.color = Color(0, 0, 0, 0.35)
+	scrim.set_anchors_preset(Control.PRESET_FULL_RECT)
+	scrim.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_menu.add_child(scrim)
+	var center := CenterContainer.new()
+	center.set_anchors_preset(Control.PRESET_FULL_RECT)
+	center.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var box := PanelContainer.new()
+	box.custom_minimum_size = Vector2(400, 0)
+	var shell := VBoxContainer.new()
+	shell.add_theme_constant_override("separation", 0)
+	shell.add_child(_menu_titlebar())
+	var pad := MarginContainer.new()
+	for side in ["left", "right", "top", "bottom"]:
+		pad.add_theme_constant_override("margin_" + side, 14)
+	var col := VBoxContainer.new()
+	col.add_theme_constant_override("separation", 12)
 	var vol_label := Label.new()
 	vol_label.text = "소리 크기"
-	box.add_child(vol_label)
+	col.add_child(vol_label)
 	_volume_slider = HSlider.new()
 	_volume_slider.min_value = 0
 	_volume_slider.max_value = 100
 	_volume_slider.value = 100
+	_volume_slider.custom_minimum_size = Vector2(0, 24)
 	_volume_slider.value_changed.connect(func(v: float): set_volume(v / 100.0))
-	box.add_child(_volume_slider)
+	col.add_child(_volume_slider)
 	_warp_check = CheckBox.new()
 	_warp_check.text = "화면 곡면 효과 (CRT)"
 	_warp_check.button_pressed = true
 	_warp_check.toggled.connect(set_warp)
-	box.add_child(_warp_check)
+	col.add_child(_warp_check)
+	var buttons := HBoxContainer.new()
+	buttons.alignment = BoxContainer.ALIGNMENT_END
 	var close := Button.new()
 	close.text = "닫기 (ESC)"
+	close.custom_minimum_size = Vector2(120, 0)
 	close.pressed.connect(toggle_menu)
-	box.add_child(close)
-	_menu.add_child(box)
+	buttons.add_child(close)
+	col.add_child(buttons)
+	pad.add_child(col)
+	shell.add_child(pad)
+	box.add_child(shell)
+	center.add_child(box)
+	_menu.add_child(center)
 	add_child(_menu)
+
+func _menu_titlebar() -> Control:
+	var bar := Panel.new()
+	bar.add_theme_stylebox_override("panel", NuriTheme.titlebar_style(true))
+	bar.custom_minimum_size = Vector2(0, 26)
+	var title := Label.new()
+	title.text = "시스템 설정"
+	title.add_theme_font_size_override("font_size", 15)
+	title.add_theme_color_override("font_color", Color.WHITE)
+	title.position = Vector2(9, 3)
+	bar.add_child(title)
+	return bar
 
 func toggle_menu() -> void:
 	_menu.visible = not _menu.visible

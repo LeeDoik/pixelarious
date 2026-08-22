@@ -47,3 +47,40 @@ func test_validator_rejects_missing_sections() -> void:
 	var db: Node = auto_free(CDB.new())
 	var errors: Array = db.validate({"fs": {"nodes": []}})
 	assert_array(errors).is_not_empty()
+
+## 성진은 유서에 "같은 글 마이홈 비밀글 17번에도 올려놓았음"이라고 쓴다.
+## 두 사본이 갈라지면 퍼즐3의 보상(관문까지 가서 얻는 증거)이 조용히 깨진다 —
+## 한쪽만 고치는 사고는 눈으로는 안 잡힌다. 둘 다 가져야 하는 사실을 목록으로 못 박는다.
+func test_the_will_and_its_web_copy_carry_the_same_evidence() -> void:
+	var db := _make()
+	var will: String = String(db.doc("doc:diary_final")["body"])
+	var page: Dictionary = db.web_page("myhome.nurinet.co.kr/sj2002/diary/17")
+	var copy: String = String(page.get("body", ""))
+	assert_str(copy).is_not_empty()
+	for fact in ["가천분교", "4862", "흰 건물 두 동", "진부"]:
+		assert_str(will).override_failure_message(
+			"유서에 '%s'가 없다" % fact).contains(fact)
+		assert_str(copy).override_failure_message(
+			"diary/17 사본에 '%s'가 없다 — 유서만 고쳐졌다" % fact).contains(fact)
+
+## 성진은 8월 수련회 뒤로 수련원에 간 적이 없다. 11월 1일 메모가 "앞 글자를 못 봤다"고
+## 써 둔 간판을 다음날 유서가 "이번엔 똑똑히 봤다"고 하면 없는 방문이 생긴다.
+func test_the_will_does_not_claim_a_second_visit() -> void:
+	var db := _make()
+	var will: String = String(db.doc("doc:diary_final")["body"])
+	assert_str(will).override_failure_message(
+		"유서가 간판을 다시 봤다고 말한다 — 코퍼스 어디에도 두 번째 방문이 없다"
+	).not_contains("간판을 이번엔")
+
+## 이미지 노드가 가리키는 파일이 실제로 있어야 한다 — 탐색기에서 열면 빈 창이 된다
+func test_every_image_node_has_its_asset() -> void:
+	var nodes: Array = JSON.parse_string(
+		FileAccess.get_file_as_string("res://content/fs.json"))["nodes"]
+	var seen := 0
+	for n in nodes:
+		if String(n.get("type", "")) != "image":
+			continue
+		seen += 1
+		assert_bool(FileAccess.file_exists(String(n.get("image", "")))).override_failure_message(
+			"%s의 이미지 파일이 없다: %s" % [n.get("name"), n.get("image")]).is_true()
+	assert_int(seen).is_equal(9)   # 기존 5장 + 필사 3장 + 서원문

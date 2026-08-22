@@ -1,4 +1,4 @@
-import { getGames } from '@/lib/games'
+import { getVisibleGames } from '@/lib/games'
 import { getProfile } from '@/lib/profile'
 import { PaletteSwap } from '@/components/PaletteSwap'
 import { Hero } from '@/components/Hero'
@@ -8,7 +8,7 @@ import { Player1 } from '@/components/Player1'
 import { Footer } from '@/components/Footer'
 
 export default function Home() {
-  const games = getGames()
+  const games = getVisibleGames()
   return (
     <>
       <PaletteSwap />

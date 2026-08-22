@@ -36,8 +36,27 @@
   "n03": {
    "from": "seulgi",
    "text": "주웠다고요..\n어디서요",
-   "next": "n04",
-   "delay_ms": 1400
+   "delay_ms": 1400,
+   "choices": [
+    {
+     "text": "아파트 뒤 재활용 수거장에서요",
+     "next": "n04",
+     "set": [
+      "pickup_told"
+     ]
+    },
+    {
+     "text": "고물상에 쌓여 있던 걸 얻었어요",
+     "next": "n04",
+     "set": [
+      "pickup_told"
+     ]
+    },
+    {
+     "text": "(어디서 주웠는지는 말하지 않는다)",
+     "next": "n04"
+    }
+   ]
   },
   "n04": {
    "from": "seulgi",
@@ -390,6 +409,11 @@
     {
      "text": "잠깐만요, 하나만 더 볼게요",
      "next": "g4m"
+    },
+    {
+     "text": "1월 31일 새벽에 누가 이 컴퓨터를 썼어요",
+     "next": "iq1",
+     "require": "intruder_found"
     }
    ]
   },
@@ -410,6 +434,11 @@
      "set": [
       "ending_start"
      ]
+    },
+    {
+     "text": "1월 31일 새벽에 누가 이 컴퓨터를 썼어요",
+     "next": "iq1",
+     "require": "intruder_found"
     }
    ]
   },
@@ -428,6 +457,48 @@
   "g7": {
    "from": "sys",
    "text": "슬기님이 접속을 종료했습니다."
+  },
+  "iq1": {
+   "from": "seulgi",
+   "text": "1월 31일이요?\n오빠 마지막 접속은 11월 2일이에요. 석 달이나 뒤잖아요.",
+   "next": "iq2",
+   "delay_ms": 1600
+  },
+  "iq2": {
+   "from": "seulgi",
+   "text": "…나 29일에 방명록에 글 썼어요.\n컴퓨터만 찾으면 다 나온다고.",
+   "next": "iq3",
+   "delay_ms": 1800
+  },
+  "iq3": {
+   "from": "seulgi",
+   "text": "그 사람들이 그걸 보고 온 거네요.\n보고, 지우고, 버린 거네요.\n…내가 쓴 글 때문에.",
+   "next": "iq4",
+   "delay_ms": 2000
+  },
+  "iq4": {
+   "from": "seulgi",
+   "text": "아니다. 그 글 때문에 오빠 컴퓨터가 나한테까지 온 거예요.\n그 문서도 같이 인쇄해 주세요. 날짜가 박혀 있잖아요.",
+   "choices": [
+    {
+     "text": "인쇄해서 경찰에 가세요",
+     "next": "g5a",
+     "set": [
+      "ending_start"
+     ]
+    },
+    {
+     "text": "원본 그대로 보내드릴게요",
+     "next": "g5b",
+     "set": [
+      "ending_start"
+     ]
+    },
+    {
+     "text": "잠깐만요, 하나만 더 볼게요",
+     "next": "g4m"
+    }
+   ]
   }
  },
  "logs": [

@@ -13,5 +13,6 @@
     "PC"
   ],
   "coverScene": "cave",
-  "playPath": "/games/it-sleeps-below/index.html"
+  "playPath": "/games/it-sleeps-below/index.html",
+  "hidden": true
 }

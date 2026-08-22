@@ -12,6 +12,12 @@ export interface Game {
   coverScene: CoverScene
   coverImage?: string
   playPath: string | null
+  /** Keeps the cartridge out of the public lineup. The record and its /play
+   *  route stay intact — this only hides it from the listing. */
+  hidden?: boolean
+  /** Built for mouse/keyboard. On touch devices the PLAY button first shows
+   *  a notice recommending a PC — the player can still continue. */
+  pcRecommended?: boolean
 }
 
 export const GAMES_DIR = path.join(process.cwd(), 'content', 'games')
@@ -40,6 +46,9 @@ export function validate(raw: Record<string, unknown>, file: string): Game {
     const abs = path.join(process.cwd(), 'public', raw.playPath)
     if (!fs.existsSync(abs)) fail(`playPath file missing: ${raw.playPath}`)
   }
+  if (raw.hidden !== undefined && typeof raw.hidden !== 'boolean') fail('hidden must be a boolean')
+  if (raw.pcRecommended !== undefined && typeof raw.pcRecommended !== 'boolean')
+    fail('pcRecommended must be a boolean')
   return raw as unknown as Game
 }
 
@@ -54,6 +63,12 @@ export function getGames(): Game[] {
     seen.add(g.slug)
   }
   return games.sort((a, b) => a.order - b.order)
+}
+
+/** The lineup the site shows. Hidden cartridges stay in the registry — the
+ *  editor and /play still see them — they just drop out of the listing. */
+export function getVisibleGames(): Game[] {
+  return getGames().filter((g) => !g.hidden)
 }
 
 export function getGame(slug: string): Game | undefined {

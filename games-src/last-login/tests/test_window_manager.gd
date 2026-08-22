@@ -145,3 +145,68 @@ func test_window_resize_left_edge_moves_and_resizes() -> void:
 	w._apply_resize(Vector2(-20, 0))
 	assert_float(w.position.x + w.size.x).is_equal_approx(right_edge, 0.5)  # 오른쪽 변은 고정
 	assert_bool(w.position.x < 60.0).is_true()
+
+func test_edge_cursor_matches_drag_direction() -> void:
+	# 커서 모양은 실제 끌리는 방향과 붙어 있어야 한다. 특히 대각선 둘을 맞바꾸면
+	# 커서가 드래그 방향과 반대로 기울어지는데, 눈으로만 보면 놓치기 쉽다.
+	var wm := _make()
+	wm.size = Vector2(1024, 732)
+	wm.open_app("memo")
+	var w: OSWindow = wm.get_child(wm.get_child_count() - 1)
+	var mid := w.size * 0.5
+	var edge := w.RESIZE_MARGIN * 0.5
+	var cases := {
+		Vector2(edge, mid.y): Control.CURSOR_HSIZE,                      # 왼쪽 변
+		Vector2(w.size.x - edge, mid.y): Control.CURSOR_HSIZE,           # 오른쪽 변
+		Vector2(mid.x, w.size.y - edge): Control.CURSOR_VSIZE,           # 아래 변
+		Vector2(edge, w.size.y - edge): Control.CURSOR_BDIAGSIZE,        # 좌하 모서리 = "/"
+		Vector2(w.size.x - edge, w.size.y - edge): Control.CURSOR_FDIAGSIZE,  # 우하 모서리 = "\"
+		mid: Control.CURSOR_ARROW,                                       # 본체 안쪽
+	}
+	for point in cases:
+		w._update_resize_cursor(w._zone_at(point))
+		assert_int(w.mouse_default_cursor_shape).override_failure_message(
+			"wrong cursor at %s" % point).is_equal(cases[point])
+
+func test_maximize_fills_the_desktop_and_restores_exactly() -> void:
+	var wm := _make()
+	wm.size = Vector2(1024, 732)
+	wm.open_app("memo")
+	var w: OSWindow = wm.get_child(wm.get_child_count() - 1)
+	var before := Rect2(w.position, w.size)
+	w.toggle_maximize()
+	assert_bool(w.is_maximized()).is_true()
+	assert_bool(w.position.is_equal_approx(Vector2.ZERO)).is_true()
+	assert_bool(w.size.is_equal_approx(wm.size)).is_true()
+	w.toggle_maximize()
+	assert_bool(w.is_maximized()).is_false()
+	assert_bool(w.position.is_equal_approx(before.position)).is_true()
+	assert_bool(w.size.is_equal_approx(before.size)).is_true()
+
+func test_maximized_window_does_not_offer_resize_edges() -> void:
+	# 최대화된 창의 가장자리가 계속 잡히면 화면 밖으로 끌려 나간다
+	var wm := _make()
+	wm.size = Vector2(1024, 732)
+	wm.open_app("memo")
+	var w: OSWindow = wm.get_child(wm.get_child_count() - 1)
+	w.toggle_maximize()
+	var e := InputEventMouseMotion.new()
+	e.position = Vector2(w.size.x - 2.0, w.size.y - 2.0)
+	w._on_body_input(e)
+	assert_int(w.mouse_default_cursor_shape).is_equal(Control.CURSOR_ARROW)
+
+func test_taskbar_knows_which_window_is_in_front() -> void:
+	var wm := _make()
+	wm.open_app("memo")
+	wm.open_app("mail")
+	assert_str(wm.active_id()).is_equal("mail")
+	wm.focus_app("memo")
+	assert_str(wm.active_id()).is_equal("memo")
+	wm.toggle_minimize("memo")           # 최소화된 창은 활성이 아니다
+	assert_str(wm.active_id()).is_equal("mail")
+
+func test_window_icon_is_remembered_for_the_taskbar() -> void:
+	var wm := _make()
+	wm.register_app("photo", "사진", func() -> Control: return Label.new(), "res://assets/img/icons/photo.png")
+	wm.open_app("photo")
+	assert_str(wm.window_icon("photo")).is_equal("res://assets/img/icons/photo.png")

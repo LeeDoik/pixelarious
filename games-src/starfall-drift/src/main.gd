@@ -86,7 +86,8 @@ func _process(delta: float) -> void:
 	_check_fall_death()
 	var height := _height()
 	GameState.update_rise(height)
-	hud.set_altitude(Scoring.height_score(height))
+	# 미터 표시는 순수 고도가 아니라 점수(최고 고도 + 보너스) — 게임오버 SCORE와 항상 일치해야 한다.
+	hud.set_altitude(GameState.score())
 	hud.set_combo(GameState.combo)
 
 func _handle_capture() -> void:
