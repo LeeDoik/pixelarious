@@ -75,6 +75,16 @@ describe('profile record', () => {
     expect(read().intro).toBe(profile.intro)
   })
 
+  it('keeps a donation address on the round trip', () => {
+    updateProfile({ donate: 'https://toon.at/donate/pixelarious' }, file)
+    expect(read().donate).toBe('https://toon.at/donate/pixelarious')
+  })
+
+  it('rejects a blank donation address rather than shipping a dead coin slot', () => {
+    expect(() => updateProfile({ donate: '  ' }, file)).toThrow(/donate/)
+    expect(read().donate).toBeUndefined()
+  })
+
   it('rejects a blank badge', () => {
     expect(() => updateProfile({ badges: ['OK', ' '] }, file)).toThrow(/badges/)
   })
