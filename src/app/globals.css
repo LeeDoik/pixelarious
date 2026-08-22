@@ -650,6 +650,13 @@ body.dmg .console-screen{background:var(--bg-deep)}
 }
 .acceptor-credit-n{color:var(--gold)}
 body.dmg .acceptor-credit-n{color:var(--text)}
+/* 팝업이 막혔을 때만 뜬다 — 현재 페이지를 후원 페이지로 돌리지는 않는다 */
+.acceptor-blocked{
+  max-width:150px; text-align:center;
+  font-size:12px; line-height:1.5; color:var(--accent);
+  word-break:keep-all;
+}
+body.dmg .acceptor-blocked{color:var(--text)}
 
 /* ---- 동전 ----
    16x16 스프라이트를 정수배(4x)로 키운다. 배율이 정수가 아니면 픽셀 크기가

@@ -16,6 +16,10 @@ import { CoinFace } from './CoinFace'
  * 드래그로 넣었을 때는 pointerup 안에서 곧바로 window.open을 부른다. 애니메이션이
  * 끝나기를 기다렸다 열면 사용자 제스처가 끊겨 팝업 차단에 걸린다.
  *
+ * 후원은 언제나 새 창에서만 연다. 현재 탭을 후원 페이지로 돌리는 경로는 두지
+ * 않는다 — 보던 게임 페이지가 사라지면 안 된다. 팝업이 막히면 아무 데도 가지
+ * 않고 동전을 눌러 달라고 알린다(직접 클릭은 차단되지 않는다).
+ *
  * 후원 주소가 없으면 아무것도 그리지 않는다.
  */
 
@@ -30,6 +34,7 @@ export function CoinSlot({ href }: { href?: string }) {
   const [phase, setPhase] = useState<Phase>('idle')
   const [offset, setOffset] = useState({ x: 0, y: 0 })
   const [credit, setCredit] = useState(0)
+  const [blocked, setBlocked] = useState(false)
   const slitRef = useRef<HTMLSpanElement>(null)
   const start = useRef({ x: 0, y: 0 })
   /** 동전이 포인터를 따라다니므로 드래그 후에도 앵커 위에서 click이 발생한다.
@@ -90,9 +95,9 @@ export function CoinSlot({ href }: { href?: string }) {
     setPhase('accepted')
     setCredit((n) => Math.min(n + 1, 99))
 
-    // 제스처가 살아 있는 지금 연다
+    // 제스처가 살아 있는 지금, 새 창으로만 연다. 막히면 현재 페이지는 그대로 둔다
     const win = window.open(href, '_blank', 'noopener,noreferrer')
-    if (!win) window.location.href = href
+    setBlocked(!win)
 
     if (timer.current) clearTimeout(timer.current)
     timer.current = setTimeout(() => {
@@ -135,6 +140,11 @@ export function CoinSlot({ href }: { href?: string }) {
           <span className="acceptor-credit">
             CREDIT <span className="acceptor-credit-n">{String(credit).padStart(2, '0')}</span>
           </span>
+          {blocked && (
+            <span className="acceptor-blocked" role="status">
+              팝업이 막혔습니다 — 동전을 눌러 주세요
+            </span>
+          )}
         </div>
         <div className="acceptor-face">
           <span className="acceptor-screw acceptor-screw-tl" aria-hidden="true" />

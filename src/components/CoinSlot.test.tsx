@@ -109,23 +109,21 @@ describe('CoinSlot', () => {
     expect(openSpy).not.toHaveBeenCalled()
   })
 
-  it('팝업이 막히면 같은 탭으로라도 보낸다', () => {
+  it('팝업이 막혀도 현재 페이지는 그대로 둔다 — 후원은 새 창에서만 연다', () => {
     openSpy.mockReturnValue(null)
     const { container } = render(<CoinSlot href={HREF} />)
     stubLayout(container)
-    const assign = vi.fn()
-    Object.defineProperty(window, 'location', {
-      configurable: true,
-      value: {
-        get href() {
-          return ''
-        },
-        set href(v: string) {
-          assign(v)
-        },
-      },
-    })
+    const before = window.location.href
     drag(screen.getByRole('link'), { x: SLIT.left + 6, y: SLIT.top + 40 })
-    expect(assign).toHaveBeenCalledWith(HREF)
+
+    expect(window.location.href).toBe(before)
+    expect(screen.getByText(/팝업이 막혔습니다/)).toBeDefined()
+  })
+
+  it('팝업이 열리면 안내는 뜨지 않는다', () => {
+    const { container } = render(<CoinSlot href={HREF} />)
+    stubLayout(container)
+    drag(screen.getByRole('link'), { x: SLIT.left + 6, y: SLIT.top + 40 })
+    expect(screen.queryByText(/팝업이 막혔습니다/)).toBeNull()
   })
 })
