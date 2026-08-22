@@ -20,6 +20,11 @@ const ROOT_LABEL := "내 컴퓨터"
 const DRIVE := "C:"
 const GRID_COLUMN_W := 148.0
 
+## 보기 드롭다운 항목 id. 2번은 구분선이라 비어 있다.
+const MENU_ICONS := 0
+const MENU_DETAILS := 1
+const MENU_HIDDEN := 3
+
 var _cwd := "mydocs"
 var _selected := ""          # 보기를 바꿔도 유지할 선택
 var _pending_locked := ""      # 암호 대기 중인 폴더 id
@@ -34,8 +39,7 @@ var _status_left: Label
 var _status_right: Label
 var _back_btn: Button
 var _up_btn: Button
-var _icons_btn: Button
-var _details_btn: Button
+var _view_btn: MenuButton
 var _dialog: OSDialog
 var _tex_cache: Dictionary = {}
 
@@ -69,12 +73,23 @@ func _build_toolbar() -> Control:
 	row.add_child(_back_btn)
 	row.add_child(_up_btn)
 	row.add_child(VSeparator.new())
-	_icons_btn = _tool_button("아이콘", ICON["view_icons"], set_view_mode.bind(ViewMode.ICONS))
-	_details_btn = _tool_button("자세히", ICON["view_details"], set_view_mode.bind(ViewMode.DETAILS))
-	_icons_btn.toggle_mode = true
-	_details_btn.toggle_mode = true
-	row.add_child(_icons_btn)
-	row.add_child(_details_btn)
+	_view_btn = MenuButton.new()
+	_view_btn.theme_type_variation = "NuriFlat"
+	_view_btn.text = "보기"
+	_view_btn.focus_mode = Control.FOCUS_NONE
+	_view_btn.add_theme_font_size_override("font_size", 14)
+	var vtex := _texture(ICON["view_details"])
+	if vtex != null:
+		_view_btn.icon = vtex
+	var menu := _view_btn.get_popup()
+	menu.add_theme_font_size_override("font_size", 14)
+	menu.add_radio_check_item("큰 아이콘", MENU_ICONS)
+	menu.add_radio_check_item("자세히", MENU_DETAILS)
+	menu.add_separator()
+	menu.add_check_item("숨긴 파일 보기", MENU_HIDDEN)
+	menu.id_pressed.connect(select_view_menu)
+	menu.about_to_popup.connect(sync_view_menu)
+	row.add_child(_view_btn)
 	bar.add_child(row)
 	return bar
 
@@ -177,13 +192,35 @@ func _build_status_bar() -> Control:
 
 # ── 보기 전환 ─────────────────────────────────────────────────────────────
 
+func view_menu() -> PopupMenu:
+	return _view_btn.get_popup()
+
+func select_view_menu(id: int) -> void:
+	match id:
+		MENU_ICONS:
+			set_view_mode(ViewMode.ICONS)
+		MENU_DETAILS:
+			set_view_mode(ViewMode.DETAILS)
+		MENU_HIDDEN:
+			if GameState.has_flag("view_hidden"):
+				GameState.clear_flag("view_hidden")
+			else:
+				GameState.set_flag("view_hidden")
+			_refresh()
+	sync_view_menu()
+
+func sync_view_menu() -> void:
+	var m := view_menu()
+	m.set_item_checked(m.get_item_index(MENU_ICONS), _view_mode == ViewMode.ICONS)
+	m.set_item_checked(m.get_item_index(MENU_DETAILS), _view_mode == ViewMode.DETAILS)
+	m.set_item_checked(m.get_item_index(MENU_HIDDEN), GameState.has_flag("view_hidden"))
+
 func set_view_mode(mode: ViewMode) -> void:
 	_view_mode = mode
 	var icons := mode == ViewMode.ICONS
 	_list.visible = icons
 	_tree.visible = not icons
-	_icons_btn.button_pressed = icons
-	_details_btn.button_pressed = not icons
+	sync_view_menu()
 	if icons:
 		_relayout_grid()
 	_apply_selection()

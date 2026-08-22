@@ -154,3 +154,30 @@ func test_status_bar_counts_hidden_files_the_list_does_not_show() -> void:
 	assert_bool(e.open_folder("locked")).is_true()
 	assert_str(e.status_text()).is_equal("개체 6개")
 	assert_int(e.item_count()).is_equal(5)
+
+func test_view_menu_toggles_hidden_files() -> void:
+	var e := _make()
+	assert_bool(e.open_folder("locked")).is_false()
+	assert_bool(e.submit_password("20020316")).is_true()
+	assert_bool(e.open_folder("locked")).is_true()
+	assert_int(e.item_count()).is_equal(5)
+	e.select_view_menu(e.MENU_HIDDEN)
+	assert_bool(GameState.has_flag("view_hidden")).is_true()
+	assert_int(e.item_count()).is_equal(6)
+	e.select_view_menu(e.MENU_HIDDEN)
+	assert_bool(GameState.has_flag("view_hidden")).is_false()
+	assert_int(e.item_count()).is_equal(5)
+
+func test_view_menu_still_switches_icon_and_detail_modes() -> void:
+	var e := _make()
+	e.select_view_menu(e.MENU_DETAILS)
+	assert_int(e.view_mode()).is_equal(e.ViewMode.DETAILS)
+	e.select_view_menu(e.MENU_ICONS)
+	assert_int(e.view_mode()).is_equal(e.ViewMode.ICONS)
+
+func test_view_menu_checkbox_reflects_flag_on_open() -> void:
+	var e := _make()
+	e.select_view_menu(e.MENU_HIDDEN)
+	var m: PopupMenu = e.view_menu()
+	e.sync_view_menu()
+	assert_bool(m.is_item_checked(m.get_item_index(e.MENU_HIDDEN))).is_true()
