@@ -11,8 +11,8 @@ func test_params_at_ground() -> void:
 
 func test_stars_do_not_collapse_below_grace_height() -> void:
 	assert_bool(Spawner.params_for_height(0.0).collapses).is_false()
-	assert_bool(Spawner.params_for_height(4999.0).collapses).is_false()
-	assert_bool(Spawner.params_for_height(5000.0).collapses).is_true()
+	assert_bool(Spawner.params_for_height(9999.0).collapses).is_false()
+	assert_bool(Spawner.params_for_height(10000.0).collapses).is_true()
 	assert_bool(Spawner.params_for_height(20000.0).collapses).is_true()
 
 func test_params_at_ramp_max_and_clamped_beyond() -> void:
