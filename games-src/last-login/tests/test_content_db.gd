@@ -84,3 +84,23 @@ func test_every_image_node_has_its_asset() -> void:
 		assert_bool(FileAccess.file_exists(String(n.get("image", "")))).override_failure_message(
 			"%s의 이미지 파일이 없다: %s" % [n.get("name"), n.get("image")]).is_true()
 	assert_int(seen).is_equal(9)   # 기존 5장 + 필사 3장 + 서원문
+
+func test_bowl_record_is_hidden_inside_locked_folder() -> void:
+	var db := _make()
+	var n: Dictionary = db.fs_node("l_bowl")
+	assert_dict(n).is_not_empty()
+	assert_str(String(n.get("parent", ""))).is_equal("locked")
+	assert_bool(n.get("hidden", false)).is_true()
+	assert_str(String(n.get("cid", ""))).is_equal("doc:bowl_record")
+
+func test_bowl_record_body_has_no_observation_paragraph() -> void:
+	## 제출본에만 있는 문단이다 — 사본에 있으면 퍼즐6이 성립하지 않는다
+	var db := _make()
+	var body := String(db.doc("doc:bowl_record").get("body", ""))
+	assert_str(body).is_not_empty()
+	assert_str(body).not_contains("○○ 님은")
+
+func test_evidence_memo_points_at_the_hidden_file() -> void:
+	var db := _make()
+	var body := String(db.doc("doc:evidence_memo").get("body", ""))
+	assert_str(body).contains("안 보이게 해놨다")

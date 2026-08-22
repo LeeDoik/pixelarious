@@ -37,6 +37,7 @@
   {"id": "l_evidence", "parent": "locked", "name": "기억나는대로.txt", "type": "doc", "cid": "doc:evidence_memo", "size": 1185, "mtime": "2002-11-01 03:48"},
   {"id": "l_debt", "parent": "locked", "name": "빚 정리.txt", "type": "doc", "cid": "doc:debt_note", "size": 498, "mtime": "2002-11-01 04:02"},
   {"id": "l_letter", "parent": "locked", "name": "슬기에게(부치지못함).txt", "type": "doc", "cid": "doc:letter_unsent", "size": 1202, "mtime": "2002-11-01 04:16"},
+  {"id": "l_bowl", "parent": "locked", "name": "그릇기록_0803.txt", "type": "doc", "cid": "doc:bowl_record", "hidden": true, "size": 1136, "mtime": "2002-08-03 23:41"},
 
   {"id": "t1", "parent": "trash", "name": "backup_1102.txt", "type": "doc", "cid": "doc:diary_final", "record": true, "size": 1454, "mtime": "2002-11-02 23:38", "origin": "mydocs", "deleted": "2002-11-02 23:40"},
   {"id": "t2", "parent": "trash", "name": "backup_0930.txt", "type": "doc", "cid": "doc:corrupt_0930", "corrupt": true, "size": 0, "mtime": "2002-09-30 23:58", "origin": "mydocs", "deleted": "2002-10-01 00:03", "error": "0x0000001E"},

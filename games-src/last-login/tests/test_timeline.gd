@@ -30,6 +30,7 @@ const WRITTEN := {
 	"doc:retreat_review": "2002-08-05",
 	"doc:retreat_notes": "",
 	"doc:vow": "2002-09-30",              # 새빛력 4년 9월 30일 = 2002-09-30
+	"doc:bowl_record": "2002-08-03",      # "2002. 8. 3 (토) 수련회 셋째 날 밤"
 	"doc:donation_ledger": "2002-11-01",  # 표 마지막 행
 	"doc:quit_plan": "2002-11-01",
 	"doc:evidence_memo": "2002-11-01",    # "(11. 1 밤에 적음)"
