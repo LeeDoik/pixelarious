@@ -3,7 +3,8 @@
 import { useState } from 'react'
 import type { Game } from '@/lib/games'
 import type { Profile } from '@/lib/profile'
-import { Cartridge } from './Cartridge'
+import { CartridgeArt } from './CartridgeArt'
+import { GameDetail } from './GameDetail'
 import { Player1 } from './Player1'
 import { PaletteSwap } from './PaletteSwap'
 import { EditorGameForm, parseTags, toGameDraft, type GameDraft } from './EditorGameForm'
@@ -59,6 +60,18 @@ export function EditorClient({ games, profile }: { games: Game[]; profile: Profi
 
   const game = target.kind === 'game' ? games.find((g) => g.slug === target.slug) : undefined
   const gameDraft = target.kind === 'game' ? gameDrafts[target.slug] : undefined
+
+  const previewGame =
+    game && gameDraft
+      ? {
+          ...game,
+          title: gameDraft.title.trim() || '(제목 없음)',
+          subtitle: gameDraft.subtitle.trim() || undefined,
+          description: gameDraft.description.trim() || '(설명 없음)',
+          tags: parseTags(gameDraft.tags),
+          coverScene: gameDraft.coverScene,
+        }
+      : undefined
 
   const dirty =
     target.kind === 'profile'
@@ -205,20 +218,11 @@ export function EditorClient({ games, profile }: { games: Game[]; profile: Profi
                 badges: parseBadges(profileDraft.badges),
               }}
             />
-          ) : game && gameDraft ? (
-            <div className="carts">
-              <Cartridge
-                game={{
-                  ...game,
-                  title: gameDraft.title.trim() || '(제목 없음)',
-                  subtitle: gameDraft.subtitle.trim() || undefined,
-                  description: gameDraft.description.trim() || '(설명 없음)',
-                  tags: parseTags(gameDraft.tags),
-                  coverScene: gameDraft.coverScene,
-                }}
-                index={games.findIndex((g) => g.slug === game.slug)}
-                defaultOpen
-              />
+          ) : previewGame ? (
+            <div className="pkg pkg-preview">
+              <CartridgeArt game={previewGame} size="package">
+                <GameDetail game={previewGame} titleId={`pkg-title-${previewGame.slug}`} />
+              </CartridgeArt>
             </div>
           ) : null}
 

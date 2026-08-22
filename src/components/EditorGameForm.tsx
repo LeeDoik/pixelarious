@@ -64,7 +64,7 @@ export function EditorGameForm({
           onChange={(e) => onChange({ description: e.target.value })}
         />
         <p className={styles.hint}>
-          엔터로 줄을 나누면 배너에도 그대로 나옵니다. 빈 줄을 넣으면 문단이 갈라집니다.
+          엔터로 줄을 나누면 팝업에도 그대로 나옵니다. 빈 줄을 넣으면 문단이 갈라집니다.
         </p>
       </label>
 
