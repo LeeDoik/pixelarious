@@ -84,7 +84,7 @@ func test_orbiting_below_kill_line_also_dies() -> void:
 	await runner.simulate_frames(2)
 	var main = runner.scene()
 	# 화면 아래 먼 곳의 별에 잡힌 상태를 만든다 — 공전 중이어도 킬라인 아래면 죽어야 한다
-	var below: Star = main._spawn_star("standard", Vector2(135.0, main.cam.position.y + 2000.0), 1.0)
+	var below: Star = main._spawn_star("standard", Vector2(135.0, main.cam.position.y + 2000.0), 1.0, true)
 	main.player.attach_to(below, below.global_position + Vector2(below.orbit_r, 0), Vector2(0, 10))
 	await runner.simulate_frames(5)
 	assert_int(GameState.phase).is_equal(GameState.Phase.GAME_OVER)

@@ -36,12 +36,14 @@ func _ready() -> void:
 	add_child(_cracks)
 	add_child(_debris)
 
-func setup(t: String, collapse_mult: float) -> void:
+func setup(t: String, collapse_mult: float, collapses: bool = true) -> void:
 	type = t
 	var d: Dictionary = Tuning.STAR_TYPES[t]
 	orbit_r = d.orbit_r
 	ang_vel = d.ang_vel
-	collapse_time = d.collapse / collapse_mult
+	# 도입부(Tuning.COLLAPSE_GRACE_H 아래)의 별은 영원히 버틴다 — 게이지가 차지 않으므로
+	# 균열·흔들림·경고음도 함께 꺼진다.
+	collapse_time = d.collapse / collapse_mult if collapses else INF
 	_body.texture = load("res://assets/img/%s.png" % d.sprite)
 	_cracks.texture = load("res://assets/img/cracks.png")
 	_cracks.scale = Vector2.ONE * (d.size / 32.0)

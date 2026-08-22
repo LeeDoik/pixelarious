@@ -51,7 +51,7 @@ func _view_h() -> float:
 
 func _build_world() -> void:
 	start_y = Tuning.VIEW_H - Tuning.FIRST_STAR_OFFSET_Y
-	var first := _spawn_star("giant", Vector2(Tuning.VIEW_W / 2.0, start_y), 1.0)
+	var first := _spawn_star("giant", Vector2(Tuning.VIEW_W / 2.0, start_y), 1.0, Spawner.params_for_height(0.0).collapses)
 	top_star = {"type": "giant", "pos": first.global_position}
 	player = Player.new()
 	player.process_mode = Node.PROCESS_MODE_PAUSABLE
@@ -64,10 +64,10 @@ func _build_world() -> void:
 	player.attach_to(first, first.global_position + Vector2(first.orbit_r, 0), Vector2(0, 10))
 	cam_target_y = cam.position.y
 
-func _spawn_star(type: String, pos: Vector2, collapse_mult: float) -> Star:
+func _spawn_star(type: String, pos: Vector2, collapse_mult: float, collapses: bool) -> Star:
 	var s := Star.new()
 	stars_root.add_child(s)
-	s.setup(type, collapse_mult)
+	s.setup(type, collapse_mult, collapses)
 	s.global_position = pos
 	s.add_to_group("stars")
 	s.collapsed.connect(_on_star_collapsed)
@@ -115,7 +115,7 @@ func _stream_spawn() -> void:
 		var h: float = start_y - (top_star.pos as Vector2).y
 		var next := Spawner.next_star(top_star, h, rng)
 		var p := Spawner.params_for_height(h)
-		_spawn_star(next.type, next.pos, p.collapse_mult)
+		_spawn_star(next.type, next.pos, p.collapse_mult, p.collapses)
 		if rng.randf() < p.asteroid_p:
 			var ast := Asteroid.new()
 			asteroids_root.add_child(ast)
