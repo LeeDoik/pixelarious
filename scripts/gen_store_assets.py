@@ -105,10 +105,21 @@ def panel_mockup(capture: Image.Image, panel_w=300, panel_h=620):
 
     # 게임 영역: 캡처를 폭에 맞춰 니어리스트 확대/축소
     game_h = panel_h - header_h - footer_h
+    # 픽셀 아트라 배율이 중요하다: 확대는 니어리스트, 축소는 되도록 1/k 정수배(BOX 평균)로
+    # 줄여 픽셀 격자를 유지하고, 정수배가 너무 작아질 때만 임의 배율로 맞춘다.
     fitted = capture.convert("RGBA")
     scale = min(panel_w / fitted.width, game_h / fitted.height)
-    size = (max(1, int(fitted.width * scale)), max(1, int(fitted.height * scale)))
-    fitted = fitted.resize(size, Image.NEAREST if scale >= 1 else Image.LANCZOS)
+    if scale >= 1:
+        size = (int(fitted.width * scale), int(fitted.height * scale))
+        fitted = fitted.resize(size, Image.NEAREST)
+    else:
+        k = int(1 / scale) + (0 if (1 / scale).is_integer() else 1)
+        if fitted.width / k >= panel_w * 0.85:
+            fitted = fitted.resize((fitted.width // k, fitted.height // k), Image.BOX)
+        else:
+            size = (max(1, int(fitted.width * scale)), max(1, int(fitted.height * scale)))
+            fitted = fitted.resize(size, Image.BOX)
+    size = fitted.size
     im.alpha_composite(fitted, ((panel_w - size[0]) // 2, header_h + (game_h - size[1]) // 2))
 
     # 확장 하단 바
