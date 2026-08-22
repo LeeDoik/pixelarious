@@ -105,7 +105,7 @@ export function Cartridge({
               ! NOTICE !
             </h4>
             <p className="pc-notice-body">
-              이 게임은 마우스 조작을 전제로 만들어졌습니다.
+              이 게임은 마우스 및 키보드 조작을 전제로 만들어졌습니다.
               <br />
               PC 환경에서 플레이하시는 것을 권장합니다.
             </p>

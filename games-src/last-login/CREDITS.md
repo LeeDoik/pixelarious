@@ -5,6 +5,8 @@
   — SIL Open Font License 1.1. 예약 글꼴 이름: "Neo둥근모", "NeoDunggeunmo".
   누리넷(브라우저) 본문 전용. web.json 페이지들이 한글 2칸 / ASCII 1칸 격자로 짜여 있는데
   Galmuri는 ASCII 최대폭이 한글의 0.8배라 표가 어긋난다. 이 폰트는 모든 크기에서 정확히 2:1이다.
+- Font: 나눔손글씨 가람연꽃 (네이버 클로바 나눔손글씨) — SIL Open Font License 1.1.
+  필사 제출본 사진(scripts/gen_pilsa_photos.py)에만 래스터로 쓰인다 — 폰트 파일은 게임에 실리지 않는다.
 - Engine: Godot Engine — MIT License
 - 사운드: 전량 자체 신디사이징 (scripts/gen_audio.py) — 표준 라이브러리만 사용, 라이선스 청정
 - 클릭·키보드 효과음: 사용자 제공 녹음을 분할·정규화 (scripts/split_clicks.py, 원본 scripts/audio_src/) — 입력마다 랜덤 변주 재생

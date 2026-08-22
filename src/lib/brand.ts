@@ -93,6 +93,10 @@ export interface MarkOptions {
 /**
  * 마크를 캔버스의 지정 영역에 그린다. 프로필도 배너도 워터마크도 전부 이 함수 하나를 쓴다.
  * contentScale은 내용을 영역보다 작게 잡는 비율 — 원형 크롭에는 0.707(내접 정사각형)을 넘긴다.
+ *
+ * plate는 글자 뒤에 까는 칠흑 판이다. 스크린샷 위의 워터마크처럼 무엇이 깔릴지 모르는
+ * 자리에서는 이 판이 가독성을 보장하지만, 이미 어두운 배경 아트 위에서는 글자보다 훨씬
+ * 큰 검은 사각형이 남아 이미지가 깨진 것처럼 보인다.
  */
 export function drawMarkInto(
   ctx: CanvasRenderingContext2D,
@@ -101,9 +105,12 @@ export function drawMarkInto(
   w: number,
   h: number,
   contentScale = 1,
+  plate = true,
 ): void {
-  ctx.fillStyle = BRAND.deep
-  ctx.fillRect(x, y, w, h)
+  if (plate) {
+    ctx.fillStyle = BRAND.deep
+    ctx.fillRect(x, y, w, h)
+  }
   const fontSize = pixelFontSize((Math.min(w, h) * contentScale) / 4.2)
   ctx.font = `${fontSize}px ${DISPLAY_FONT}`
   ctx.textBaseline = 'middle'
@@ -154,22 +161,130 @@ export const YT_SAFE = { w: 1546, h: 423 } as const
 export const SHORTS_SAFE_RATIO = 0.75
 
 /** 결정적 픽셀 별밭. 커버 아트와 같은 시드 계열을 쓴다. */
+/** 별 하나가 담당하는 캔버스 면적. 클수록 하늘이 성겨진다. */
+const STAR_AREA_PER_PIXEL = 26000
+
+/**
+ * 4x4 순서 디더 행렬(Bayer). 8색 팔레트에서 톤 전이를 만드는 유일한 방법이다 —
+ * 부드러운 그라데이션은 팔레트를 벗어나므로 쓸 수 없다.
+ */
+const BAYER4 = [
+  [0, 8, 2, 10],
+  [12, 4, 14, 6],
+  [3, 11, 1, 9],
+  [15, 7, 13, 5],
+]
+
+/** 로고나 문구가 올라갈 자리 — 여기엔 배경 요소를 두지 않는다. */
+export interface Rect {
+  x: number
+  y: number
+  w: number
+  h: number
+}
+
+function inside(rect: Rect, x: number, y: number, size: number): boolean {
+  return x + size > rect.x && x < rect.x + rect.w && y + size > rect.y && y < rect.y + rect.h
+}
+
+/**
+ * 2D 값 노이즈. 성긴 격자에 난수를 놓고 부드럽게 이어 붙여 0~1을 돌려준다.
+ * 선형 보간은 격자점마다 기울기가 꺾여 마름모 자국을 남기므로 smoothstep으로 잇는다.
+ */
+function noiseField(seed: number, gx: number, gy: number): (u: number, v: number) => number {
+  const r = rng(seed)
+  const grid: number[][] = []
+  for (let y = 0; y <= gy; y++) {
+    const row: number[] = []
+    for (let x = 0; x <= gx; x++) row.push(r())
+    grid.push(row)
+  }
+  const ease = (t: number) => t * t * (3 - 2 * t)
+  return (u, v) => {
+    const fx = Math.min(Math.max(u, 0), 1) * gx
+    const fy = Math.min(Math.max(v, 0), 1) * gy
+    const x0 = Math.min(Math.floor(fx), gx - 1)
+    const y0 = Math.min(Math.floor(fy), gy - 1)
+    const tx = ease(fx - x0)
+    const ty = ease(fy - y0)
+    const top = grid[y0][x0] + (grid[y0][x0 + 1] - grid[y0][x0]) * tx
+    const bot = grid[y0 + 1][x0] + (grid[y0 + 1][x0 + 1] - grid[y0 + 1][x0]) * tx
+    return top + (bot - top) * ty
+  }
+}
+
+/** 성운의 옅은 둘레가 짙은 속보다 얼마나 넓게 퍼지는가. 1이면 둘레가 없다. */
+const NEBULA_HALO = 1.9
+
+/**
+ * 디더 성운. shapeAt(u, v)이 성운이 앉을 자리를 0~1로 정하고 여기에 2D 노이즈를
+ * 곱해 뭉치고 흩어지게 한다. 세로 램프만 쓰면 밀도가 열과 무관해져서 Bayer 격자가
+ * 직조된 천처럼 드러나고, 띠가 시작되는 경계도 자로 그은 직선이 된다.
+ *
+ * 짙은 속은 surface, 그 둘레는 bg — 여덟 색으로 만들 수 있는 가장 부드러운 감쇠다.
+ * 배경색 위에 셀만 얹으므로 밀도가 0인 구간은 순회 비용도 들지 않는다.
+ */
+function drawNebula(
+  ctx: CanvasRenderingContext2D,
+  w: number,
+  h: number,
+  cell: number,
+  seed: number,
+  shapeAt: (u: number, v: number) => number,
+): void {
+  const cols = Math.ceil(w / cell)
+  const rows = Math.ceil(h / cell)
+  const noise = noiseField(seed, 7, 5)
+  // 셀마다 색을 갈아 끼우면 fillStyle이 수만 번 바뀐다. 톤마다 한 번씩 훑고,
+  // 옅은 둘레를 먼저 깐 뒤 짙은 속으로 덮는다.
+  for (const [color, gain] of [
+    [BRAND.bg, NEBULA_HALO],
+    [BRAND.surface, 1],
+  ] as const) {
+    ctx.fillStyle = color
+    for (let ry = 0; ry < rows; ry++) {
+      const v = rows > 1 ? ry / (rows - 1) : 0
+      const row = BAYER4[ry & 3]
+      for (let rx = 0; rx < cols; rx++) {
+        const shape = shapeAt(cols > 1 ? rx / (cols - 1) : 0, v)
+        if (shape <= 0) continue
+        // 노이즈를 0.3~1.3배로 쓴다. 0을 곱할 수 있게 두면 성운에 구멍이 뚫린다.
+        const density = Math.min(1, shape * (0.3 + noise(cols > 1 ? rx / (cols - 1) : 0, v)) * gain)
+        if (row[rx & 3] < density * 16) ctx.fillRect(rx * cell, ry * cell, cell, cell)
+      }
+    }
+  }
+}
+
+/**
+ * 별밭. avoid에 준 사각형들은 비워 둔다 — 로고와 문구가 앉을 자리에 별이 끼면
+ * 아무리 성겨도 지저분해 보인다.
+ */
 function drawStarfield(
   ctx: CanvasRenderingContext2D,
   w: number,
   h: number,
   unit: number,
   seed: number,
+  avoid: Rect[] = [],
 ): void {
   const r = rng(seed)
-  const count = Math.round((w * h) / 6000)
+  // 별은 배경 질감이지 주인공이 아니다. 밀도를 낮게 잡아야 로고가 묻히지 않는다 —
+  // 별 하나당 대략 160x160 픽셀을 차지한다.
+  const count = Math.round((w * h) / STAR_AREA_PER_PIXEL)
   for (let i = 0; i < count; i++) {
     const x = Math.floor(r() * w)
     const y = Math.floor(r() * h)
+    // 소수만 두 배 크기로 두어 밀도를 올리지 않고 원근감을 만든다.
+    const near = r() < 0.18
+    const size = near ? unit * 2 : unit
     // 금색은 커서 전용이다. 별에 쓰면 안전 영역 검사가 별까지 잡고,
     // 브랜드의 유일한 강조색이 배경 노이즈로 흩어진다.
-    ctx.fillStyle = r() < 0.35 ? BRAND.dim : BRAND.text
-    ctx.fillRect(x, y, unit * 2, unit * 2)
+    const color = near || r() < 0.6 ? BRAND.text : BRAND.dim
+    // 비워야 할 자리에 떨어졌으면 그냥 버린다. 밀어내면 경계에 별이 줄지어 선다.
+    if (avoid.some((rect) => inside(rect, x, y, size))) continue
+    ctx.fillStyle = color
+    ctx.fillRect(x, y, size, size)
   }
 }
 
@@ -180,17 +295,22 @@ export function drawYouTubeBanner(canvas: BrandCanvas): void {
   const H = canvas.height
   const unit = unitFor(W, H)
 
-  ctx.fillStyle = BRAND.deep
-  ctx.fillRect(0, 0, W, H)
-  drawStarfield(ctx, W, H, unit, 7)
-
   const left = Math.round((W - YT_SAFE.w) / 2)
   const top = Math.round((H - YT_SAFE.h) / 2)
+
+  ctx.fillStyle = BRAND.deep
+  ctx.fillRect(0, 0, W, H)
+  // 아래로 갈수록 짙어지는 성운. 하단 40%에서만 올라온다.
+  drawNebula(ctx, W, H, unit, 13, (_u, v) => (v < 0.6 ? 0 : ((v - 0.6) / 0.4) ** 1.4))
+  // 별은 안전 영역 바깥에만 둔다 — 가운데는 로고와 두 줄 문구가 들어갈 자리다.
+  drawStarfield(ctx, W, H, unit, 7, [
+    { x: left, y: top, w: YT_SAFE.w, h: YT_SAFE.h },
+  ])
 
   // 마크 타일
   const tile = Math.round(YT_SAFE.h * 0.55)
   const tileY = Math.round(top + (YT_SAFE.h - tile) / 2)
-  drawMarkInto(ctx, left, tileY, tile, tile)
+  drawMarkInto(ctx, left, tileY, tile, tile, 1, false)
 
   // 워드마크와 태그라인 — 안전 영역 오른쪽 경계까지의 실제 여유폭을 실측해서 넘치면 줄인다
   const textX = left + tile + Math.round(tile * 0.22)
@@ -221,10 +341,17 @@ export function drawShortsCard(canvas: BrandCanvas, headline: string[]): void {
 
   ctx.fillStyle = BRAND.deep
   ctx.fillRect(0, 0, W, H)
-  drawStarfield(ctx, W, H, unit, 23)
+  // 위에서 아래로 내려가며 성운이 옅어진다. 하단 절반은 완전히 비어 있다.
+  drawNebula(ctx, W, H, unit, 29, (_u, v) => (v > 0.5 ? 0 : ((0.5 - v) / 0.5) ** 1.3))
+  // 마크 자리(상단)와 앱 UI가 덮는 하단 25%에는 별을 두지 않는다.
+  const markTile = Math.round(W * 0.26)
+  drawStarfield(ctx, W, H, unit, 23, [
+    { x: Math.round((W - markTile) / 2) - unit * 2, y: Math.round(H * 0.14) - unit * 2, w: markTile + unit * 4, h: markTile + unit * 4 },
+    { x: 0, y: floor, w: W, h: H - floor },
+  ])
 
   const tile = Math.round(W * 0.26)
-  drawMarkInto(ctx, Math.round((W - tile) / 2), Math.round(H * 0.14), tile, tile)
+  drawMarkInto(ctx, Math.round((W - tile) / 2), Math.round(H * 0.14), tile, tile, 1, false)
 
   // 좌우 여백을 남긴 실사용 폭 안에 맞춘다(drawQuestion과 같은 방식) — 긴 헤드라인 한 줄이
   // 캔버스를 양옆으로 넘치는 사고를 막는다.
@@ -405,8 +532,14 @@ function drawFullBleed(
   if (spec.image) {
     drawImageCover(ctx, spec.image, 0, 0, W, H)
   } else {
-    ctx.fillStyle = BRAND.bg
+    // 스크린샷이 없을 때의 배경. 단색 사각형은 "빈 자리"로 보이므로
+    // 커버 아트와 같은 어법(칠흑 + 디더 성운 + 성긴 별)으로 채운다.
+    const unit = unitFor(W, H)
+    ctx.fillStyle = BRAND.deep
     ctx.fillRect(0, 0, W, H)
+    drawNebula(ctx, W, H, unit, 41, (_u, v) => (v > 0.55 ? 0 : ((0.55 - v) / 0.55) ** 1.3))
+    // 아래 40%에는 라벨·제목·워터마크가 앉는다.
+    drawStarfield(ctx, W, H, unit, 41, [{ x: 0, y: H * 0.6, w: W, h: H * 0.4 }])
   }
 
   const pad = Math.round(W * 0.055)

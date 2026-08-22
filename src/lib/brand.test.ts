@@ -9,6 +9,7 @@ import {
   drawYouTubeBanner,
   drawShortsCard,
   YT_SAFE,
+  unitFor,
   SHORTS_SAFE_RATIO,
   drawPost,
   POST_LABELS,
@@ -848,4 +849,107 @@ describe('drawPost — D 질문 카드', () => {
       expect(last.y + shrunkQSize / 2).toBeLessThanOrEqual(H)
     },
   )
+})
+
+describe('배경 아트 — 디더 성운과 별 배치', () => {
+  it('banner leaves the safe area free of stars so the logo sits on empty dark', () => {
+    const { canvas, rects } = fakeCanvas(2560, 1440)
+    drawYouTubeBanner(canvas)
+    const left = (2560 - YT_SAFE.w) / 2
+    const top = (1440 - YT_SAFE.h) / 2
+    // 별은 text/dim 색이고 마크 타일보다 작다. 안전 영역 안에 하나도 없어야 한다.
+    const stars = rects.filter(
+      (r) => (r.color === BRAND.text || r.color === BRAND.dim) && r.w <= 40,
+    )
+    expect(stars.length).toBeGreaterThan(0)
+    for (const s of stars) {
+      const overlaps =
+        s.x + s.w > left && s.x < left + YT_SAFE.w && s.y + s.h > top && s.y < top + YT_SAFE.h
+      expect(overlaps, `star at ${s.x},${s.y} sits inside the safe area`).toBe(false)
+    }
+  })
+
+  it('banner dithers a nebula band that stays in the lower part of the frame', () => {
+    const { canvas, rects } = fakeCanvas(2560, 1440)
+    drawYouTubeBanner(canvas)
+    const band = rects.filter((r) => r.color === BRAND.surface)
+    expect(band.length).toBeGreaterThan(50)
+    // 상단 절반에는 성운이 올라오지 않는다
+    expect(band.every((r) => r.y >= 1440 * 0.55)).toBe(true)
+  })
+
+  it('shorts keeps stars out of the UI-covered bottom quarter', () => {
+    const { canvas, rects } = fakeCanvas(1080, 1920)
+    drawShortsCard(canvas, ['가'])
+    const floor = 1920 * SHORTS_SAFE_RATIO
+    const stars = rects.filter(
+      (r) => (r.color === BRAND.text || r.color === BRAND.dim) && r.w <= 40,
+    )
+    expect(stars.length).toBeGreaterThan(0)
+    for (const s of stars) {
+      expect(s.y + s.h <= floor, `star reaches ${s.y + s.h}`).toBe(true)
+    }
+  })
+
+  it('full-bleed without a screenshot paints the field, not a flat rectangle', () => {
+    const { canvas, rects } = fakeCanvas(1080, 1080)
+    drawPost(canvas, { kind: 'full', label: 'NEW GAME', title: ['A'], image: null })
+    // 예전에는 BRAND.bg 단색 하나였다. 이제 디더 셀과 별이 있어야 한다.
+    expect(rects.some((r) => r.color === BRAND.surface)).toBe(true)
+    const stars = rects.filter(
+      (r) => (r.color === BRAND.text || r.color === BRAND.dim) && r.w <= 40,
+    )
+    expect(stars.length).toBeGreaterThan(0)
+    // 하단 40%는 라벨·제목·워터마크 자리다
+    for (const s of stars) expect(s.y + s.h <= 1080 * 0.6 + 1).toBe(true)
+  })
+})
+
+describe('배경 아트 — 성운의 결', () => {
+  const cellsOf = (rects: { color: string; x: number; y: number; w: number; h: number }[], W: number) =>
+    rects.filter((r) => (r.color === BRAND.surface || r.color === BRAND.bg) && r.w < W)
+
+  it('성운 경계가 자로 그은 직선이 아니다', () => {
+    const { canvas, rects } = fakeCanvas(2560, 1440)
+    drawYouTubeBanner(canvas)
+    // 열마다 성운이 시작되는 높이를 모은다. 밀도가 세로 램프뿐이면 모든 열이 같은
+    // 높이에서 시작해 띠의 경계가 캔버스를 가로지르는 한 줄로 보인다.
+    const topByColumn = new Map<number, number>()
+    for (const c of cellsOf(rects, 2560)) {
+      const prev = topByColumn.get(c.x)
+      if (prev === undefined || c.y < prev) topByColumn.set(c.x, c.y)
+    }
+    expect(new Set(topByColumn.values()).size).toBeGreaterThan(10)
+  })
+
+  it('가로로도 밀도가 변한다 — 네 열 주기로 똑같이 반복되지 않는다', () => {
+    const { canvas, rects } = fakeCanvas(2560, 1440)
+    drawYouTubeBanner(canvas)
+    const step = unitFor(2560, 1440) * 4
+    const count = new Map<number, number>()
+    for (const c of cellsOf(rects, 2560)) count.set(c.x, (count.get(c.x) ?? 0) + 1)
+    const xs = [...count.keys()].sort((a, b) => a - b)
+    // Bayer 4x4는 네 열마다 되풀이된다. 밀도가 x와 무관하면 x와 x+4셀의 개수가
+    // 항상 정확히 같아서 무늬가 직조된 천처럼 읽힌다.
+    let differs = 0
+    for (const x of xs) {
+      const next = count.get(x + step)
+      if (next !== undefined && next !== count.get(x)) differs++
+    }
+    expect(differs).toBeGreaterThan(xs.length * 0.5)
+  })
+
+  it('성운이 두 톤으로 깊이를 만든다 — 짙은 속과 옅은 둘레', () => {
+    const { canvas, rects } = fakeCanvas(2560, 1440)
+    drawYouTubeBanner(canvas)
+    expect(rects.some((r) => r.color === BRAND.surface && r.w < 2560)).toBe(true)
+    expect(rects.some((r) => r.color === BRAND.bg && r.w < 2560)).toBe(true)
+  })
+
+  it('쇼츠 마크가 성운 위에 검은 판을 찍지 않는다', () => {
+    const { canvas, rects } = fakeCanvas(1080, 1920)
+    drawShortsCard(canvas, ['가'])
+    // 배경 전면을 칠하는 한 장 말고 deep 사각형이 더 있으면 그건 마크 판이다.
+    expect(rects.filter((r) => r.color === BRAND.deep && r.w < 1080)).toHaveLength(0)
+  })
 })
