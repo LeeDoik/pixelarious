@@ -420,6 +420,9 @@ func open_file(node_id: String) -> void:
 		wm.open_window("doc:" + node_id, String(n["name"]), pad, Vector2(560, 470), ICON["doc"])
 	if n.has("cid"):
 		GameState.mark_read(String(n["cid"]))
+	if node_id == "l_bowl":
+		# 보기 설정을 켠 것만으로는 안 된다 — 이 게임의 판정은 언제나 "읽었는가"다
+		GameState.set_flag("bowl_record_found")
 
 func _photo_view(path: String) -> Control:
 	var frame := PanelContainer.new()

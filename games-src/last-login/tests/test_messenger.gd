@@ -117,3 +117,14 @@ func test_gated_choice_appears_only_with_its_flag() -> void:
 	GameState.set_flag("intruder_found")
 	m._render_choices(node)
 	assert_int(m.choice_count()).is_equal(2)
+
+func test_hidden_file_becomes_the_gate_after_the_four_locks() -> void:
+	GameState.reset()
+	var m: Control = auto_free(Messenger.new())
+	add_child(m)
+	assert_str(m.current_gate()).is_equal("puzzle1")
+	for pid: String in ["puzzle1", "puzzle2", "puzzle3", "puzzle4"]:
+		GameState.set_flag(pid + "_solved")
+	assert_str(m.current_gate()).is_equal("hidden_file")
+	GameState.set_flag("bowl_record_found")
+	assert_str(m.current_gate()).is_not_equal("hidden_file")

@@ -129,3 +129,23 @@ func test_clear_flag_hides_it_again() -> void:
 	for n: Dictionary in db.fs_children("locked"):
 		ids.append(String(n["id"]))
 	assert_array(ids).not_contains(["l_bowl"])
+
+func test_action_puzzle_needs_no_answer_but_needs_three_hints() -> void:
+	var db := _make()
+	var p: Dictionary = db.puzzle("hidden_file")
+	assert_str(String(p.get("kind", ""))).is_equal("action")
+	assert_bool(p.has("answer")).is_false()
+	assert_int((p.get("hints", []) as Array).size()).is_equal(3)
+
+func test_validate_rejects_action_puzzle_without_three_hints() -> void:
+	var db: Node = auto_free(CDB.new())
+	var raw = JSON.parse_string(FileAccess.get_file_as_string("res://content/fs.json"))
+	assert_object(raw).is_not_null()
+	var bad := {
+		"fs": {"nodes": []}, "docs": {}, "chat": {"start": "a", "nodes": {"a": {}}},
+		"mail": [], "web": {"pages": {}},
+		"puzzles": {"x": {"kind": "action", "hints": ["one"]}},
+		"records": {"records": []}, "strings": {"dev_allow_partial_records": true},
+	}
+	var errors: Array = db.validate(bad)
+	assert_array(errors).contains(["puzzle x needs exactly 3 hints"])

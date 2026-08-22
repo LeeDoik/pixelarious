@@ -301,7 +301,14 @@ func _current_gate() -> String:
 	for pid in ["puzzle1", "puzzle2", "puzzle3", "puzzle4"]:
 		if not GameState.has_flag(pid + "_solved"):
 			return pid
+	# 조작형 퍼즐은 잠금이 아니라 상태로 열린다. 잠금 넷이 다 풀린 뒤에야
+	# "폴더 안에 안 보이는 게 있다"는 질문이 성립한다.
+	if not GameState.has_flag("bowl_record_found"):
+		return "hidden_file"
 	return ""
+
+func current_gate() -> String:
+	return _current_gate()
 
 func _bubble(from: String, text: String) -> void:
 	_chat_box.add_child(_make_line(from, text, _stamp()))

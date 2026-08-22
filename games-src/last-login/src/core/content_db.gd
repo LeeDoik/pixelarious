@@ -98,8 +98,11 @@ func validate(raw: Dictionary) -> Array[String]:
 	re.compile("^[A-Za-z0-9/.]+$")
 	for pid in raw["puzzles"]:
 		var p: Dictionary = raw["puzzles"][pid]
-		if re.search(String(p.get("answer", ""))) == null:
-			errors.append("puzzle %s answer not alnum" % pid)
+		# 조작형 퍼즐은 정답 문자열이 없다 — 앱 코드가 플래그를 직접 세운다.
+		# 힌트 3단은 종류와 상관없이 슬기가 주므로 여기서만 검사한다.
+		if String(p.get("kind", "password")) != "action":
+			if re.search(String(p.get("answer", ""))) == null:
+				errors.append("puzzle %s answer not alnum" % pid)
 		if p.get("hints", []).size() != 3:
 			errors.append("puzzle %s needs exactly 3 hints" % pid)
 	# 기록물 존재 + 9개 (개발 중 완화 플래그)

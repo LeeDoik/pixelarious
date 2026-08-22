@@ -181,3 +181,20 @@ func test_view_menu_checkbox_reflects_flag_on_open() -> void:
 	var m: PopupMenu = e.view_menu()
 	e.sync_view_menu()
 	assert_bool(m.is_item_checked(m.get_item_index(e.MENU_HIDDEN))).is_true()
+
+func test_opening_the_hidden_file_sets_the_flag() -> void:
+	var pair := _make_with_wm()
+	var e: Control = pair[0]
+	assert_bool(e.open_folder("locked")).is_false()
+	assert_bool(e.submit_password("20020316")).is_true()
+	assert_bool(e.open_folder("locked")).is_true()
+	e.select_view_menu(e.MENU_HIDDEN)
+	assert_bool(GameState.has_flag("bowl_record_found")).is_false()
+	e.open_file("l_bowl")
+	assert_bool(GameState.has_flag("bowl_record_found")).is_true()
+
+func test_turning_the_setting_on_is_not_enough() -> void:
+	## 판정은 여는 것이다 — 이 게임의 다른 퍼즐도 전부 "읽었는가"로 끝난다
+	var e := _make()
+	e.select_view_menu(e.MENU_HIDDEN)
+	assert_bool(GameState.has_flag("bowl_record_found")).is_false()
