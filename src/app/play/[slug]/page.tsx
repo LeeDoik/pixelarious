@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getGame, getGames } from '@/lib/games'
+import { PlayFrame } from '@/components/PlayFrame'
 
 export const dynamicParams = false
 
@@ -34,12 +35,7 @@ export default async function PlayPage({ params }: { params: Promise<{ slug: str
         </Link>
         <span className="play-title">{game.title}</span>
       </div>
-      <iframe
-        className="play-frame"
-        src={game.playPath}
-        title={game.title}
-        allow="fullscreen; gamepad; autoplay"
-      />
+      <PlayFrame slug={game.slug} title={game.title} playPath={game.playPath} />
     </div>
   )
 }
