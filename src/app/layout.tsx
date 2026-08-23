@@ -1,4 +1,6 @@
 import type { Metadata } from 'next'
+import { Analytics } from '@vercel/analytics/next'
+import { SpeedInsights } from '@vercel/speed-insights/next'
 import './globals.css'
 import { ThemeProvider } from '@/components/ThemeProvider'
 
@@ -16,6 +18,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body suppressHydrationWarning>
         <script dangerouslySetInnerHTML={{ __html: themeInit }} />
         <ThemeProvider>{children}</ThemeProvider>
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   )
