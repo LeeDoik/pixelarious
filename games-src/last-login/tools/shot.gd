@@ -4,7 +4,7 @@ extends SceneTree
 ##
 ##   godot --path . -s tools/shot.gd -- <출력경로> [시나리오]
 ##
-## 시나리오: explorer(기본) | details | locked | notepad | desktop | stack | settings | boot | splash | start | maximize | shutdown | msg | msgroom | msgchoice | msgwhere | msglogs | photo | photozoom | mail | maillock | web | webmyhome | webportal | web404 | webgate | trash | trashdetails | trashfail | trashpurge | trashblocked | trashdone
+## 시나리오: explorer(기본) | details | locked | notepad | desktop | stack | settings | boot | splash | start | maximize | shutdown | msg | msgroom | msgchoice | msgwhere | msglogs | photo | photozoom | mail | maillist | maillock | mailattach | web | webmyhome | webportal | web404 | webgate | trash | trashdetails | trashfail | trashpurge | trashblocked | trashdone
 ##
 ## 주의: `-s`로 실행되는 스크립트는 오토로드가 등록되기 전에 컴파일된다.
 ## 여기서 프로젝트 클래스를 정적 타입으로 참조하면 그 스크립트가 딸려 컴파일되면서
@@ -65,13 +65,16 @@ func _run() -> void:
 		if scenario == "msglogs":
 			m.open_log(2)          # 10-05 민규 — 시스템 줄이 섞인 가장 긴 로그
 			await _settle()
-	elif scenario == "mail" or scenario == "maillock":
+	elif scenario in ["mail", "maillist", "maillock", "mailattach"]:
 		wm.open_app("mail")
 		await _settle()
 		var ml = _find_by_script(wm, "res://src/apps/mail.gd")
-		ml.open_mail("m1")            # 첨부(퍼즐2)가 달린 메일
-		if scenario == "maillock":
-			ml.open_attachment("m1")   # 잠긴 첨부 → 암호 요구
+		if scenario != "maillist":        # maillist는 열자마자 뜨는 받은 편지함
+			ml.open_mail("m1")            # 첨부(퍼즐2)가 달린 메일 — 목록 대신 이 한 장이 뜬다
+		if scenario in ["maillock", "mailattach"]:
+			ml.open_attachment("m1")      # 잠긴 첨부 → 암호 요구
+		if scenario == "mailattach":
+			ml.submit_password("030703")  # 암호를 풀면 첨부도 한 장으로 열린다
 		await _settle()
 	elif scenario in ["web", "webmyhome", "webportal", "web404", "webgate"]:
 		wm.open_app("browser")

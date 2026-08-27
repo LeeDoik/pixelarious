@@ -10,6 +10,16 @@ func _make() -> Control:
 	add_child(m)
 	return m
 
+func _click_row(m: Control, id: String) -> void:
+	## 목록에서 그 줄을 실제로 고른 것과 같은 경로 (item_selected → 이동)
+	var row: TreeItem = m._list.get_root().get_first_child()
+	while row != null:
+		if String(row.get_metadata(0)) == id:
+			row.select(2)
+			return
+		row = row.get_next()
+	fail("no row for " + id)
+
 func test_open_mail_marks_read() -> void:
 	var m := _make()
 	m.open_mail("m1")
@@ -38,6 +48,7 @@ func test_list_refresh_releases_its_signal_block() -> void:
 	# 이번엔 목록 클릭이 죽는다 — 양쪽 다 조용히 망가지는 종류다.
 	var m := _make()
 	m.open_mail("m1")
+	m.go_back()                      # 받은 편지함으로 돌아오며 목록을 다시 그린다
 	assert_bool(m._list.is_blocking_signals()).is_false()
 
 func test_header_carries_sender_date_subject() -> void:
@@ -75,3 +86,80 @@ func test_toolbar_explains_why_it_cannot_send() -> void:
 	assert_str(m.last_message()).contains("보낼 수 없습니다")
 	m._dialog.close()
 	assert_bool(m._dialog.is_open()).is_false()
+
+# ── 이동 (목록 ↔ 메일 한 장) ───────────────────────────────────────────────
+
+func test_starts_on_the_inbox() -> void:
+	var m := _make()
+	assert_str(m.view_id()).is_equal("inbox")
+	assert_bool(m.is_reading()).is_false()
+	assert_bool(m._list.visible).is_true()
+	assert_str(m.location_text()).is_equal("받은 편지함")
+	assert_bool(m.can_go_back()).is_false()
+
+func test_clicking_a_row_moves_the_whole_screen_to_that_mail() -> void:
+	# 미리보기 칸이 아니라 화면이 통째로 넘어간다 — 목록은 자리를 비운다
+	var m := _make()
+	_click_row(m, "m_demand_3")
+	assert_str(m.view_id()).is_equal("mail:m_demand_3")
+	assert_bool(m.is_reading()).is_true()
+	assert_bool(m._list.visible).is_false()
+	assert_str(m.location_text()).contains("받은 편지함 > ")
+	assert_str(m.location_text()).contains("3차 안내")
+
+func test_back_returns_to_the_list_with_that_row_still_marked() -> void:
+	var m := _make()
+	m.open_mail("m1")
+	assert_bool(m.can_go_back()).is_true()
+	m.go_back()
+	assert_str(m.view_id()).is_equal("inbox")
+	assert_bool(m._list.visible).is_true()
+	assert_str(String(m._list.get_selected().get_metadata(0))).is_equal("m1")
+	assert_bool(m.can_go_forward()).is_true()
+	m.go_forward()
+	assert_str(m.view_id()).is_equal("mail:m1")
+
+func test_inbox_button_comes_home_from_a_mail() -> void:
+	var m := _make()
+	m.open_mail("m_invite")
+	m.open_inbox()
+	assert_str(m.view_id()).is_equal("inbox")
+	assert_bool(m.is_reading()).is_false()
+
+func test_reopening_the_same_place_does_not_stack_history() -> void:
+	# 같은 메일을 두 번 열었다고 뒤로가 두 번 필요해지면 안 된다
+	var m := _make()
+	m.open_mail("m1")
+	m.open_mail("m1")
+	m.go_back()
+	assert_str(m.view_id()).is_equal("inbox")
+
+func test_forward_history_is_cut_when_a_new_place_opens() -> void:
+	var m := _make()
+	m.open_mail("m1")
+	m.go_back()
+	m.open_mail("m_invite")
+	assert_bool(m.can_go_forward()).is_false()
+	m.go_back()
+	assert_str(m.view_id()).is_equal("inbox")
+
+func test_attachment_is_its_own_place() -> void:
+	# 첨부를 열면 한 자리로 쌓이고, 뒤로 누르면 그 메일로 돌아온다
+	var m := _make()
+	m.open_mail("m1")
+	m.open_attachment("m1")             # 잠김 → 암호 대화상자
+	m.submit_password("030703")
+	assert_str(m.view_id()).is_equal("attach:m1")
+	assert_str(m.location_text()).contains("새빛자료.zip")
+	assert_str(m.header_text()).contains("첨부")
+	assert_bool(m._attach_bar.visible).is_false()   # 이미 그 문서를 보고 있다
+	m.go_back()
+	assert_str(m.view_id()).is_equal("mail:m1")
+	assert_str(m.header_text()).contains("보낸사람")
+	assert_bool(m._attach_bar.visible).is_true()
+
+func test_unknown_mail_falls_back_to_the_inbox() -> void:
+	var m := _make()
+	m.open_mail("nope")
+	assert_str(m.view_id()).is_equal("inbox")
+	assert_bool(m.is_reading()).is_false()
