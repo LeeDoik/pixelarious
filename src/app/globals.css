@@ -76,6 +76,12 @@ body.dmg .swap .lab{color:var(--dim)}
   animation:hop .8s steps(2) infinite;
 }
 @keyframes hop{50%{transform:translateY(6px)}}
+/* 넓은 화면에서는 로고와 스크롤 안내가 서로 붙어 보인다. 안내는 히어로 바닥에
+   절대 배치돼 있으니, 사이를 벌리려면 로고를 위로 올리는 수밖에 없다.
+   margin-bottom은 가운데 정렬 계산에 함께 들어가므로 실제로 올라가는 양은 절반이다. */
+@media (min-width:641px){
+  .hero h1{margin-bottom:clamp(140px, 26vh, 300px)}
+}
 
 /* ---------- section headers ---------- */
 .sec{padding:72px 0 96px}
