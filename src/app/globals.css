@@ -228,6 +228,12 @@ body.dmg .swap .lab{color:var(--dim)}
   background:var(--accent2); border:2px solid var(--frame); padding:3px 10px;
 }
 body.dmg .stat span{color:var(--surface)}
+/* 카드는 960px까지 늘어나는데 소개 글줄은 그 절반쯤에서 끝난다 — PC에서 내용이
+   왼쪽으로 쏠려 보였다. 글줄 폭만큼의 칸을 만들어 카드 안에서 가운데로 옮긴다.
+   왼끝 정렬은 그대로 살아 있고, 글이 길어지면 minmax가 카드 폭에서 잡아준다. */
+@media (min-width:641px){
+  .about{display:grid; justify-content:center; grid-template-columns:minmax(0, max-content)}
+}
 
 /* ---------- footer ---------- */
 footer{
