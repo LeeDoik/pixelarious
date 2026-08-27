@@ -301,6 +301,9 @@ static func dotted_focus() -> StyleBoxTexture:
 	var s := StyleBoxTexture.new()
 	s.texture = ImageTexture.create_from_image(img)
 	s.set_texture_margin_all(1)
+	# 여기는 점선이 곧 타일이라 타일을 쓴다. 다만 가운데(투명)까지 타일로 채우면
+	# 배율에 따라 되감기가 어긋나며 안쪽에 점이 흩뿌려진다 — 아예 안 그린다.
+	s.draw_center = false
 	s.axis_stretch_horizontal = StyleBoxTexture.AXIS_STRETCH_MODE_TILE
 	s.axis_stretch_vertical = StyleBoxTexture.AXIS_STRETCH_MODE_TILE
 	return s
@@ -354,7 +357,7 @@ static func _column_head(bg: Color) -> StyleBoxTexture:
 
 static func _bevel(bg: Color, outer_tl: Color, inner_tl: Color, outer_br: Color, inner_br: Color) -> StyleBoxTexture:
 	# 6x6 나인패치: 바깥 1px + 안쪽 1px = 2픽셀 베벨, 가운데 2x2가 면.
-	# 가장자리는 타일로 늘려 보간 번짐을 막는다.
+	# 베벨 네 귀퉁이는 여백(2px)이 지켜주므로 어떤 크기에서도 1:1로 찍힌다.
 	var img := Image.create(6, 6, false, Image.FORMAT_RGBA8)
 	img.fill(bg)
 	for i in 6:
@@ -372,8 +375,12 @@ static func _bevel(bg: Color, outer_tl: Color, inner_tl: Color, outer_br: Color,
 	var s := StyleBoxTexture.new()
 	s.texture = ImageTexture.create_from_image(img)
 	s.set_texture_margin_all(2)
-	s.axis_stretch_horizontal = StyleBoxTexture.AXIS_STRETCH_MODE_TILE
-	s.axis_stretch_vertical = StyleBoxTexture.AXIS_STRETCH_MODE_TILE
+	# 늘리기(STRETCH)여야 한다 — 타일은 안 된다. 나인패치 타일은 셰이더가 칸마다
+	# mod()로 UV를 되감는데, 캔버스가 정수배가 아닌 배율로 커지면(웹에서 창 크기에
+	# 따라 늘 그렇다) 되감기는 지점이 가끔 가장자리 텍셀에 걸려 면 한가운데에
+	# 검은 세로줄·가로줄이 격자로 그어진다. 면은 단색이라 늘려도 결과가 같다.
+	s.axis_stretch_horizontal = StyleBoxTexture.AXIS_STRETCH_MODE_STRETCH
+	s.axis_stretch_vertical = StyleBoxTexture.AXIS_STRETCH_MODE_STRETCH
 	return s
 
 static func titlebar_style(active: bool) -> StyleBox:
