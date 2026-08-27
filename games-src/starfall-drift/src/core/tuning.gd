@@ -19,10 +19,12 @@ const SWIFT_BONUS := 25
 const DWARF_BONUS := 50
 const PX_PER_M := 10.0
 
+# cracks = 그 별 전용 균열 오버레이. 별마다 캔버스와 원 지름이 달라서(스프라이트에 여백이 있다)
+# 한 장을 늘려 쓰면 금이 별 밖으로 삐져나온다. scripts/gen_cracks.py가 종류별로 뽑아 둔다.
 const STAR_TYPES := {
-	"standard": {"sprite": "star_standard", "size": 32.0, "orbit_r": 28.0, "ang_vel": 2.4, "collapse": 3.5},
-	"dwarf": {"sprite": "star_dwarf", "size": 16.0, "orbit_r": 16.0, "ang_vel": 3.6, "collapse": 2.0},
-	"giant": {"sprite": "star_giant", "size": 48.0, "orbit_r": 44.0, "ang_vel": 1.6, "collapse": 6.0},
+	"standard": {"sprite": "star_standard", "cracks": "cracks_standard", "orbit_r": 28.0, "ang_vel": 2.4, "collapse": 3.5},
+	"dwarf": {"sprite": "star_dwarf", "cracks": "cracks_dwarf", "orbit_r": 16.0, "ang_vel": 3.6, "collapse": 2.0},
+	"giant": {"sprite": "star_giant", "cracks": "cracks_giant", "orbit_r": 44.0, "ang_vel": 1.6, "collapse": 6.0},
 }
 
 # 난이도 커브 (h = 시작점 기준 상승 px)

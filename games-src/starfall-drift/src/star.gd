@@ -43,8 +43,8 @@ func setup(t: String, collapse_mult: float) -> void:
 	ang_vel = d.ang_vel
 	collapse_time = d.collapse / collapse_mult
 	_body.texture = load("res://assets/img/%s.png" % d.sprite)
-	_cracks.texture = load("res://assets/img/cracks.png")
-	_cracks.scale = Vector2.ONE * (d.size / 32.0)
+	# 균열은 별 종류마다 그 별 크기에 맞춰 뽑아 둔 원본 해상도 텍스처를 그대로 쓴다(확대 금지).
+	_cracks.texture = load("res://assets/img/%s.png" % d.cracks)
 
 func gauge_ratio() -> float:
 	return gauge / collapse_time
