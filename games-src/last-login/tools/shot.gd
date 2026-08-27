@@ -4,7 +4,7 @@ extends SceneTree
 ##
 ##   godot --path . -s tools/shot.gd -- <출력경로> [시나리오]
 ##
-## 시나리오: explorer(기본) | details | locked | notepad | desktop | stack | settings | boot | splash | start | maximize | shutdown | msg | msgchoice | msgwhere | msglogs | mail | maillock | web | webmyhome | webportal | web404 | webgate | trash | trashdetails | trashfail | trashpurge | trashblocked | trashdone
+## 시나리오: explorer(기본) | details | locked | notepad | desktop | stack | settings | boot | splash | start | maximize | shutdown | msg | msgroom | msgchoice | msgwhere | msglogs | photo | photozoom | mail | maillock | web | webmyhome | webportal | web404 | webgate | trash | trashdetails | trashfail | trashpurge | trashblocked | trashdone
 ##
 ## 주의: `-s`로 실행되는 스크립트는 오토로드가 등록되기 전에 컴파일된다.
 ## 여기서 프로젝트 클래스를 정적 타입으로 참조하면 그 스크립트가 딸려 컴파일되면서
@@ -34,27 +34,36 @@ func _run() -> void:
 		root.get_node("/root/Fx").set_volume(0.55)   # 홈과 손잡이가 둘 다 보이게
 		root.get_node("/root/Fx").toggle_menu()
 		await _settle()
-	elif scenario == "msg" or scenario == "msgchoice" or scenario == "msgwhere" or scenario == "msglogs":
+	elif scenario in ["photo", "photozoom"]:
+		wm.open_app("explorer")
+		await _settle()
+		var ex = _find_by_script(wm, "res://src/apps/explorer.gd")
+		ex.open_file("s_photo1")            # 필사본 — 맞춤으로는 손글씨가 안 읽히는 크기
+		await _settle()
+		var pv = _find_by_script(wm, "res://src/apps/photo.gd")
+		if scenario == "photozoom":
+			pv.set_zoom(2.0, pv.view_size() * 0.5)
+		await _settle()
+	elif scenario in ["msg", "msgroom", "msgchoice", "msgwhere", "msglogs"]:
 		wm.open_app("messenger")
-		await _settle(60)          # 슬기의 첫 줄이 흘러나올 때까지
+		await _settle(60)          # 슬기의 첫 줄이 흘러나올 때까지 (창은 대화 목록으로 열린다)
+		var m = _find_by_script(wm, "res://src/apps/messenger.gd")
+		if scenario == "msgroom":
+			m.open_room("live")
+			await _settle()
 		if scenario == "msgchoice":
 			# n01의 delay_ms(1600) 뒤 스크립트가 스스로 n02(선택지 노드)로 넘어간다
+			m.open_room("live")
 			await _settle(260)
 		if scenario == "msgwhere":
 			# n02에서 답하면 n03이 "어디서요"를 묻는다 — 선택지 셋이
 			# "보낼 말" 칸에 들어가는지는 눈으로만 확인된다
+			m.open_room("live")
 			await _settle(260)
-			var mw = _find_by_script(wm, "res://src/apps/messenger.gd")
-			mw._on_choice(0)
+			m._on_choice(0)
 			await _settle(120)
 		if scenario == "msglogs":
-			var m = _find_by_script(wm, "res://src/apps/messenger.gd")
-			for t in _walk(m):
-				if t is TabContainer:
-					t.current_tab = 1
-					break
-			var msg = _find_by_script(wm, "res://src/apps/messenger.gd")
-			msg.open_log(2)          # 10-05 민규 — 시스템 줄이 섞인 가장 긴 로그
+			m.open_log(2)          # 10-05 민규 — 시스템 줄이 섞인 가장 긴 로그
 			await _settle()
 	elif scenario == "mail" or scenario == "maillock":
 		wm.open_app("mail")
