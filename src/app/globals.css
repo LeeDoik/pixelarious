@@ -339,9 +339,11 @@ footer .coin{font-family:var(--font-display); font-size:10px; letter-spacing:2px
   width:100%; height:auto; aspect-ratio:100/42;
   border-width:2px; transition:none;
 }
+/* 제목은 낱말 사이에서만 접는다 — word-break:break-word는 자리가 남아도 낱말
+   가운데를 끊어서 STARFALL을 STARFAL/L로 갈랐다. */
 .cartridge-name{
   font-family:var(--font-display); font-size:9px; line-height:1.6;
-  letter-spacing:1px; color:var(--text); word-break:break-word;
+  letter-spacing:1px; color:var(--text); overflow-wrap:break-word;
 }
 /* 상단 립 — 패미컴/NES 카트 위쪽의 턱. 셸 패딩 밖으로 빼서 폭을 꽉 채운다 */
 .cartridge-lip{
@@ -610,7 +612,14 @@ body.dmg .console-screen{background:var(--bg-deep)}
   .cartridge-package .cartridge-label{padding:10px 10px 14px; gap:12px}
   .pkg{padding-top:62px}
   .cart-flight{top:-210px; height:226px}
-  .cart-flight .cartridge{width:124px; height:174px}
+  /* 라벨에 제목 한 낱말이 통째로 들어갈 만큼은 준다. 124px에서는 STARFALL(8자)이
+     4px 모자라 낱말이 갈렸다 — 자간을 좁히고 폭을 조금 넓혀 9자까지 받는다. */
+  .cart-flight .cartridge{width:132px; height:184px}
+  .cart-flight .cartridge-name{letter-spacing:0}
+  /* 시스템명 띠도 이 폭에서는 넘친다 — 자간을 붙이고, 장식인 점 셋은 접는다.
+     그냥 두면 점이 라벨 밖 셸 위로 삐져나갔다. */
+  .cart-flight .label-sys{letter-spacing:0}
+  .cart-flight .label-dots{display:none}
 }
 
 @media (prefers-reduced-motion: reduce){
