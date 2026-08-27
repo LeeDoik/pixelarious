@@ -34,7 +34,12 @@ SOUNDS = {
     "awaken":      ("massive deep rumble of a mountain waking, sub bass groan rising, terrifying", False, 6.0),
     "pulse":       ("single deep organic heart pulse with pink glow feeling, sub bass thump", False, 1.5),
     # ── 앰비언트 (looping API로 루프화) ──
-    "amb_surface": ("quiet mountain camp at dusk, soft wind, sparse distant birds, lonely", True, 0),
+    # 구 프롬프트("quiet ... soft ... sparse distant ...")는 -67 dBFS RMS/피크 -54 dB로 나와
+    # 게임의 -6 dB 감쇠까지 겹치면 사실상 무음이었다. 크기를 지시하는 말은 빼고 가까이서
+    # 녹음한 것처럼, 페이드 없이 일정하게 — 볼륨은 게임 믹서가 정한다.
+    "amb_surface": ("mountain camp at dusk, steady wind through pine trees, occasional bird calls, "
+                    "close and present, full level, constant volume throughout, no fade in or out, "
+                    "continuous seamless background, lonely and melancholic", True, 0),
     "amb_rock":    ("deep cave ambience, water droplets echoing, distant hollow drips", True, 0),
     "amb_fissure": ("very low ominous drone in deep cave, faint sub bass hum, oppressive silence", True, 0),
     "amb_finale":  ("deep pulsing organic drone, heartbeat rhythm inside living cavern, dread", True, 0),

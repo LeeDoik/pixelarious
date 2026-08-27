@@ -36,9 +36,13 @@ func tick(delta: float, player_pos: Vector2i, radius: float, lamp_on: bool) -> v
 	if grid_pos == player_pos:
 		caught.emit()
 	elif grid_pos == target:
-		# 목표 도달 + 새 소음 없음 → 배회로 전환 (지나침 규칙, 스펙 §6)
+		# 목표 도달 + 새 소음 없음 → 배회로 전환 (지나침 규칙, 스펙 §6).
+		# 후보를 여러 개 뽑아 갈 수 있는 곳만 고른다 — 벽을 목표로 잡으면 그 자리에 굳는다.
+		var candidates: Array = []
+		for i in range(6):
+			candidates.append(grid_pos + Vector2i([-4, -2, 2, 4].pick_random(), [-3, 0, 3].pick_random()))
 		var s := LurkerLogic.arrived_wander({"target": target, "alert": false},
-			grid_pos + Vector2i([-4, 4].pick_random(), [-3, 0, 3].pick_random()))
+			LurkerLogic.pick_wander(grid_pos, candidates, is_open))
 		target = s.target
 
 func hear(pos: Vector2i, level: float) -> void:

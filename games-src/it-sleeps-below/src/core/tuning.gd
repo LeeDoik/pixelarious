@@ -21,13 +21,13 @@ const PICK_SPEED_MULT := [1.0, 0.85, 0.7, 0.55]  # 곡괭이 Lv1..4
 const QUIET_GAP := 0.6      # 이 간격 이상 끊어 파면 조용한 채굴
 const NOISE_LOUD := 1.0
 const NOISE_QUIET := 0.35
-const FALL_SAFE_BASE := 3   # 장화 Lv1
+const CRACK_NOISE := 1.2    # 붕괴 소음 — NOISE_LOUD보다 크게. 데미지 대신 이게 러커를 부른다
 
 # ── 램프/기름 ──
 const OIL_TANK := [60.0, 80.0, 100.0, 120.0]      # 램프 Lv1..4 (초)
 const OIL_PICKUP_RATIO := 0.25
 const LIGHT_STAGES := [[0.6, 4.5], [0.3, 3.5], [0.1, 2.5], [0.0, 1.5]]  # [잔량비 초과, 반경(타일)]
-const LIGHT_OFF_RADIUS := 0.75   # 램프 오프/기름 소진 잔광
+const LIGHT_OFF_RADIUS := 0.75   # 램프 오프/기름 소진 잔광 (헬멧 Lv1 기준)
 
 # ── 러커/디렉터 ──
 const LURKER_SPEED := 2.2         # 타일/초 (어둠에서)
@@ -41,8 +41,8 @@ const LIGHT_SENSE_INTERVAL := 1.2   # 램프가 켜져 있으면 이 간격마�
 # ── 이코노미 ──
 const ORE_VALUES := [5, 10, 25, 50, 100, 150, 300]
 const BAG_SLOTS := [8, 12, 16, 20]
-const MAX_HEARTS := [3, 4, 5]
-const FALL_TOLERANCE := [3, 4, 5]
+const BOOTS_SPEED_MULT := [1.0, 0.9, 0.8]          # 장화 Lv1..3 — 걷기·등반 시간 배수
+const HELMET_GLOW := [LIGHT_OFF_RADIUS, 1.25, 1.75]  # 헬멧 Lv1..3 — 램프 오프 잔광 반경(타일)
 const OIL_BOTTLE_PRICE := 60
 const OIL_BOTTLE_CARRY_MAX := 2
 const UPGRADE_COSTS := {

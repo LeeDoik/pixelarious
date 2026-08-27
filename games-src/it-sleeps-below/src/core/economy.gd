@@ -22,11 +22,15 @@ static func upgrade_cost(track: String, next_level: int) -> int:
 static func bag_slots(level: int) -> int:
 	return Tuning.BAG_SLOTS[level - 1]
 
-static func max_hearts(level: int) -> int:
-	return Tuning.MAX_HEARTS[level - 1]
+static func walk_time(boots_level: int) -> float:
+	return Tuning.WALK_TIME * Tuning.BOOTS_SPEED_MULT[boots_level - 1]
 
-static func fall_tolerance(level: int) -> int:
-	return Tuning.FALL_TOLERANCE[level - 1]
+static func climb_time(boots_level: int) -> float:
+	return Tuning.CLIMB_TIME * Tuning.BOOTS_SPEED_MULT[boots_level - 1]
+
+static func glow_radius(helmet_level: int) -> float:
+	# 램프를 껐거나 기름이 마른 상태의 잔광 — 헬멧 등급이 암흑 등반의 시야를 결정한다
+	return Tuning.HELMET_GLOW[helmet_level - 1]
 
 static func dig_allowed(pick_level: int, row: int) -> bool:
 	var s := WorldGen.strata_of(row)

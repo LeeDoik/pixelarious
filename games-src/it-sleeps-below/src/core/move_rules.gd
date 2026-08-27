@@ -9,6 +9,30 @@ const A_DIG := 3
 static func passable(c: int) -> bool:
 	return c == WorldGen.T_EMPTY
 
+# 타일 단위. 화면 폭 270px에 타일 16px이라 실기에서 한 칸은 25~30px — 손가락 패드보다 작다.
+# 2.3이면 8방향 이웃과 두 칸 빗맞음까지 받고, 세 칸부터는 확실히 무시한다.
+const TAP_REACH := 2.3
+
+static func tap_dir(world_pos: Vector2, ppos: Vector2i) -> Vector2i:
+	## 화면 좌표 탭 → 인접 4방향 중 하나. 제 칸과 먼 곳은 Vector2i.ZERO (무시).
+	##
+	## 정확히 인접한 칸이면 그 방향 그대로. 그보다 조금 빗나갔거나 대각이면 — 모바일에서
+	## 16px 타일을 정확히 맞히기 어렵다 — TAP_REACH 안에 한해 지배적인 축으로 스냅한다.
+	## 어느 경우든 실제 행동은 인접 한 칸뿐이라 "비인접 탭 무시" 규칙(스펙 §11)은 지킨다.
+	## floori를 쓴다 — int()는 0으로 절삭해서 음수 좌표가 한 칸 밀린다.
+	var tile := Vector2i(floori(world_pos.x / float(Tuning.TILE_PX)), floori(world_pos.y / float(Tuning.TILE_PX)))
+	var d := tile - ppos
+	if d == Vector2i.ZERO:
+		return Vector2i.ZERO
+	if absi(d.x) + absi(d.y) == 1:
+		return d
+	if Vector2(d).length() > TAP_REACH:
+		return Vector2i.ZERO
+	# 대각·근접 빗맞음 → 더 크게 벗어난 축으로. 완전한 대각은 세로 우선(하강이 이 게임의 축이다)
+	if absi(d.x) > absi(d.y):
+		return Vector2i(signi(d.x), 0)
+	return Vector2i(0, signi(d.y))
+
 static func classify(cells: PackedInt32Array, pos: Vector2i, dir: Vector2i, pick_level: int) -> int:
 	var t := pos + dir
 	if t.x < 1 or t.x > WorldGen.W - 2 or t.y < 0 or t.y >= WorldGen.DEPTH:
@@ -22,18 +46,12 @@ static func classify(cells: PackedInt32Array, pos: Vector2i, dir: Vector2i, pick
 		return A_BLOCKED
 	return A_DIG
 
-static func braced(cells: PackedInt32Array, pos: Vector2i) -> bool:
-	# 침니 클라이밍 — 좌우 벽, 또는 좌하/우하 모서리를 짚을 수 있으면 버틴다
-	# (스펙 §2 "벽을 짚고 오른다" + 구덩이 가장자리 모서리 잡기).
-	# 1칸 폭 수직갱은 항상 braced; 구덩이 가장자리도 모서리를 잡아 옆걸음이 안전하다.
-	# 잡을 것이 전혀 없는 허공(넓은 공동 한가운데)에서만 낙하한다.
-	for off: Vector2i in [Vector2i(-1, 0), Vector2i(1, 0), Vector2i(-1, 1), Vector2i(1, 1)]:
-		var n := pos + off
-		if n.x < 0 or n.x >= WorldGen.W or n.y >= WorldGen.DEPTH:
-			continue
-		if not passable(cells[WorldGen.idx(n.x, n.y)]):
-			return true
-	return false
+static func fall_from(cells: PackedInt32Array, pos: Vector2i, moved_down: bool) -> Vector2i:
+	# 벽타기는 무조건 자유 — 오르거나 옆으로 갔으면 잡을 것이 없어도 그 자리에 붙는다.
+	# 낙하는 스스로 아래로 내려갔을 때만 이어진다 (하강이 빠른 비대칭은 유지).
+	if not moved_down:
+		return pos
+	return fall_landing(cells, pos)
 
 static func fall_landing(cells: PackedInt32Array, pos: Vector2i) -> Vector2i:
 	var p := pos

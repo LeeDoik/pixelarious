@@ -5,7 +5,15 @@ extends Node2D
 signal descend_pressed
 
 const VISTA_SCALE := 270.0 / 136.0  # vista_calm.png(136px)를 270px 폭에 맞춘다
-const MERCHANT_BASE_POS := Vector2(190, 250)
+const MERCHANT_BASE_POS := Vector2(196, 220)
+# 화면을 세 띠로 나눈다: 원경(0~159) / 상태바 / 캠프 / 갱도 입구 / 버튼(410~)
+const STATUS_TOP := 162.0
+const STATUS_H := 44.0
+const GROUND_TOP := 268.0
+const PIT_POS := Vector2(39, 272)
+const PIT_SCALE := 2.0          # mine_mouth 96x64 -> 192x128
+# 프레임에 둘러싸인 개구부(원본 x21~74, y14~53)를 그대로 옮긴 것 — 여기가 어둠이다
+const PIT_VOID := Rect2(81, 300, 108, 80)
 const TRACK_ORDER := ["pick", "lamp", "bag", "boots", "helmet"]
 const TRACK_LABELS := {"pick": "PICK", "lamp": "LAMP", "bag": "BAG", "boots": "BOOTS", "helmet": "HELMET"}
 
@@ -22,6 +30,9 @@ var memo_ok_btn := Button.new()
 var merchant: Sprite2D
 var tent: Sprite2D
 var shop_btn := Button.new()
+var notebook_btn := Button.new()
+var shop_title := Label.new()
+var notebook_title := Label.new()
 
 var shop_panel: PanelContainer
 var notebook_panel: PanelContainer
@@ -30,6 +41,14 @@ var journal_text_label := Label.new()
 var rate_label := Label.new()
 var oil_label := Label.new()
 var oil_btn := Button.new()
+
+var miner_label := Label.new()
+var depth_label := Label.new()
+var journal_label := Label.new()
+var bottles_label := Label.new()
+var relic_label := Label.new()
+var campfire: Sprite2D
+var gear_row: Node2D
 
 var _font: FontFile
 var _shop_rows: Dictionary = {}
@@ -46,6 +65,8 @@ func _ready() -> void:
 	_apply_corruption()
 	Sfx.ambience("amb_surface")
 	_build_ui()
+	# 웹에서는 text.json이 비동기라 거점이 먼저 그려질 수 있다 — 도착하면 라벨을 새로 쓴다
+	TextDb.text_loaded.connect(_refresh_text)
 	_apply_delayed_anomalies()
 	_show_settle_result()
 
@@ -55,40 +76,21 @@ func _apply_corruption() -> void:
 	vista.modulate = tints[c]
 	# 새소리(표층 앰비언트) 볼륨 — 오염 1단계부터 -6dB 추가 감쇠 (기본 -6dB 위에 누적)
 	Sfx.ambience_volume(-12.0 if c >= 1 else -6.0)
-	# bgm — 오염될수록 음정이 틀어진다 (bgm_camp.ogg는 아직 없음 — 파일이 들어오면 그대로 동작)
-	Sfx.ambience("bgm_camp")
-	# Sfx._amb.pitch_scale 직접 제어 대신 Sfx에 ambience_pitch(p) 헬퍼를 추가해 사용
-	Sfx.ambience_pitch([1.0, 1.0, 0.98, 0.98, 0.95][c])
+	# bgm — 오염될수록 음정이 틀어진다. 음악은 앰비언트와 다른 채널이라
+	# 새소리는 멀쩡한 채로 음악만 틀어진다 (한 채널이면 아래 amb_surface가 곧바로 덮어썼다)
+	Sfx.music("bgm_camp")
+	Sfx.music_pitch([1.0, 1.0, 0.98, 0.98, 0.95][c])
 
 func _build_ui() -> void:
-	gold_label.add_theme_font_override("font", _font)
-	gold_label.add_theme_font_size_override("font_size", 10)
-	gold_label.position = Vector2(178, 168)
-	gold_label.size = Vector2(84, 16)
-	gold_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	add_child(gold_label)
-	_refresh_gold()
-
-	tent = Sprite2D.new()
-	tent.texture = load("res://assets/img/tent.png")
-	tent.centered = false
-	tent.scale = Vector2(2, 2)
-	tent.position = Vector2(20, 260)
-	add_child(tent)
-
-	merchant = Sprite2D.new()
-	merchant.texture = load("res://assets/img/merchant.png")
-	merchant.centered = false
-	merchant.scale = Vector2(2, 2)
-	merchant.position = MERCHANT_BASE_POS
-	if GameState.corruption() >= 3:
-		merchant.position += Vector2(6, -4)  # 오염 3+ — 위치가 미묘하게 이동
-	add_child(merchant)
+	_build_ground()
+	_build_status_bar()
+	_build_camp_props()
+	_build_mine_mouth()
 
 	settle_label.add_theme_font_override("font", _font)
 	settle_label.add_theme_font_size_override("font_size", 8)
-	settle_label.position = Vector2(10, 168)
-	settle_label.size = Vector2(160, 60)
+	settle_label.position = Vector2(8, 208)
+	settle_label.size = Vector2(180, 28)
 	settle_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	settle_label.modulate.a = 0.0
 	settle_label.visible = false
@@ -96,8 +98,8 @@ func _build_ui() -> void:
 
 	memo_label.add_theme_font_override("font", _font)
 	memo_label.add_theme_font_size_override("font_size", 8)
-	memo_label.position = Vector2(160, 220)
-	memo_label.size = Vector2(96, 90)
+	memo_label.position = Vector2(146, 206)
+	memo_label.size = Vector2(116, 56)
 	memo_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	memo_label.visible = false
 	add_child(memo_label)
@@ -105,8 +107,8 @@ func _build_ui() -> void:
 	memo_ok_btn.text = "OK"
 	memo_ok_btn.add_theme_font_override("font", _font)
 	memo_ok_btn.add_theme_font_size_override("font_size", 9)
-	memo_ok_btn.position = Vector2(196, 312)
-	memo_ok_btn.size = Vector2(40, 24)
+	memo_ok_btn.position = Vector2(196, 246)
+	memo_ok_btn.size = Vector2(44, 18)
 	memo_ok_btn.visible = false
 	memo_ok_btn.pressed.connect(_ack_merchant_gone)
 	add_child(memo_ok_btn)
@@ -119,7 +121,6 @@ func _build_ui() -> void:
 	shop_btn.pressed.connect(_open_shop)
 	add_child(shop_btn)
 
-	var notebook_btn := Button.new()
 	notebook_btn.add_theme_font_override("font", _font)
 	notebook_btn.add_theme_font_size_override("font_size", 9)
 	notebook_btn.text = TextDb.t("ui", "notebook")
@@ -139,6 +140,163 @@ func _build_ui() -> void:
 
 	_build_shop_panel()
 	_build_notebook_panel()
+
+func _refresh_text() -> void:
+	shop_btn.text = TextDb.t("ui", "shop")
+	notebook_btn.text = TextDb.t("ui", "notebook")
+	shop_title.text = TextDb.t("ui", "shop")
+	notebook_title.text = TextDb.t("ui", "notebook")
+
+# ── 화면 구성 ──
+
+func _make_label(px: int, pos: Vector2, box: Vector2, align := HORIZONTAL_ALIGNMENT_LEFT) -> Label:
+	var l := Label.new()
+	l.add_theme_font_override("font", _font)
+	l.add_theme_font_size_override("font_size", px)
+	l.position = pos
+	l.size = box
+	l.horizontal_alignment = align
+	add_child(l)
+	return l
+
+func _sprite(img: String, pos: Vector2, s: float) -> Sprite2D:
+	var sp := Sprite2D.new()
+	sp.texture = load("res://assets/img/%s.png" % img)
+	sp.centered = false
+	sp.position = pos
+	sp.scale = Vector2(s, s)
+	add_child(sp)
+	return sp
+
+func _flicker(node: CanvasItem) -> void:
+	# 캠프에서 유일하게 살아 움직이는 빛 — 정지 화면이 되지 않도록
+	var tw := create_tween().set_loops()
+	tw.tween_property(node, "modulate:a", 0.75, 0.45).set_trans(Tween.TRANS_SINE)
+	tw.tween_property(node, "modulate:a", 1.0, 0.65).set_trans(Tween.TRANS_SINE)
+
+func _build_ground() -> void:
+	# 원경 아래는 캠프가 선 땅이고, 갱구는 그 땅에 뚫려 있다
+	var soil := ColorRect.new()
+	soil.color = Color("#241A2B")
+	soil.position = Vector2(0, GROUND_TOP)
+	soil.size = Vector2(270, 480 - GROUND_TOP)
+	soil.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(soil)
+	# 경계를 납작한 선으로 두면 UI 구분선처럼 보인다 — 흙 층을 한 줄 깔아 지형으로 읽히게 한다.
+	# tile_dirt는 23%만 불투명해 흩뿌려진 티가 나므로, 꽉 찬 tile_rock을 흙빛으로 물들여 바닥을 만들고
+	# 그 위에 tile_dirt를 얹어 표면 질감만 준다.
+	for i in range(18):
+		var bed := _sprite("tile_rock", Vector2(i * 16, GROUND_TOP), 1.0)
+		bed.modulate = Color(0.62, 0.48, 0.52)
+		var top := _sprite("tile_dirt", Vector2(i * 16, GROUND_TOP - 6), 1.0)
+		top.modulate = Color(0.78, 0.7, 0.72)
+
+func _build_status_bar() -> void:
+	# 내려가기 전에 알아야 할 것만 — 몇 번째 광부인지, 어디까지 갔는지, 무엇을 들고 가는지
+	var bar := ColorRect.new()
+	bar.color = Color(0.05, 0.04, 0.08, 0.82)
+	bar.position = Vector2(0, STATUS_TOP)
+	bar.size = Vector2(270, STATUS_H)
+	bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(bar)
+
+	var prof: Dictionary = GameState.profile
+	miner_label = _make_label(8, Vector2(8, STATUS_TOP + 2), Vector2(88, 12))
+	miner_label.text = Camp.miner_tag(prof.miner_no)
+	depth_label = _make_label(8, Vector2(92, STATUS_TOP + 2), Vector2(84, 12), HORIZONTAL_ALIGNMENT_CENTER)
+	depth_label.text = Camp.best_depth_tag(prof.best_depth)
+
+	gold_label.add_theme_font_override("font", _font)
+	gold_label.add_theme_font_size_override("font_size", 10)
+	gold_label.position = Vector2(178, STATUS_TOP)
+	gold_label.size = Vector2(84, 14)
+	gold_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	add_child(gold_label)
+	_refresh_gold()
+
+	journal_label = _make_label(7, Vector2(8, STATUS_TOP + 15), Vector2(100, 10))
+	journal_label.text = Camp.journal_tag(prof.journals_found)
+	bottles_label = _make_label(7, Vector2(178, STATUS_TOP + 15), Vector2(84, 10), HORIZONTAL_ALIGNMENT_RIGHT)
+	bottles_label.text = Camp.oil_tag(prof.oil_bottles)
+
+	_build_gear_pips(STATUS_TOP + 29)
+
+func _build_gear_pips(y: float) -> void:
+	# 상점을 열지 않고도 장비 상태가 보인다 — 칸이 다 차면 만렙.
+	# 상점에서 사면 그 자리에서 다시 그려야 하므로 통째로 갈아끼울 수 있게 담아둔다.
+	if is_instance_valid(gear_row):
+		gear_row.queue_free()
+	gear_row = Node2D.new()
+	add_child(gear_row)
+	var x := 8.0
+	for g: Dictionary in Camp.gear_pips(GameState.profile.upgrades):
+		var lbl := Label.new()
+		lbl.add_theme_font_override("font", _font)
+		lbl.add_theme_font_size_override("font_size", 7)
+		lbl.position = Vector2(x, y)
+		lbl.size = Vector2(26, 10)
+		lbl.text = g.label
+		gear_row.add_child(lbl)
+		var px := x + 26.0
+		for i in range(g.max):
+			var dot := ColorRect.new()
+			dot.color = Color("#FFEC27") if i < g.level else Color(0.24, 0.21, 0.29)
+			dot.position = Vector2(px, y + 2)
+			dot.size = Vector2(3, 5)
+			dot.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			gear_row.add_child(dot)
+			px += 5.0
+		x += 52.0
+
+func _build_camp_props() -> void:
+	var c := GameState.corruption()
+	tent = _sprite("tent", Vector2(4, 220), 2.0)
+	_sprite("woodpile", Vector2(70, 238), 1.25)
+	# 오염이 깊어지면 불이 사그라든다 — 거점이 식어가는 것을 말 없이 보여준다
+	campfire = _sprite("campfire_low" if c >= 2 else "campfire", Vector2(102, 236), 2.0)
+	_flicker(campfire)
+	_sprite("miner_idle", Vector2(138, 236), 2.0)
+	_sprite("crate", Vector2(172, 244), 1.5)
+
+	merchant = _sprite("merchant", MERCHANT_BASE_POS, 2.0)
+	if c >= 3:
+		merchant.position += Vector2(6, -4)  # 오염 3+ — 위치가 미묘하게 이동
+
+	var lamp := _sprite("lantern_post", Vector2(246, 236), 1.0)
+	if c >= 2:
+		lamp.modulate = Color(0.7, 0.66, 0.78)
+
+func _build_mine_mouth() -> void:
+	# 화면 이름이 갱도 입구인데 정작 입구가 없었다 — 여기가 이 화면의 주인공이다
+	var dark := ColorRect.new()
+	dark.color = Color(0.02, 0.015, 0.03)
+	dark.position = PIT_VOID.position
+	dark.size = PIT_VOID.size
+	dark.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(dark)
+
+	for i in range(3):  # 사다리는 내려갈수록 어둠에 먹힌다
+		var rung := _sprite("ladder", Vector2(119, 300 + i * 30), 2.0)
+		rung.modulate.a = 1.0 - i * 0.35
+
+	_sprite("mine_mouth", PIT_POS, PIT_SCALE)
+	_sprite("minecart", Vector2(4, 344), 1.5)  # 갱구 앞에 세워둔 광차
+
+	var tag := Camp.relic_tag(GameState.profile.relic)
+	if tag != "":
+		# 저 아래 두고 온 가방 — 회수하러 갈 이유를 화면에 남긴다
+		_sprite("relic_bag", Vector2(236, 300), 1.5)
+		relic_label = _make_label(7, Vector2(206, 330), Vector2(60, 10), HORIZONTAL_ALIGNMENT_CENTER)
+		relic_label.text = tag
+		relic_label.modulate = Color("#FF77A8")
+
+	var pit_btn := Button.new()  # 입구를 눌러도 내려간다
+	pit_btn.flat = true
+	pit_btn.focus_mode = Control.FOCUS_NONE
+	pit_btn.position = PIT_POS
+	pit_btn.size = Vector2(192, 128)
+	pit_btn.pressed.connect(func() -> void: descend_pressed.emit())
+	add_child(pit_btn)
 
 # ── 정산 표시 ──
 
@@ -217,11 +375,10 @@ func _build_shop_panel() -> void:
 	var vbox := VBoxContainer.new()
 	shop_panel.add_child(vbox)
 
-	var title := Label.new()
-	title.add_theme_font_override("font", _font)
-	title.add_theme_font_size_override("font_size", 12)
-	title.text = TextDb.t("ui", "shop")
-	vbox.add_child(title)
+	shop_title.add_theme_font_override("font", _font)
+	shop_title.add_theme_font_size_override("font_size", 12)
+	shop_title.text = TextDb.t("ui", "shop")
+	vbox.add_child(shop_title)
 
 	for track in TRACK_ORDER:
 		var row := HBoxContainer.new()
@@ -263,7 +420,12 @@ func _build_shop_panel() -> void:
 	_refresh_shop()
 
 func _refresh_gold() -> void:
-	gold_label.text = "%d G" % GameState.profile.gold
+	gold_label.text = Camp.gold_tag(GameState.profile.gold)
+
+func _refresh_status_bar() -> void:
+	# 상점에서 사면 상태 바가 그대로 굳어 있었다 — 구매 경로에서 같이 갱신한다
+	bottles_label.text = Camp.oil_tag(GameState.profile.oil_bottles)
+	_build_gear_pips(STATUS_TOP + 29)
 
 func _refresh_shop() -> void:
 	for track in TRACK_ORDER:
@@ -297,6 +459,7 @@ func _buy(track: String) -> void:
 	GameState.save()
 	Sfx.play("settle")
 	_refresh_shop()
+	_refresh_status_bar()
 
 func _buy_oil() -> void:
 	if GameState.profile.oil_bottles >= Tuning.OIL_BOTTLE_CARRY_MAX:
@@ -308,6 +471,7 @@ func _buy_oil() -> void:
 	GameState.save()
 	Sfx.play("settle")
 	_refresh_shop()
+	_refresh_status_bar()
 
 # ── 수첩 ──
 
@@ -324,11 +488,10 @@ func _build_notebook_panel() -> void:
 	var vbox := VBoxContainer.new()
 	notebook_panel.add_child(vbox)
 
-	var title := Label.new()
-	title.add_theme_font_override("font", _font)
-	title.add_theme_font_size_override("font_size", 12)
-	title.text = TextDb.t("ui", "notebook")
-	vbox.add_child(title)
+	notebook_title.add_theme_font_override("font", _font)
+	notebook_title.add_theme_font_size_override("font_size", 12)
+	notebook_title.text = TextDb.t("ui", "notebook")
+	vbox.add_child(notebook_title)
 
 	rate_label.add_theme_font_override("font", _font)
 	rate_label.add_theme_font_size_override("font_size", 9)

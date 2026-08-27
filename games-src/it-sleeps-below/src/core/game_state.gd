@@ -21,7 +21,7 @@ func corruption() -> int:
 func start_run() -> Dictionary:
 	run = {
 		"seed": randi(),
-		"bag": [], "hearts": Economy.max_hearts(profile.upgrades.helmet),
+		"bag": [],
 		"oil": Oil.tank(profile.upgrades.lamp), "lamp_on": true,
 		"depth": 0, "bottles": profile.oil_bottles,
 	}

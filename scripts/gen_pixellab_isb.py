@@ -66,6 +66,25 @@ SPRITES = {
     # logo: PixelLab 텍스트 렌더링이 4회 시도 모두 철자를 깨뜨려("SLEPS" 등)
     # 텍스트 없는 명판으로 전환 — 타이틀 화면에서 실제 폰트로 텍스트를 오버레이한다.
     "logo":         (96, 48, f"weathered carved stone plaque, rectangular, moss and cracks, faint pink glow seeping from the cracks, empty center area for text overlay, no letters, no text, {STYLE}"),
+    # ── 거점 화면 소품 (갱도 입구 + 캠프) ──
+    # 화면 이름이 "갱도 입구"인데 정작 입구가 그려져 있지 않아 추가한다.
+    "mine_mouth":   (96, 64, f"mine shaft entrance dug into a hillside, heavy timber frame beams around the opening, "
+                             f"pitch black void inside going down, loose rocks and dirt mound at the sides, "
+                             f"front view, no people, {STYLE}"),
+    # winch 프롬프트는 장작더미로 나왔고 그 결과물이 캠프 소품으로 더 쓸모 있어 이름을 바꿔 채택
+    "woodpile":     (24, 24, f"stacked firewood logs pile beside a camp, rough cut timber, {STYLE}"),
+    # minecart 1차는 16px 높이에서 형태가 뭉개져 32x24로 키우고 대비를 명시
+    "minecart":     (32, 24, f"mine cart, rusty orange-brown iron tub with two large visible wheels on a rail, "
+                             f"side view, bright rim highlights, high contrast, clear silhouette, empty, {STYLE}"),
+    "crate":        (16, 16, f"wooden supply crate with iron corner brackets, closed lid, {STYLE}"),
+    "campfire":     (16, 16, f"small campfire, stacked logs with warm orange flame, glowing embers, {STYLE}"),
+    # campfire_low 1차는 불꽃이 그대로 나와 "불꽃 없음"을 강하게 지시
+    "campfire_low": (16, 16, f"burnt out campfire, grey ash pile and black charred log stubs, two or three tiny dull red "
+                             f"ember dots only, no flame, no fire, no orange light, cold and dead, {STYLE}"),
+    "ladder":       (16, 16, f"wooden ladder segment, two vertical rails and rungs, seamless vertical tile, front view, {STYLE}"),
+    # lantern_post 1차는 16px 폭에서 형태가 안 읽혀 24x32로 키우고 램프를 크게
+    "lantern_post": (24, 32, f"thick wooden post planted in ground with a large brass oil lantern hanging from an iron "
+                             f"hook at the top, lantern glass glowing warm orange, clear readable shapes, {STYLE}"),
 }
 
 def read_key():
