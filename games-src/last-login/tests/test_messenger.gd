@@ -23,6 +23,36 @@ func test_opens_with_seulgi_online_and_her_first_line() -> void:
 	assert_bool(m.is_online()).is_true()
 	assert_str(m.status_text()).contains("접속중")
 
+## 창을 열면 대화창이 아니라 대화 목록이 먼저다 — 라이브 한 칸 + 남아 있는 지난 대화들
+func test_opens_on_the_room_list_with_every_conversation_in_it() -> void:
+	var m := _make()
+	assert_str(m.current_room()).is_equal("")
+	assert_int(m.room_count()).is_equal(ContentDB.chat_logs().size() + 1)
+
+func test_seulgi_sits_in_the_online_group_and_drops_out_when_she_logs_off() -> void:
+	var m := _make()
+	assert_bool("live" in m.online_room_ids()).is_true()
+	m._bubble("sys", "슬기님이 접속을 종료했습니다.")
+	assert_int(m.online_room_ids().size()).is_equal(0)
+	# 접속을 끊어도 그 대화는 목록에서 사라지지 않는다 — 오프라인 칸으로 내려갈 뿐이다
+	assert_int(m.room_count()).is_equal(ContentDB.chat_logs().size() + 1)
+
+## 목록을 보는 동안에도 슬기는 계속 말한다 — 안 본 줄이 쌓이는 게 보여야 열어본다
+func test_lines_arriving_while_the_list_shows_pile_up_as_unread() -> void:
+	var m := _make()
+	assert_int(m.unread_count()).is_greater(0)
+	m.open_room("live")
+	assert_str(m.current_room()).is_equal("live")
+	assert_int(m.unread_count()).is_equal(0)
+	m.show_list()
+	assert_str(m.current_room()).is_equal("")
+
+func test_opening_a_past_log_switches_rooms_without_touching_her_status() -> void:
+	var m := _make()
+	m.open_log(_log_index("2002-06-26"))
+	assert_str(m.current_room()).is_equal("chatlog:2002-06-26")
+	assert_bool(m.is_online()).is_true()
+
 func test_choice_node_fills_the_compose_box_and_sending_adds_my_line() -> void:
 	var m := _make()
 	assert_int(m.choice_count()).is_equal(0)   # 첫 노드는 자동 진행 중 — 고를 말이 없다
@@ -117,3 +147,17 @@ func test_gated_choice_appears_only_with_its_flag() -> void:
 	GameState.set_flag("intruder_found")
 	m._render_choices(node)
 	assert_int(m.choice_count()).is_equal(2)
+
+## 선택지에 붙는 번호는 화면에 보이는 순서다. 걸러진 선택지 때문에 번호와
+## 원래 인덱스가 어긋나면 숫자 키가 엉뚱한 말을 보낸다.
+func test_number_slots_follow_what_is_on_screen_not_the_raw_index() -> void:
+	var m := _make()
+	var node := {"from": "seulgi", "text": "t", "choices": [
+		{"text": "a", "next": "x"},
+		{"text": "b", "next": "y", "require": "intruder_found"},
+		{"text": "c", "next": "z"}]}
+	m._render_choices(node)
+	assert_int(m.choice_count()).is_equal(2)
+	assert_int(m._choice_slots.size()).is_equal(2)
+	assert_int(m._choice_slots[0]).is_equal(0)
+	assert_int(m._choice_slots[1]).is_equal(2)   # 2번 키 = 세 번째 선택지
