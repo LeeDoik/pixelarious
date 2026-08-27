@@ -228,11 +228,16 @@ body.dmg .swap .lab{color:var(--dim)}
   background:var(--accent2); border:2px solid var(--frame); padding:3px 10px;
 }
 body.dmg .stat span{color:var(--surface)}
-/* 카드는 960px까지 늘어나는데 소개 글줄은 그 절반쯤에서 끝난다 — PC에서 내용이
-   왼쪽으로 쏠려 보였다. 글줄 폭만큼의 칸을 만들어 카드 안에서 가운데로 옮긴다.
-   왼끝 정렬은 그대로 살아 있고, 글이 길어지면 minmax가 카드 폭에서 잡아준다. */
+/* 카드는 960px까지 늘어나는데 글줄은 절반에서 끝나 오른쪽이 비어 보였다.
+   넓은 화면에서는 문단을 좌우 두 칸에 나눠 담고, 연락처는 왼쪽 아래,
+   뱃지는 오른쪽 아래에 붙여 배너를 끝까지 쓴다. 문단이 하나뿐이면 나눌 게
+   없으니 두 칸을 다 차지한다. */
 @media (min-width:641px){
-  .about{display:grid; justify-content:center; grid-template-columns:minmax(0, max-content)}
+  .about{display:grid; grid-template-columns:1fr 1fr; column-gap:36px; row-gap:22px}
+  .about p{margin:0}
+  .about p:only-of-type{grid-column:1 / -1}
+  .links{grid-column:1; align-self:end; margin-top:8px}
+  .stat{grid-column:2; justify-self:end; align-self:end; margin:8px 0 0}
 }
 
 /* ---------- footer ---------- */
