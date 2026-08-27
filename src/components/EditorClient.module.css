@@ -178,3 +178,60 @@
   font-size: 14px;
   margin: 18px 0 0;
 }
+
+/* 배포 — 저장과는 성격이 다른 행동이라 선을 하나 긋고 아래에 둔다. */
+.deploy {
+  margin-top: 26px;
+  padding-top: 22px;
+  border-top: 3px dashed var(--dim);
+}
+.deployTitle {
+  font-family: var(--font-display);
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: var(--gold);
+  margin: 0 0 8px;
+}
+.deployNote {
+  color: var(--dim);
+  font-size: 14px;
+  margin: 0;
+}
+.deploy .actions {
+  margin-top: 16px;
+}
+
+.files {
+  list-style: none;
+  margin: 14px 0 0;
+  padding: 0;
+}
+.file {
+  font-size: 14px;
+  color: var(--dim);
+  line-height: 1.9;
+  word-break: break-all;
+}
+.fileTag {
+  font-family: var(--font-display);
+  font-size: 9px;
+  letter-spacing: 1px;
+  color: var(--accent2);
+  margin-right: 6px;
+}
+.warn {
+  color: var(--gold);
+  font-size: 14px;
+  margin: 12px 0 0;
+}
+
+/* .btn 에는 disabled 모양이 없어서, 누를 수 없는 버튼이 누를 수 있는 것처럼
+   보인다. 편집기 안에서만 눌러 죽인다. */
+.actions :global(.btn):disabled,
+.actions :global(.btn):disabled:hover,
+.actions :global(.btn):disabled:active {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: 4px 4px 0 var(--shadow);
+}

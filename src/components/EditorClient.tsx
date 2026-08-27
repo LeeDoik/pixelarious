@@ -1,8 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import type { Game } from '@/lib/games'
 import type { Profile } from '@/lib/profile'
+import { describeChange, type Change, type DeployResult, type DeployState } from '@/lib/deploy'
 import { CartridgeArt } from './CartridgeArt'
 import { GameDetail } from './GameDetail'
 import { Player1 } from './Player1'
@@ -25,6 +26,14 @@ type Status =
   | { kind: 'ok'; message: string }
   | { kind: 'error'; message: string }
 
+type DeployUi =
+  | { kind: 'idle' }
+  /** 배포는 되돌리기 어려우니 한 번 더 묻는다 — 두 번째 클릭에서 실제로 푸시한다. */
+  | { kind: 'confirm' }
+  | { kind: 'pushing' }
+  | { kind: 'ok'; message: string }
+  | { kind: 'error'; message: string }
+
 const changed = (a: unknown, b: unknown) => JSON.stringify(a) !== JSON.stringify(b)
 
 export function EditorClient({ games, profile }: { games: Game[]; profile: Profile }) {
@@ -40,10 +49,28 @@ export function EditorClient({ games, profile }: { games: Game[]; profile: Profi
     games[0] ? { kind: 'game', slug: games[0].slug } : { kind: 'profile' },
   )
   const [status, setStatus] = useState<Status>({ kind: 'idle' })
+  const [deployState, setDeployState] = useState<DeployState | null>(null)
+  const [deployUi, setDeployUi] = useState<DeployUi>({ kind: 'idle' })
+
+  /** 저장한 내용 중 아직 푸시되지 않은 게 무엇인지 개발 서버에 묻는다. */
+  const refreshDeploy = useCallback(async () => {
+    try {
+      const response = await fetch('/api/deploy')
+      if (!response.ok) return
+      setDeployState((await response.json()) as DeployState)
+    } catch {
+      // 배포 상태를 못 읽어도 편집 자체는 계속된다.
+    }
+  }, [])
+
+  useEffect(() => {
+    void refreshDeploy()
+  }, [refreshDeploy])
 
   const select = (next: Target) => {
     setTarget(next)
     setStatus({ kind: 'idle' })
+    setDeployUi({ kind: 'idle' })
   }
 
   const editGame = (patch: Partial<GameDraft>) => {
@@ -51,11 +78,13 @@ export function EditorClient({ games, profile }: { games: Game[]; profile: Profi
     const slug = target.slug
     setGameDrafts((all) => ({ ...all, [slug]: { ...all[slug], ...patch } }))
     setStatus({ kind: 'idle' })
+    setDeployUi({ kind: 'idle' })
   }
 
   const editProfile = (patch: Partial<ProfileDraft>) => {
     setProfileDraft((draft) => ({ ...draft, ...patch }))
     setStatus({ kind: 'idle' })
+    setDeployUi({ kind: 'idle' })
   }
 
   const game = target.kind === 'game' ? games.find((g) => g.slug === target.slug) : undefined
@@ -72,6 +101,16 @@ export function EditorClient({ games, profile }: { games: Game[]; profile: Profi
           coverScene: gameDraft.coverScene,
         }
       : undefined
+
+  const pending: Change[] = deployState?.changes ?? []
+  const unpushed = deployState?.ahead ?? 0
+  const deployable = pending.length > 0 || unpushed > 0
+  const deploySummary = [
+    pending.length > 0 ? `저장한 변경 ${pending.length}개` : null,
+    unpushed > 0 ? `푸시 안 한 커밋 ${unpushed}개` : null,
+  ]
+    .filter(Boolean)
+    .join(' · ')
 
   const dirty =
     target.kind === 'profile'
@@ -116,13 +155,48 @@ export function EditorClient({ games, profile }: { games: Game[]; profile: Profi
       if (target.kind === 'profile') {
         setSavedProfile({ ...profileDraft })
         setStatus({ kind: 'ok', message: 'profile.json에 저장했습니다.' })
+        void refreshDeploy()
       } else {
         const slug = target.slug
         setSavedGames((all) => ({ ...all, [slug]: { ...gameDrafts[slug] } }))
         setStatus({ kind: 'ok', message: `${slug}.json에 저장했습니다.` })
+        void refreshDeploy()
       }
     } catch {
       setStatus({ kind: 'error', message: '개발 서버에 연결하지 못했습니다.' })
+    }
+  }
+
+  async function runDeploy() {
+    // 첫 클릭은 묻기만 한다. 배포는 공개 사이트를 바꾸니 두 번 눌러야 나간다.
+    if (deployUi.kind !== 'confirm') {
+      setDeployUi({ kind: 'confirm' })
+      return
+    }
+
+    setDeployUi({ kind: 'pushing' })
+    try {
+      const response = await fetch('/api/deploy', { method: 'POST' })
+      const data = (await response.json().catch(() => ({}))) as Partial<DeployResult> & {
+        error?: string
+      }
+      if (!response.ok) {
+        setDeployUi({ kind: 'error', message: data.error ?? '배포하지 못했습니다.' })
+        return
+      }
+      if (!data.pushed) {
+        setDeployUi({ kind: 'ok', message: '배포할 변경이 없었습니다.' })
+      } else if (data.sha) {
+        setDeployUi({
+          kind: 'ok',
+          message: `${data.sha} 푸시함 — Vercel이 1~2분 안에 반영합니다.`,
+        })
+      } else {
+        setDeployUi({ kind: 'ok', message: '밀린 커밋을 푸시했습니다.' })
+      }
+      void refreshDeploy()
+    } catch {
+      setDeployUi({ kind: 'error', message: '개발 서버에 연결하지 못했습니다.' })
     }
   }
 
@@ -204,6 +278,65 @@ export function EditorClient({ games, profile }: { games: Game[]; profile: Profi
                 <span className={styles.dirty}>저장하지 않은 변경이 있습니다</span>
               )}
             </span>
+          </div>
+
+          <div className={styles.deploy}>
+            <h3 className={styles.deployTitle}>DEPLOY</h3>
+            <p className={styles.deployNote}>
+              저장한 <code>content</code> 파일을 커밋하고 GitHub에 푸시합니다. 푸시하면 Vercel이
+              자동으로 배포합니다.
+            </p>
+
+            <div className={styles.actions}>
+              <button
+                className="btn"
+                type="button"
+                onClick={runDeploy}
+                disabled={deployUi.kind === 'pushing' || !deployable}
+              >
+                {deployUi.kind === 'pushing'
+                  ? 'PUSHING…'
+                  : deployUi.kind === 'confirm'
+                    ? '정말 배포? 한 번 더'
+                    : '배포'}
+              </button>
+              {deployUi.kind === 'confirm' && (
+                <button
+                  className="btn not-inserted"
+                  type="button"
+                  onClick={() => setDeployUi({ kind: 'idle' })}
+                >
+                  취소
+                </button>
+              )}
+              <span className={styles.status}>
+                {deployUi.kind === 'ok' && <span className={styles.ok}>{deployUi.message}</span>}
+                {deployUi.kind === 'error' && <span className={styles.err}>{deployUi.message}</span>}
+                {(deployUi.kind === 'idle' || deployUi.kind === 'confirm') &&
+                  (deployState === null
+                    ? '배포 상태를 읽는 중…'
+                    : deployable
+                      ? `${deployState.branch} — ${deploySummary}`
+                      : '푸시할 것이 없습니다')}
+              </span>
+            </div>
+
+            {pending.length > 0 && (
+              <ul className={styles.files}>
+                {pending.slice(0, 8).map((change) => (
+                  <li key={change.path} className={styles.file}>
+                    <span className={styles.fileTag}>{describeChange(change)}</span> {change.path}
+                  </li>
+                ))}
+                {pending.length > 8 && <li className={styles.file}>… 외 {pending.length - 8}개</li>}
+              </ul>
+            )}
+
+            {dirty && (
+              <p className={styles.warn}>
+                저장하지 않은 변경은 배포에 들어가지 않습니다. 먼저 저장하세요.
+              </p>
+            )}
           </div>
         </section>
 
