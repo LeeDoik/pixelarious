@@ -7,7 +7,9 @@ export interface ProfileLink {
 }
 
 /** The PLAYER 1 section: who runs the arcade, where to reach them.
- *  donate is optional — with no address the coin slot simply doesn't appear. */
+ *  donate is optional — with no address the coin slot simply doesn't appear.
+ *  The slot is currently parked: profile.json keeps the address under
+ *  donateDisabled, so putting it back is a rename, not a rewrite. */
 export interface Profile {
   intro: string
   links: ProfileLink[]
