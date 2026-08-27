@@ -447,7 +447,7 @@ func submit_password(text: String) -> bool:
 		_pending_locked = ""
 		_dialog.close()
 		return open_folder(target)
-	_dialog.show_error("비밀번호가 올바르지 않습니다.")
+	_dialog.show_error("암호가 올바르지 않습니다.")
 	return false
 
 func _clear_pending_lock() -> void:

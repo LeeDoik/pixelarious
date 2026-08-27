@@ -49,7 +49,7 @@ func _ready() -> void:
 	col.add_child(_build_head())
 	_edit = LineEdit.new()
 	_edit.max_length = 24
-	_edit.placeholder_text = "비밀번호 (영문/숫자)"
+	_edit.placeholder_text = "암호 (영문/숫자)"
 	_edit.secret = true
 	_edit.text_changed.connect(_filter)
 	_edit.text_submitted.connect(func(t: String) -> void: submitted.emit(t))
