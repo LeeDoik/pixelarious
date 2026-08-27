@@ -70,18 +70,21 @@ static func _build_buttons(t: Theme) -> void:
 	t.set_stylebox("hover", "Button", _button_face(FACE.lightened(0.06)))
 	t.set_stylebox("disabled", "Button", _button_face(FACE))
 	t.set_stylebox("focus", "Button", dotted_focus())
-	t.set_color("font_color", "Button", TEXT)
-	t.set_color("font_hover_color", "Button", TEXT)
-	t.set_color("font_pressed_color", "Button", TEXT)
+	# 기본 테마의 버튼 글자색은 전부 흰색 계열이다 — 한 상태라도 안 덮으면 그 상태에서만
+	# 베이지 판 위에 흰 글자가 되어 글씨가 사라진다 (누르고 있는 동안이 특히 잘 걸린다)
+	for state in ["font_color", "font_hover_color", "font_pressed_color",
+			"font_hover_pressed_color", "font_focus_color"]:
+		t.set_color(state, "Button", TEXT)
 	t.set_color("font_disabled_color", "Button", TEXT_DIM)
 	t.set_color("font_color", "Label", TEXT)
 	# 체크박스는 버튼을 상속하지만 베벨을 입으면 안 된다 — 네모 글리프 + 라벨로 읽혀야 한다
 	for state in ["normal", "hover", "pressed", "disabled", "hover_pressed"]:
 		t.set_stylebox(state, "CheckBox", _flat_face(Color(0, 0, 0, 0)))
 	t.set_stylebox("focus", "CheckBox", dotted_focus())
-	t.set_color("font_color", "CheckBox", TEXT)
-	t.set_color("font_hover_color", "CheckBox", TEXT)
-	t.set_color("font_pressed_color", "CheckBox", TEXT)
+	for state in ["font_color", "font_hover_color", "font_pressed_color",
+			"font_hover_pressed_color", "font_focus_color"]:
+		t.set_color(state, "CheckBox", TEXT)
+	t.set_color("font_disabled_color", "CheckBox", TEXT_DIM)
 	var on := _icon("check_on")
 	var off := _icon("check_off")
 	if on != null and off != null:
@@ -100,6 +103,7 @@ static func _build_inputs(t: Theme) -> void:
 	t.set_color("caret_color", "LineEdit", TEXT)
 	t.set_color("font_placeholder_color", "LineEdit", TEXT_DIM)
 	t.set_color("selection_color", "LineEdit", SELECT)
+	t.set_color("font_selected_color", "LineEdit", SELECT_TEXT)   # 파란 선택 위의 글자
 	# 슬라이더: 파인 홈 + 튀어나온 사각 손잡이 (기본값은 얇은 선 + 동그란 손잡이라 시대가 어긋난다)
 	for type in ["HSlider", "VSlider"]:
 		# 홈의 두께 = 텍스처 여백(4) + 콘텐츠 여백. 안 주면 2픽셀 실선처럼 보인다
@@ -116,24 +120,31 @@ static func _build_inputs(t: Theme) -> void:
 				t.set_icon(item, type, grab)
 
 static func _build_lists(t: Theme) -> void:
-	# 파일 목록 두 형태 — ItemList(아이콘 보기) / Tree(자세히 보기)
+	# 파일 목록 두 형태 — ItemList(아이콘 보기) / Tree(자세히 보기).
+	# 줄의 상태는 "고름 × 창 포커스 × 마우스 얹음"의 조합이라 스타일박스가 다섯 벌 필요하다.
+	# 한 벌이라도 비면 그 조합에서만 Godot 기본 테마가 새는데 — 고른 줄에 마우스를 얹은
+	# 순간 흰 글자 밑에 흰 판이 깔려 파일 이름이 통째로 사라졌다 — 눈으로 훑어선 안 잡힌다.
 	for type in ["ItemList", "Tree"]:
 		t.set_stylebox("panel", type, sunken(FIELD))
 		t.set_stylebox("focus", type, StyleBoxEmpty.new())
+		t.set_stylebox("hovered", type, _fill(SELECT.lerp(FIELD, 0.82)))
 		t.set_stylebox("selected", type, _fill(SELECT.lerp(FACE, 0.35)))
+		t.set_stylebox("hovered_selected", type, _fill(SELECT.lerp(FACE, 0.20)))
+		t.set_stylebox("selected_focus", type, _fill(SELECT))
+		t.set_stylebox("hovered_selected_focus", type, _fill(SELECT.lightened(0.12)))
+		t.set_stylebox("cursor", type, StyleBoxEmpty.new())
+		t.set_stylebox("cursor_unfocused", type, StyleBoxEmpty.new())
 		t.set_color("font_color", type, TEXT)
+		t.set_color("font_hovered_color", type, TEXT)              # 얹기만 한 줄은 옅은 판 + 검은 글자
 		t.set_color("font_selected_color", type, SELECT_TEXT)
+		t.set_color("font_hovered_selected_color", type, SELECT_TEXT)
 		t.set_color("guide_color", type, GUIDE)
-	t.set_stylebox("selected_focus", "ItemList", _fill(SELECT))
-	t.set_stylebox("cursor", "ItemList", StyleBoxEmpty.new())
-	t.set_stylebox("cursor_unfocused", "ItemList", StyleBoxEmpty.new())
-	t.set_stylebox("hovered", "ItemList", _fill(SELECT.lerp(FIELD, 0.82)))
 	t.set_constant("h_separation", "ItemList", 8)
 	t.set_constant("v_separation", "ItemList", 6)
 	t.set_constant("icon_margin", "ItemList", 6)
-	t.set_stylebox("selected_focused", "Tree", _fill(SELECT))
-	t.set_stylebox("cursor", "Tree", StyleBoxEmpty.new())
-	t.set_stylebox("cursor_unfocused", "Tree", StyleBoxEmpty.new())
+	# Tree는 선택 대상이 아닌 줄에 마우스를 얹었을 때 쓰는 한 벌이 더 있다
+	t.set_stylebox("hovered_dimmed", "Tree", _fill(SELECT.lerp(FIELD, 0.90)))
+	t.set_color("font_hovered_dimmed_color", "Tree", TEXT)
 	t.set_stylebox("title_button_normal", "Tree", _column_head(FACE))
 	t.set_stylebox("title_button_hover", "Tree", _column_head(FACE.lightened(0.06)))
 	t.set_stylebox("title_button_pressed", "Tree", _column_head(FACE.darkened(0.08)))
