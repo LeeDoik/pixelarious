@@ -51,8 +51,22 @@ func test_opening_photo_spawns_viewer_window_and_marks_read() -> void:
 	assert_str(img_id).is_not_empty()
 	e.open_file(img_id)
 	assert_bool(wm.is_open("photo:" + img_id)).is_true()
+	# 그냥 텍스처가 아니라 확대·이동이 되는 뷰어여야 한다 (필사본 손글씨를 읽어야 하므로)
+	var viewer := _find_script(wm, "res://src/apps/photo.gd")
+	assert_object(viewer).override_failure_message("사진 창에 사진 뷰어가 안 들어 있다").is_not_null()
+	assert_bool(viewer.has_method("set_zoom")).is_true()
 	if img_cid != "":
 		assert_bool(GameState.is_read(img_cid)).is_true()
+
+func _find_script(from: Node, path: String) -> Node:
+	var want := load(path)
+	if from.get_script() == want:
+		return from
+	for c in from.get_children():
+		var hit := _find_script(c, path)
+		if hit != null:
+			return hit
+	return null
 
 func test_document_opens_notepad_window_with_body() -> void:
 	var pair := _make_with_wm()
