@@ -21,6 +21,7 @@
   {"id": "p_retreat", "parent": "photos", "name": "수련회_단체_0804.jpg", "type": "image", "cid": "img:retreat_2002", "image": "res://assets/img/photos/retreat_2002.png", "size": 118390, "mtime": "2002-08-04 15:52"},
   {"id": "p_window", "parent": "photos", "name": "창밖_1029.jpg", "type": "image", "cid": "img:window_night", "image": "res://assets/img/photos/window_night.png", "size": 52218, "mtime": "2002-10-29 23:11"},
 
+  {"id": "s_3weeks", "parent": "saebit", "name": "새빛_3주.txt", "type": "doc", "cid": "doc:saebit_3weeks", "size": 2346, "mtime": "2002-07-02 23:52"},
   {"id": "s_doc1", "parent": "saebit", "name": "필사_1_빛과그릇.txt", "type": "doc", "cid": "doc:doctrine_1", "size": 875, "mtime": "2002-08-11 22:30"},
   {"id": "s_doc2", "parent": "saebit", "name": "필사_2_새빛력.txt", "type": "doc", "cid": "doc:doctrine_2", "record": true, "size": 1074, "mtime": "2002-08-18 22:52"},
   {"id": "s_doc3", "parent": "saebit", "name": "필사_3_비움.txt", "type": "doc", "cid": "doc:doctrine_3", "size": 883, "mtime": "2002-09-22 23:10"},

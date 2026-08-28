@@ -24,6 +24,7 @@ const WRITTEN := {
 	"doc:bomi_log": "2002-10-30",
 	"doc:budget_2002": "",
 	"doc:bookmarks_memo": "2002-08-20",   # "포맷하기 전에 백업 (2002. 8. 20)"
+	"doc:saebit_3weeks": "2002-07-02",    # 마지막 항목 "2002. 7. 2 (화) 3주"
 	"doc:doctrine_1": "2002-07-28",       # "(2002. 7. 28 옮겨 적음)"
 	"doc:doctrine_2": "2002-08-11",
 	"doc:doctrine_3": "2002-09-22",
