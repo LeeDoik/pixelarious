@@ -39,6 +39,54 @@ func test_validator_catches_missing_doc() -> void:
 	})
 	assert_array(errors).is_not_empty()
 
+## 말해주기 항목은 읽을 수 있는 cid와 실제 응답 노드를 가리켜야 한다 — 하나라도 어긋나면
+## "찾은 것 말하기"를 눌렀을 때 조용히 아무 일도 안 일어난다
+func test_validator_catches_a_tell_pointing_nowhere() -> void:
+	var db: Node = auto_free(CDB.new())
+	var base := {
+		"fs": {"nodes": []}, "docs": {"doc:a": {"title": "a", "body": "b"}},
+		"chat": {"start": "n1", "nodes": {"n1": {"from": "sys", "text": "hi"}, "t1": {"from": "seulgi", "text": "r"}},
+			"logs": [], "tells": [{"cid": "doc:a", "say": "a가 있어요", "node": "t1"}]},
+		"mail": [], "web": {"bookmarks": [], "pages": {}},
+		"puzzles": {}, "records": {"records": []}, "strings": {"dev_allow_partial_records": true}
+	}
+	assert_array(db.validate(base)).is_empty()
+	var bad_cid := base.duplicate(true)
+	bad_cid["chat"]["tells"][0]["cid"] = "doc:ghost"
+	assert_array(db.validate(bad_cid)).is_not_empty()
+	var bad_node := base.duplicate(true)
+	bad_node["chat"]["tells"][0]["node"] = "t9"
+	assert_array(db.validate(bad_node)).is_not_empty()
+	var no_say := base.duplicate(true)
+	no_say["chat"]["tells"][0]["say"] = ""
+	assert_array(db.validate(no_say)).is_not_empty()
+
+## 힌트는 문자열이거나 {text, require, fallback} — 여전히 정확히 셋
+func test_validator_accepts_gated_hints_but_not_empty_ones() -> void:
+	var db: Node = auto_free(CDB.new())
+	var base := {
+		"fs": {"nodes": []}, "docs": {},
+		"chat": {"start": "n1", "nodes": {"n1": {"from": "sys", "text": "hi"}}, "logs": []},
+		"mail": [], "web": {"bookmarks": [], "pages": {}},
+		"puzzles": {"puzzle1": {"answer": "1", "hints": ["a", {"text": "b", "require": "told:doc:x", "fallback": "c"}, "d"]}},
+		"records": {"records": []}, "strings": {"dev_allow_partial_records": true}
+	}
+	assert_array(db.validate(base)).is_empty()
+	var bad := base.duplicate(true)
+	bad["puzzles"]["puzzle1"]["hints"][1] = {"require": "told:doc:x"}
+	assert_array(db.validate(bad)).is_not_empty()
+
+## 실제 콘텐츠의 말해주기 항목 — 열다섯은 넘고, 전부 다른 파일을 가리킨다
+func test_shipped_tells_are_plentiful_and_distinct() -> void:
+	var db := _make()
+	var tells: Array = db.tells()
+	assert_int(tells.size()).is_greater_equal(15)
+	var seen := {}
+	for t in tells:
+		assert_bool(seen.has(t["cid"])).override_failure_message(
+			"같은 파일에 말하기 항목이 둘: " + String(t["cid"])).is_false()
+		seen[t["cid"]] = true
+
 func test_exactly_nine_records_enforced() -> void:
 	var db := _make()
 	assert_int(db.records().size()).is_equal(9)

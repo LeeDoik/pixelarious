@@ -148,6 +148,93 @@ func test_gated_choice_appears_only_with_its_flag() -> void:
 	m._render_choices(node)
 	assert_int(m.choice_count()).is_equal(2)
 
+## 파일을 읽으면 "찾은 것 말하기"가 생기고, 말하면 사라진다 — 말하지 않는 것도 선택이다
+func test_reading_a_file_offers_to_tell_and_telling_uses_it_up() -> void:
+	var m := _make()
+	var tell: Dictionary = ContentDB.tells()[0]
+	var cid := String(tell["cid"])
+	m._auto_pending = false
+	m._try_continue()                          # n02 — 선택지 노드, 본선이 멈춰 있다
+	assert_int(m.tell_count()).is_equal(0)
+	GameState.mark_read(cid)
+	m._refresh_choices()
+	assert_int(m.tell_count()).is_equal(1)
+	assert_int(m.choice_count()).is_equal(2 + 1)   # 본선 둘 + 말하기 하나
+	m._on_tell(cid)
+	assert_bool(GameState.has_flag("told:" + cid)).is_true()
+	var joined := "".join(m.line_texts())
+	assert_str(joined).contains(String(tell["say"]))          # 내 말풍선
+	assert_str(joined).contains(String(ContentDB.chat_thread()["nodes"][tell["node"]]["text"]))
+	assert_bool(m._cp.in_detour()).is_true()
+	m._refresh_choices()
+	assert_int(m.tell_count()).is_equal(0)                    # 한 번 말한 건 다시 안 뜬다
+
+## 응답이 끝나면 본선 선택지가 그대로 돌아온다 — 본선 대사는 다시 찍히지 않는다
+func test_after_the_reply_the_main_choices_come_back() -> void:
+	var m := _make()
+	m._auto_pending = false
+	m._try_continue()                          # n02
+	var node := {"from": "seulgi", "text": "끝 응답"}
+	m._cp._nodes["__t_end"] = node
+	var before: int = m.line_count()
+	m._cp.detour("__t_end")
+	m._show_current()
+	assert_int(m.line_count()).is_equal(before + 1)
+	assert_bool(m._auto_pending).is_true()     # 돌아오는 잠깐
+	m._auto_pending = false
+	m._cp.pop_detour()
+	m._after_detour()
+	assert_int(m.line_count()).is_equal(before + 1)          # 본선 "오빠 맞지"는 다시 안 나온다
+	assert_int(m.choice_count()).is_equal(2)
+	assert_str(m._cp.current_id()).is_equal("n02")
+
+## 본선이 퍼즐 앞에 멈추면 "입력 중"이 아니라 말해줄 수 있는 것들이 보인다
+func test_a_locked_main_line_shows_tells_instead_of_typing() -> void:
+	var m := _make()
+	var cid := String(ContentDB.tells()[0]["cid"])
+	m._cp._nodes["__a"] = {"from": "seulgi", "text": "q", "next": "__b"}
+	m._cp._nodes["__b"] = {"from": "seulgi", "text": "t", "require": "puzzle1_solved"}
+	m._cp._cur = "__a"
+	m._auto_pending = false                    # 첫 노드의 자동 진행 타이머는 끝난 것으로
+	GameState.mark_read(cid)
+	m._render_choices(m._cp.current())
+	assert_bool(m._auto_pending).is_false()
+	assert_int(m.tell_count()).is_equal(1)
+
+## 슬기가 접속을 끊으면 말해줄 사람이 없다
+func test_no_tells_once_she_is_offline() -> void:
+	var m := _make()
+	GameState.mark_read(String(ContentDB.tells()[0]["cid"]))
+	m._bubble("sys", "슬기님이 접속을 종료했습니다.")
+	m._render_choices({"from": "seulgi", "text": "t"})
+	assert_int(m.tell_count()).is_equal(0)
+
+## 숫자 키 슬롯은 본선 선택지 뒤에 이어 붙는다
+func test_tell_slots_continue_after_the_choice_slots() -> void:
+	var m := _make()
+	var cid := String(ContentDB.tells()[0]["cid"])
+	m._auto_pending = false
+	m._try_continue()                          # n02 — 선택지 둘
+	GameState.mark_read(cid)
+	m._refresh_choices()
+	assert_int(m._choice_slots.size()).is_equal(2)
+	assert_int(m._tell_slots.size()).is_equal(1)
+	assert_str(m._tell_slots[0]).is_equal(cid)
+	var rows := []
+	for c in m._choice_box.get_children():
+		if c is Button and c.visible:
+			rows.append(c)
+	assert_str(String(rows[2].text)).starts_with("3.")
+
+## 파일 내용을 짚는 힌트는 그 파일을 말해준 뒤에만 — 그 전엔 대체 문장
+func test_gated_hint_falls_back_until_the_player_has_told_her() -> void:
+	var m := _make()
+	var h := {"text": "내용을 짚는 힌트", "require": "told:mail:m_welcome", "fallback": "습관만 말하는 힌트"}
+	assert_str(m._hint_text(h)).is_equal("습관만 말하는 힌트")
+	GameState.set_flag("told:mail:m_welcome")
+	assert_str(m._hint_text(h)).is_equal("내용을 짚는 힌트")
+	assert_str(m._hint_text("그냥 문자열")).is_equal("그냥 문자열")
+
 ## 선택지에 붙는 번호는 화면에 보이는 순서다. 걸러진 선택지 때문에 번호와
 ## 원래 인덱스가 어긋나면 숫자 키가 엉뚱한 말을 보낸다.
 func test_number_slots_follow_what_is_on_screen_not_the_raw_index() -> void:

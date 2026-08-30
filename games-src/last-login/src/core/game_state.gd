@@ -4,6 +4,7 @@ extends Node
 signal flag_changed(name: String)
 signal act_changed(act: int)
 signal record_read(cid: String, total: int)
+signal read_changed(cid: String)   # 무엇이든 처음 열람했을 때 — 메신저의 "찾은 것 말하기"가 이걸 듣는다
 
 const SAVE_PATH := "user://save.json"
 
@@ -43,10 +44,15 @@ func mark_read(cid: String) -> void:
 	_read[cid] = true
 	if cid in records_source.call():
 		record_read.emit(cid, records_count())
+	read_changed.emit(cid)
 	save_game()
 
 func is_read(cid: String) -> bool:
 	return _read.has(cid)
+
+## 몇 번째로 읽었나 (안 읽었으면 -1). 사전이 넣은 순서를 지키므로 그 순번이 곧 시간이다.
+func read_order(cid: String) -> int:
+	return _read.keys().find(cid)
 
 func records_count() -> int:
 	var n := 0

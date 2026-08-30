@@ -4,7 +4,7 @@ extends SceneTree
 ##
 ##   godot --path . -s tools/shot.gd -- <출력경로> [시나리오]
 ##
-## 시나리오: explorer(기본) | details | locked | notepad | desktop | stack | settings | boot | splash | start | maximize | shutdown | msg | msgroom | msgchoice | msgwhere | msglogs | msgmissed | photo | photozoom | photobieum | mail | maillist | maillock | mailattach | web | webmyhome | webportal | web404 | webgate | webnotice | webboard | webboard231 | webdiary10 | trash | trashdetails | trashfail | trashpurge | trashblocked | trashdone
+## 시나리오: explorer(기본) | details | locked | notepad | desktop | stack | settings | boot | splash | start | maximize | shutdown | msg | msgroom | msgchoice | msgwhere | msglogs | msgmissed | msgtell | help | photo | photozoom | photobieum | mail | maillist | maillock | mailattach | web | webmyhome | webportal | web404 | webgate | webnotice | webboard | webboard231 | webdiary10 | trash | trashdetails | trashfail | trashpurge | trashblocked | trashdone
 ##
 ## 주의: `-s`로 실행되는 스크립트는 오토로드가 등록되기 전에 컴파일된다.
 ## 여기서 프로젝트 클래스를 정적 타입으로 참조하면 그 스크립트가 딸려 컴파일되면서
@@ -29,7 +29,10 @@ func _run() -> void:
 	root.add_child(desktop)
 	await _settle()
 	var wm = desktop.wm
-	if scenario == "settings":
+	if scenario == "help":
+		desktop.open_help()
+		await _settle()
+	elif scenario == "settings":
 		# 오토로드도 이름으로 직접 쓰면 컴파일 시점에 없다 — 런타임에 노드로 집는다
 		root.get_node("/root/Fx").set_volume(0.55)   # 홈과 손잡이가 둘 다 보이게
 		root.get_node("/root/Fx").toggle_menu()
@@ -44,7 +47,7 @@ func _run() -> void:
 		if scenario == "photozoom":
 			pv.set_zoom(2.0, pv.view_size() * 0.5)
 		await _settle()
-	elif scenario in ["msg", "msgroom", "msgchoice", "msgwhere", "msglogs", "msgmissed"]:
+	elif scenario in ["msg", "msgroom", "msgchoice", "msgwhere", "msglogs", "msgmissed", "msgtell"]:
 		wm.open_app("messenger")
 		await _settle(60)          # 슬기의 첫 줄이 흘러나올 때까지 (창은 대화 목록으로 열린다)
 		var m = _find_by_script(wm, "res://src/apps/messenger.gd")
@@ -68,6 +71,13 @@ func _run() -> void:
 		if scenario == "msgmissed":
 			m.open_log(4)          # 부재중 쪽지 — 날짜 시스템 줄로 끊긴 석 달치
 			await _settle()
+		if scenario == "msgtell":
+			# n02 선택지 아래 "찾은 것 말하기" — 파일 셋을 읽은 상태
+			m.open_room("live")
+			await _settle(260)
+			for cid in ["doc:essay_2001", "doc:jesa_memo", "img:window_night"]:
+				root.get_node("/root/GameState").mark_read(cid)
+			await _settle(30)
 	elif scenario in ["mail", "maillist", "maillock", "mailattach"]:
 		wm.open_app("mail")
 		await _settle()

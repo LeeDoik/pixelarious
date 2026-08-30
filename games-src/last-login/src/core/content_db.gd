@@ -20,6 +20,14 @@ func load_all(base: String = "res://content") -> Array[String]:
 			var e: Array[String] = ["cannot parse " + path]
 			return e
 		raw[key] = parsed
+	# 도움말은 있어도 되고 없어도 된다 — 서사 데이터가 아니라 OS의 일부라 검증 대상이 아니다
+	var help_path := "%s/help.json" % base
+	if FileAccess.file_exists(help_path):
+		var help = JSON.parse_string(FileAccess.get_file_as_string(help_path))
+		if help == null:
+			var e: Array[String] = ["cannot parse " + help_path]
+			return e
+		raw["help"] = help
 	var errors := validate(raw)
 	if errors.is_empty():
 		_d = raw
@@ -93,7 +101,16 @@ func validate(raw: Dictionary) -> Array[String]:
 		for t in targets:
 			if not nodes.has(t):
 				errors.append("chat node %s -> missing %s" % [id, t])
-	# 퍼즐 정답 영숫자(+주소용 / .)
+	# 말해주기 항목 — 읽을 수 있는 cid여야 하고, 응답 노드가 있어야 하고, 할 말이 있어야 한다
+	for t in raw["chat"].get("tells", []):
+		var tcid := String(t.get("cid", ""))
+		if not known_cids.has(tcid):
+			errors.append("tell cid missing: " + tcid)
+		if not nodes.has(String(t.get("node", ""))):
+			errors.append("tell %s -> missing node %s" % [tcid, t.get("node", "?")])
+		if String(t.get("say", "")) == "":
+			errors.append("tell %s has no say" % tcid)
+	# 퍼즐 정답 영숫자(+주소용 / .) · 힌트는 셋 — 문자열이거나 {text, require, fallback}
 	var re := RegEx.new()
 	re.compile("^[A-Za-z0-9/.]+$")
 	for pid in raw["puzzles"]:
@@ -102,6 +119,11 @@ func validate(raw: Dictionary) -> Array[String]:
 			errors.append("puzzle %s answer not alnum" % pid)
 		if p.get("hints", []).size() != 3:
 			errors.append("puzzle %s needs exactly 3 hints" % pid)
+		for h in p.get("hints", []):
+			if typeof(h) == TYPE_DICTIONARY and String(h.get("text", "")) == "":
+				errors.append("puzzle %s hint without text" % pid)
+			elif typeof(h) != TYPE_DICTIONARY and typeof(h) != TYPE_STRING:
+				errors.append("puzzle %s hint of wrong type" % pid)
 	# 기록물 존재 + 9개 (개발 중 완화 플래그)
 	var recs: Array = raw["records"]["records"]
 	for cid in recs:
@@ -148,6 +170,13 @@ func chat_thread() -> Dictionary:
 
 func chat_logs() -> Array:
 	return _d["chat"]["logs"]
+
+## 플레이어가 슬기에게 말해줄 수 있는 것들 — {cid, say, node}
+func tells() -> Array:
+	return _d["chat"].get("tells", [])
+
+func help_topics() -> Array:
+	return _d.get("help", {}).get("topics", [])
 
 func mails() -> Array[Dictionary]:
 	var out: Array[Dictionary] = []

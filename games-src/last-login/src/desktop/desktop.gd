@@ -25,7 +25,7 @@ const TRAY_VOLUME := "res://assets/img/icons/tray_volume.png"
 const TASKBAR_H := 36.0
 const START_W := 92.0
 const TRAY_W := 200.0
-const START_MENU_H := 218.0
+const START_MENU_H := 252.0
 const TASK_BTN_MAX := 160.0
 const TASK_BTN_MIN := 64.0
 
@@ -295,6 +295,7 @@ func _build_start_menu() -> void:
 	sep.add_theme_stylebox_override("separator", sep_line)
 	sep.add_theme_constant_override("separation", 7)
 	items.add_child(sep)
+	items.add_child(_start_item(ContentDB.ui("app_help"), "", open_help))
 	items.add_child(_start_item("시스템 설정", "", func(): Fx.toggle_menu()))
 	row.add_child(items)
 	_start_menu.add_child(row)
@@ -345,6 +346,10 @@ func _start_item(label: String, icon_path: String, cb: Callable) -> Button:
 		_close_start_menu()
 		cb.call())
 	return b
+
+## 도움말은 바탕화면 아이콘이 아니라 시스템 화면이다 — 시스템 설정과 같은 급으로 시작 메뉴에만 있다
+func open_help() -> void:
+	wm.open_window("help", ContentDB.ui("app_help"), HelpApp.new(), Vector2(640, 460))
 
 func _toggle_start_menu() -> void:
 	if _start_menu.visible:
