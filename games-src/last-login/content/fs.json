@@ -43,7 +43,7 @@
   {"id": "l_letter", "parent": "locked", "name": "슬기에게(부치지못함).txt", "type": "doc", "cid": "doc:letter_unsent", "size": 1202, "mtime": "2002-11-01 04:16"},
 
   {"id": "zip_self", "parent": "attach", "name": "정리.zip", "type": "folder", "mtime": "2002-11-02 19:12"},
-  {"id": "z_van", "parent": "zip_self", "name": "봉고_1029.jpg", "type": "image", "cid": "img:van_1029", "image": "res://assets/img/photos/van_1029.png", "size": 39594, "mtime": "2002-10-29 23:13"},
+  {"id": "z_van", "parent": "zip_self", "name": "봉고_1029.jpg", "type": "image", "cid": "img:van_1029", "image": "res://assets/img/photos/van_1029.png", "size": 335440, "mtime": "2002-10-29 23:13"},
   {"id": "z_envelope", "parent": "zip_self", "name": "봉투_1102.jpg", "type": "image", "cid": "img:envelope_1102", "image": "res://assets/img/photos/envelope_1102.png", "size": 93284, "mtime": "2002-11-02 14:26"},
   {"id": "z_numbers", "parent": "zip_self", "name": "번호.txt", "type": "doc", "cid": "doc:numbers", "size": 363, "mtime": "2002-11-02 19:08"},
 
