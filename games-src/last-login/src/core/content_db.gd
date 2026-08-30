@@ -127,7 +127,8 @@ func validate(raw: Dictionary) -> Array[String]:
 	re.compile("^[A-Za-z0-9/.]+$")
 	for pid in raw["puzzles"]:
 		var p: Dictionary = raw["puzzles"][pid]
-		if re.search(String(p.get("answer", ""))) == null:
+		# answer가 없는 퍼즐은 "질문이 열쇠" — 자물쇠 대신 대화 노드가 <id>_solved를 찍는다
+		if p.has("answer") and re.search(String(p["answer"])) == null:
 			errors.append("puzzle %s answer not alnum" % pid)
 		if p.get("hints", []).size() != 3:
 			errors.append("puzzle %s needs exactly 3 hints" % pid)

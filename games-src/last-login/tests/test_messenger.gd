@@ -250,6 +250,29 @@ func test_questions_open_on_their_condition_and_sit_after_the_tells() -> void:
 	m._refresh_choices()
 	assert_bool(key in m._tell_slots).is_false()
 
+## 회계는 누구인가 — 자물쇠가 아니라 슬기의 기억으로 확인한다. 틀린 이름은 되묻고, 맞으면 퍼즐이 풀린다
+func test_naming_the_accountant_loops_until_right_and_solves_puzzle6() -> void:
+	var m := _make()
+	m._auto_pending = false
+	m._try_continue()                          # n02
+	GameState.set_flag("office_matched")
+	GameState.set_flag("told:ask:office_man")
+	GameState.set_flag("told:doc:donation_ledger")
+	m._refresh_choices()
+	assert_bool("ask:mailbox_name" in m._tell_slots).is_true()
+	m._on_tell("ask:mailbox_name")
+	assert_str(m._cp.current_id()).is_equal("a_name_1")
+	assert_int(m.choice_count()).is_equal(4)
+	m._on_choice(0)                            # 김정애 — 틀림
+	assert_bool(GameState.has_flag("puzzle6_solved")).is_false()
+	m._auto_pending = false
+	m._try_continue()                          # 되묻기 → a_name_1로 돌아온다
+	assert_str(m._cp.current_id()).is_equal("a_name_1")
+	m._on_choice(3)                            # 최영식
+	assert_bool(GameState.has_flag("accountant_named")).is_true()
+	assert_bool(GameState.has_flag("puzzle6_solved")).is_true()
+	assert_bool(m._cp.in_detour()).is_true()
+
 ## 힌트 자물쇠는 첫 미해결 퍼즐 — 단, hint_after가 안 찬 퍼즐은 건너뛴다
 func test_hint_gate_skips_a_puzzle_the_player_has_not_reached() -> void:
 	var m := _make()

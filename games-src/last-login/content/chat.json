@@ -772,7 +772,9 @@
   },
   "t_ledger_2": {
    "from": "seulgi",
-   "text": "오빠는 통장 하나를 십 년 썼어요. 첫 통장이요.\n이름이 바뀌는 게 이상하다고 생각은 했을 거예요. 물어보진 못했겠지만."
+   "text": "오빠는 통장 하나를 십 년 썼어요. 첫 통장이요.\n이름이 바뀌는 게 이상하다고 생각은 했을 거예요. 물어보진 못했겠지만.",
+   "next": "t_ledger_3",
+   "delay_ms": 1500
   },
   "t_notes_1": {
    "from": "seulgi",
@@ -868,6 +870,86 @@
   "a_jesa_2": {
    "from": "seulgi",
    "text": "그날 오빠가 안 왔어요.\n그 사람들도 아는 날이에요. 오빠가 말했을 테니까."
+  },
+  "t_ledger_3": {
+   "from": "seulgi",
+   "text": "경찰이 그랬어요. 돈을 받은 사람 이름이 있어야 한다고.\n이름이 넷이면 넷 다 가짜라는 말밖에 안 돼요. 그중에 진짜가 하나라도 있으면 좋겠는데."
+  },
+  "a_office_1": {
+   "from": "seulgi",
+   "text": "40대 남자요. 저녁마다 문을 잠갔어요.\n12월에 짐 뺄 때도 그 사람이었어요.",
+   "next": "a_office_2",
+   "delay_ms": 1500
+  },
+  "a_office_2": {
+   "from": "seulgi",
+   "text": "문 옆 우편함에 이름이 있었어요. 세 글자, 최로 시작해요.\n뒤는… 매일 봤는데 기억이 안 나요.",
+   "next": "a_office_3",
+   "delay_ms": 1500
+  },
+  "a_office_3": {
+   "from": "seulgi",
+   "text": "이름을 대면 알아볼 것 같아요."
+  },
+  "a_name_1": {
+   "from": "seulgi",
+   "text": "말해보세요.",
+   "choices": [
+    {
+     "text": "김정애",
+     "next": "a_name_no1"
+    },
+    {
+     "text": "이현우",
+     "next": "a_name_no2"
+    },
+    {
+     "text": "박순덕",
+     "next": "a_name_no3"
+    },
+    {
+     "text": "최영식",
+     "next": "a_name_ok"
+    }
+   ]
+  },
+  "a_name_no1": {
+   "from": "seulgi",
+   "text": "아니에요. 여자 이름이잖아요.",
+   "next": "a_name_1",
+   "delay_ms": 1200
+  },
+  "a_name_no2": {
+   "from": "seulgi",
+   "text": "아니에요. 최로 시작한다니까요.",
+   "next": "a_name_1",
+   "delay_ms": 1200
+  },
+  "a_name_no3": {
+   "from": "seulgi",
+   "text": "아니에요. 최요. 최.",
+   "next": "a_name_1",
+   "delay_ms": 1200
+  },
+  "a_name_ok": {
+   "from": "seulgi",
+   "text": "최영식.\n…그거예요. 최영식.",
+   "next": "a_name_ok2",
+   "delay_ms": 1500,
+   "set": [
+    "accountant_named",
+    "puzzle6_solved"
+   ]
+  },
+  "a_name_ok2": {
+   "from": "seulgi",
+   "text": "회계가 자기 이름으로 받았네요. 마지막 두 번은.\n천만 원을 자기 통장으로요.",
+   "next": "a_name_ok3",
+   "delay_ms": 1500
+  },
+  "a_name_ok3": {
+   "from": "seulgi",
+   "text": "이름 하나 있어요. 이제."
   }
  },
  "tells": [
@@ -1026,6 +1108,23 @@
    "require": "told:mail:m_self",
    "say": "어머니 기일이 언제예요?",
    "node": "a_jesa_1"
+  },
+  {
+   "id": "office_man",
+   "ask": true,
+   "require": "office_matched",
+   "say": "후문 사무실에 누가 있었어요?",
+   "node": "a_office_1"
+  },
+  {
+   "id": "mailbox_name",
+   "ask": true,
+   "require": [
+    "told:ask:office_man",
+    "told:doc:donation_ledger"
+   ],
+   "say": "우편함 이름, 이 중에 있었어요?",
+   "node": "a_name_1"
   }
  ],
  "logs": [

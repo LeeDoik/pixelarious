@@ -74,8 +74,8 @@ func is_restored(id: String) -> bool:
 
 func try_answer(puzzle_id: String, input: String) -> bool:
 	var p: Dictionary = puzzle_source.call(puzzle_id)
-	if p.is_empty():
-		return false
+	if p.is_empty() or not p.has("answer"):
+		return false   # 자물쇠가 없는 퍼즐(질문이 열쇠)은 대화 노드가 <id>_solved를 찍는다
 	if input.strip_edges().to_lower() == String(p["answer"]).to_lower():
 		set_flag(puzzle_id + "_solved")
 		return true

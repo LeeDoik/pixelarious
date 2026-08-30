@@ -88,6 +88,16 @@ func test_shipped_tells_are_plentiful_and_distinct() -> void:
 			"같은 열쇠에 말하기 항목이 둘: " + key).is_false()
 		seen[key] = true
 
+## 자물쇠 없는 퍼즐(질문이 열쇠)은 answer 없이 힌트만 가진다 — 대화상자로는 못 푼다
+func test_a_question_puzzle_has_no_answer_and_cannot_be_typed() -> void:
+	var db := _make()
+	var p: Dictionary = db.puzzle("puzzle6")
+	assert_bool(p.has("answer")).is_false()
+	assert_int(p["hints"].size()).is_equal(3)
+	GameState.reset()
+	assert_bool(GameState.try_answer("puzzle6", "choiyoungsik")).is_false()
+	assert_bool(GameState.has_flag("puzzle6_solved")).is_false()
+
 ## 압축 폴더 첨부는 fs에 그 폴더를 부모로 둔 노드가 있어야 하고, 물어보기는 cid 대신 id로 선다
 func test_validator_checks_zip_attachments_and_questions() -> void:
 	var db: Node = auto_free(CDB.new())

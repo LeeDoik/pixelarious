@@ -23,21 +23,27 @@ func at_end() -> bool:
 	var n := current()
 	return not n.has("next") and not n.has("choices")
 
-## require 문자열을 푼다. "read:<cid>"는 열람 기록, 그 밖은 플래그 —
-## 말해주기의 "told:<cid>"도 플래그 이름 그대로라 접두만으로 갈린다.
-func gate_open(req: String) -> bool:
-	if req == "":
+## require를 푼다. 문자열 하나이거나 배열(전부 차야 한다).
+## "read:<cid>"는 열람 기록, 그 밖은 플래그 — 말해주기의 "told:<cid>"도 플래그 이름 그대로라 접두만으로 갈린다.
+func gate_open(req) -> bool:
+	if req is Array:
+		for r in req:
+			if not gate_open(r):
+				return false
 		return true
-	if req.begins_with("read:"):
-		return _state.is_read(req.trim_prefix("read:"))
-	return _state.has_flag(req)
+	var s := String(req)
+	if s == "":
+		return true
+	if s.begins_with("read:"):
+		return _state.is_read(s.trim_prefix("read:"))
+	return _state.has_flag(s)
 
 ## 다음 노드의 자물쇠가 열려 있나 — 본선이 퍼즐 앞에 멈춰 있는지 메신저가 이걸로 안다
 func next_gate_open() -> bool:
 	var n := current()
 	if not n.has("next"):
 		return false
-	return gate_open(String(_nodes[n["next"]].get("require", "")))
+	return gate_open(_nodes[n["next"]].get("require", ""))
 
 func advance() -> bool:
 	var n := current()

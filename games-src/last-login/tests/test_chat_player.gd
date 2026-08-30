@@ -74,6 +74,17 @@ func test_gate_reads_told_and_read_prefixes() -> void:
 	assert_bool(cp.gate_open("told:mail:m_welcome")).is_true()
 	assert_bool(cp.gate_open("puzzle1_solved")).is_false()
 
+## require가 배열이면 전부 차야 열린다 — 물어보기 하나가 두 사실 위에 서는 경우
+func test_gate_with_a_list_needs_every_item() -> void:
+	var cp := CP.new(ContentDB.chat_thread(), GameState)
+	var req := ["office_matched", "told:doc:donation_ledger"]
+	assert_bool(cp.gate_open(req)).is_false()
+	GameState.set_flag("office_matched")
+	assert_bool(cp.gate_open(req)).is_false()
+	GameState.set_flag("told:doc:donation_ledger")
+	assert_bool(cp.gate_open(req)).is_true()
+	assert_bool(cp.gate_open([])).is_true()
+
 ## 본선이 퍼즐 앞에 멈춰 있는지를 다음 노드의 자물쇠로 안다
 func test_next_gate_open_reports_the_lock_on_the_next_node() -> void:
 	var thread := {"start": "a", "nodes": {

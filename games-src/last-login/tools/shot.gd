@@ -4,7 +4,7 @@ extends SceneTree
 ##
 ##   godot --path . -s tools/shot.gd -- <출력경로> [시나리오]
 ##
-## 시나리오: explorer(기본) | details | locked | notepad | desktop | stack | settings | boot | splash | start | maximize | shutdown | msg | msgroom | msgchoice | msgwhere | msglogs | msgmissed | msgtell | msgask | help | mailzip | photo | photozoom | photobieum | mail | maillist | maillock | mailattach | web | webmyhome | webportal | web404 | webgate | webnotice | webboard | webboard231 | webdiary10 | trash | trashdetails | trashfail | trashpurge | trashblocked | trashdone
+## 시나리오: explorer(기본) | details | locked | notepad | desktop | stack | settings | boot | splash | start | maximize | shutdown | msg | msgroom | msgchoice | msgwhere | msglogs | msgmissed | msgtell | msgask | msgname | help | mailzip | photo | photozoom | photobieum | mail | maillist | maillock | mailattach | web | webmyhome | webportal | web404 | webgate | webnotice | webboard | webboard231 | webdiary10 | trash | trashdetails | trashfail | trashpurge | trashblocked | trashdone
 ##
 ## 주의: `-s`로 실행되는 스크립트는 오토로드가 등록되기 전에 컴파일된다.
 ## 여기서 프로젝트 클래스를 정적 타입으로 참조하면 그 스크립트가 딸려 컴파일되면서
@@ -47,7 +47,7 @@ func _run() -> void:
 		if scenario == "photozoom":
 			pv.set_zoom(2.0, pv.view_size() * 0.5)
 		await _settle()
-	elif scenario in ["msg", "msgroom", "msgchoice", "msgwhere", "msglogs", "msgmissed", "msgtell", "msgask"]:
+	elif scenario in ["msg", "msgroom", "msgchoice", "msgwhere", "msglogs", "msgmissed", "msgtell", "msgask", "msgname"]:
 		wm.open_app("messenger")
 		await _settle(60)          # 슬기의 첫 줄이 흘러나올 때까지 (창은 대화 목록으로 열린다)
 		var m = _find_by_script(wm, "res://src/apps/messenger.gd")
@@ -78,6 +78,17 @@ func _run() -> void:
 			root.get_node("/root/GameState").mark_read("mail:m_self")
 			root.get_node("/root/GameState").set_flag("told:mail:m_self")
 			await _settle(30)
+		if scenario == "msgname":
+			# 우편함 이름 대기 — 예금주 넷이 선택지로 선다
+			m.open_room("live")
+			await _settle(260)
+			var gs = root.get_node("/root/GameState")
+			for f in ["office_matched", "told:ask:office_man", "told:doc:donation_ledger"]:
+				gs.set_flag(f)
+			await _settle(10)
+			m._refresh_choices()
+			m._on_tell("ask:mailbox_name")
+			await _settle(40)
 		if scenario == "msgtell":
 			# n02 선택지 아래 "찾은 것 말하기" — 파일 셋을 읽은 상태
 			m.open_room("live")

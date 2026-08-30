@@ -759,8 +759,8 @@ func _current_gate() -> String:
 	for pid in ContentDB.puzzle_ids():
 		if GameState.has_flag(pid + "_solved"):
 			continue
-		var after := String(ContentDB.puzzle(pid).get("hint_after", ""))
-		if after != "" and not _cp.gate_open(after):
+		var after = ContentDB.puzzle(pid).get("hint_after", "")
+		if String(after) != "" and not _cp.gate_open(after):
 			continue
 		return pid
 	return ""
@@ -813,7 +813,7 @@ func _render_choices(n: Dictionary) -> void:
 			var c: Dictionary = n["choices"][i]
 			# 조건이 안 찬 선택지는 아예 없다 — 회색 잠금은 '뭔가 있다'는 스포일러다.
 			# 걸러도 원 인덱스를 넘기므로 ChatPlayer.choose와 어긋나지 않는다.
-			if not _cp.gate_open(String(c.get("require", ""))):
+			if not _cp.gate_open(c.get("require", "")):
 				continue
 			_choice_slots.append(i)
 			_choice_box.add_child(_choice_row(String(c["text"]), i, _choice_slots.size()))
@@ -869,7 +869,7 @@ func _available_tells() -> Array:
 			continue
 		if t.has("cid") and not GameState.is_read(String(t["cid"])):
 			continue
-		if not _cp.gate_open(String(t.get("require", ""))):
+		if not _cp.gate_open(t.get("require", "")):
 			continue
 		if t.get("ask", false):
 			asks.append(t)
@@ -1064,7 +1064,7 @@ func _on_hint(puzzle_id: String, level: int) -> void:
 func _hint_text(h) -> String:
 	if typeof(h) != TYPE_DICTIONARY:
 		return String(h)
-	if _cp.gate_open(String(h.get("require", ""))):
+	if _cp.gate_open(h.get("require", "")):
 		return String(h.get("text", ""))
 	return String(h.get("fallback", ""))
 
