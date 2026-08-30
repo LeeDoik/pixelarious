@@ -753,10 +753,16 @@ func _start_script() -> void:
 	timer.timeout.connect(_hints.poll)
 	add_child(timer)
 
+## 힌트를 줄 자물쇠 — 첫 미해결 퍼즐. hint_after가 있으면 그 조건이 찰 때까지 그 퍼즐은 건너뛴다
+## (내게 쓴 메일을 아직 못 찾은 사람에게 그 메일 힌트를 주지 않는다)
 func _current_gate() -> String:
-	for pid in ["puzzle1", "puzzle2", "puzzle3", "puzzle4"]:
-		if not GameState.has_flag(pid + "_solved"):
-			return pid
+	for pid in ContentDB.puzzle_ids():
+		if GameState.has_flag(pid + "_solved"):
+			continue
+		var after := String(ContentDB.puzzle(pid).get("hint_after", ""))
+		if after != "" and not _cp.gate_open(after):
+			continue
+		return pid
 	return ""
 
 func _bubble(from: String, text: String) -> void:
@@ -847,32 +853,47 @@ func _refresh_choices() -> void:
 
 # ── 찾은 것 말하기 ────────────────────────────────────────────────────────
 
-## 읽었고 · 아직 말하지 않았고 · 슬기가 접속중일 때만. 최근에 읽은 것이 위.
+## 항목의 열쇠 — 찾은 것은 cid, 물어보기는 "ask:<id>". told 플래그도 이 열쇠로 찍힌다.
+func _tell_key(t: Dictionary) -> String:
+	return String(t["cid"]) if t.has("cid") else "ask:" + String(t.get("id", ""))
+
+## 읽었고(찾은 것) 또는 조건이 찼고(물어보기) · 아직 말하지 않았고 · 슬기가 접속중일 때만.
+## 찾은 것은 최근에 읽은 것이 위, 물어보기는 적힌 순서. 둘을 [tells, asks]로 돌려준다.
 func _available_tells() -> Array:
-	var out: Array = []
+	var tells: Array = []
+	var asks: Array = []
 	if not _online:
-		return out
+		return [tells, asks]
 	for t in ContentDB.tells():
-		var cid := String(t["cid"])
-		if GameState.is_read(cid) and not GameState.has_flag(TELL_PREFIX + cid):
-			out.append(t)
-	out.sort_custom(func(a, b) -> bool:
+		if GameState.has_flag(TELL_PREFIX + _tell_key(t)):
+			continue
+		if t.has("cid") and not GameState.is_read(String(t["cid"])):
+			continue
+		if not _cp.gate_open(String(t.get("require", ""))):
+			continue
+		if t.get("ask", false):
+			asks.append(t)
+		else:
+			tells.append(t)
+	tells.sort_custom(func(a, b) -> bool:
 		return GameState.read_order(String(a["cid"])) > GameState.read_order(String(b["cid"])))
-	return out
+	return [tells, asks]
 
 func _render_tells() -> void:
-	var items := _available_tells()
-	if items.is_empty():
-		return
-	_choice_box.add_child(_tells_head())
-	for t in items:
-		var cid := String(t["cid"])
-		_tell_slots.append(cid)
-		_choice_box.add_child(_choice_row(String(t["say"]), -1, _choice_slots.size() + _tell_slots.size(), cid))
+	var groups := _available_tells()
+	for i in 2:
+		var items: Array = groups[i]
+		if items.is_empty():
+			continue
+		_choice_box.add_child(_tells_head("찾은 것 말하기" if i == 0 else "물어보기"))
+		for t in items:
+			var key := _tell_key(t)
+			_tell_slots.append(key)
+			_choice_box.add_child(_choice_row(String(t["say"]), -1, _choice_slots.size() + _tell_slots.size(), key))
 
-func _tells_head() -> Control:
+func _tells_head(text: String) -> Control:
 	var l := Label.new()
-	l.text = "찾은 것 말하기"
+	l.text = text
 	l.add_theme_font_size_override("font_size", 12)
 	l.add_theme_color_override("font_color", NuriTheme.TEXT_DIM)
 	return l
@@ -880,19 +901,26 @@ func _tells_head() -> Control:
 func tell_count() -> int:
 	return _tell_slots.size()
 
-func _tell_by_cid(cid: String) -> Dictionary:
+func ask_count() -> int:
+	var n := 0
+	for k in _tell_slots:
+		if k.begins_with("ask:"):
+			n += 1
+	return n
+
+func _tell_by_key(key: String) -> Dictionary:
 	for t in ContentDB.tells():
-		if String(t["cid"]) == cid:
+		if _tell_key(t) == key:
 			return t
 	return {}
 
-## 말해준다: 내 말풍선 → told 플래그 → 응답 노드로 우회. 응답이 끝나면 본선으로 돌아온다.
-func _on_tell(cid: String) -> void:
-	var t := _tell_by_cid(cid)
-	if t.is_empty() or GameState.has_flag(TELL_PREFIX + cid):
+## 말해준다(또는 묻는다): 내 말풍선 → told 플래그 → 응답 노드로 우회. 응답이 끝나면 본선으로.
+func _on_tell(key: String) -> void:
+	var t := _tell_by_key(key)
+	if t.is_empty() or GameState.has_flag(TELL_PREFIX + key):
 		return
 	_bubble("player", String(t["say"]))
-	GameState.set_flag(TELL_PREFIX + cid)
+	GameState.set_flag(TELL_PREFIX + key)
 	_cp.detour(String(t["node"]))
 	_show_current()
 

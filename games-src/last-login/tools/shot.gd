@@ -4,7 +4,7 @@ extends SceneTree
 ##
 ##   godot --path . -s tools/shot.gd -- <출력경로> [시나리오]
 ##
-## 시나리오: explorer(기본) | details | locked | notepad | desktop | stack | settings | boot | splash | start | maximize | shutdown | msg | msgroom | msgchoice | msgwhere | msglogs | msgmissed | msgtell | help | photo | photozoom | photobieum | mail | maillist | maillock | mailattach | web | webmyhome | webportal | web404 | webgate | webnotice | webboard | webboard231 | webdiary10 | trash | trashdetails | trashfail | trashpurge | trashblocked | trashdone
+## 시나리오: explorer(기본) | details | locked | notepad | desktop | stack | settings | boot | splash | start | maximize | shutdown | msg | msgroom | msgchoice | msgwhere | msglogs | msgmissed | msgtell | msgask | help | mailzip | photo | photozoom | photobieum | mail | maillist | maillock | mailattach | web | webmyhome | webportal | web404 | webgate | webnotice | webboard | webboard231 | webdiary10 | trash | trashdetails | trashfail | trashpurge | trashblocked | trashdone
 ##
 ## 주의: `-s`로 실행되는 스크립트는 오토로드가 등록되기 전에 컴파일된다.
 ## 여기서 프로젝트 클래스를 정적 타입으로 참조하면 그 스크립트가 딸려 컴파일되면서
@@ -47,7 +47,7 @@ func _run() -> void:
 		if scenario == "photozoom":
 			pv.set_zoom(2.0, pv.view_size() * 0.5)
 		await _settle()
-	elif scenario in ["msg", "msgroom", "msgchoice", "msgwhere", "msglogs", "msgmissed", "msgtell"]:
+	elif scenario in ["msg", "msgroom", "msgchoice", "msgwhere", "msglogs", "msgmissed", "msgtell", "msgask"]:
 		wm.open_app("messenger")
 		await _settle(60)          # 슬기의 첫 줄이 흘러나올 때까지 (창은 대화 목록으로 열린다)
 		var m = _find_by_script(wm, "res://src/apps/messenger.gd")
@@ -71,6 +71,13 @@ func _run() -> void:
 		if scenario == "msgmissed":
 			m.open_log(4)          # 부재중 쪽지 — 날짜 시스템 줄로 끊긴 석 달치
 			await _settle()
+		if scenario == "msgask":
+			# 내게 쓴 메일을 말해준 뒤 — "물어보기" 묶음이 본선 선택지 아래에 선다
+			m.open_room("live")
+			await _settle(260)
+			root.get_node("/root/GameState").mark_read("mail:m_self")
+			root.get_node("/root/GameState").set_flag("told:mail:m_self")
+			await _settle(30)
 		if scenario == "msgtell":
 			# n02 선택지 아래 "찾은 것 말하기" — 파일 셋을 읽은 상태
 			m.open_room("live")
@@ -78,6 +85,16 @@ func _run() -> void:
 			for cid in ["doc:essay_2001", "doc:jesa_memo", "img:window_night"]:
 				root.get_node("/root/GameState").mark_read(cid)
 			await _settle(30)
+	elif scenario == "mailzip":
+		# 정리.zip을 푼 뒤 — 탐색기 창이 압축 폴더(섬)로 열린다
+		root.get_node("/root/GameState").set_flag("puzzle5_solved")
+		wm.open_app("mail")
+		await _settle()
+		var mail = _find_by_script(wm, "res://src/apps/mail.gd")
+		mail.open_mail("m_self")
+		await _settle()
+		mail.open_attachment("m_self")
+		await _settle()
 	elif scenario in ["mail", "maillist", "maillock", "mailattach"]:
 		wm.open_app("mail")
 		await _settle()

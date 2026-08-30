@@ -76,16 +76,38 @@ func test_validator_accepts_gated_hints_but_not_empty_ones() -> void:
 	bad["puzzles"]["puzzle1"]["hints"][1] = {"require": "told:doc:x"}
 	assert_array(db.validate(bad)).is_not_empty()
 
-## 실제 콘텐츠의 말해주기 항목 — 열다섯은 넘고, 전부 다른 파일을 가리킨다
+## 실제 콘텐츠의 말해주기 항목 — 열다섯은 넘고, 전부 다른 열쇠(파일 또는 질문)를 가진다
 func test_shipped_tells_are_plentiful_and_distinct() -> void:
 	var db := _make()
 	var tells: Array = db.tells()
 	assert_int(tells.size()).is_greater_equal(15)
 	var seen := {}
 	for t in tells:
-		assert_bool(seen.has(t["cid"])).override_failure_message(
-			"같은 파일에 말하기 항목이 둘: " + String(t["cid"])).is_false()
-		seen[t["cid"]] = true
+		var key: String = String(t["cid"]) if t.has("cid") else "ask:" + String(t["id"])
+		assert_bool(seen.has(key)).override_failure_message(
+			"같은 열쇠에 말하기 항목이 둘: " + key).is_false()
+		seen[key] = true
+
+## 압축 폴더 첨부는 fs에 그 폴더를 부모로 둔 노드가 있어야 하고, 물어보기는 cid 대신 id로 선다
+func test_validator_checks_zip_attachments_and_questions() -> void:
+	var db: Node = auto_free(CDB.new())
+	var base := {
+		"fs": {"nodes": [{"id": "z1", "parent": "zip_x", "name": "a.txt", "type": "doc", "cid": "doc:a", "mtime": "2002-11-02 19:00"}]},
+		"docs": {"doc:a": {"title": "a", "body": "b"}},
+		"chat": {"start": "n1", "nodes": {"n1": {"from": "sys", "text": "hi"}, "t1": {"from": "seulgi", "text": "r"}},
+			"logs": [], "tells": [{"id": "birthday", "ask": true, "say": "생일이요?", "node": "t1", "require": "met_seulgi"}]},
+		"mail": [{"id": "m9", "from": "x", "date": "2002-11-02", "subject": "s", "body": "b",
+			"attachment": {"name": "x.zip", "locked_by": "puzzle5", "folder": "zip_x"}}],
+		"web": {"bookmarks": [], "pages": {}},
+		"puzzles": {}, "records": {"records": []}, "strings": {"dev_allow_partial_records": true}
+	}
+	assert_array(db.validate(base)).is_empty()
+	var empty_zip := base.duplicate(true)
+	empty_zip["mail"][0]["attachment"]["folder"] = "zip_nowhere"
+	assert_array(db.validate(empty_zip)).is_not_empty()
+	var no_key := base.duplicate(true)
+	no_key["chat"]["tells"][0].erase("id")
+	assert_array(db.validate(no_key)).is_not_empty()
 
 func test_exactly_nine_records_enforced() -> void:
 	var db := _make()
@@ -131,4 +153,4 @@ func test_every_image_node_has_its_asset() -> void:
 		seen += 1
 		assert_bool(FileAccess.file_exists(String(n.get("image", "")))).override_failure_message(
 			"%s의 이미지 파일이 없다: %s" % [n.get("name"), n.get("image")]).is_true()
-	assert_int(seen).is_equal(10)   # 기존 5장 + 필사 3장 + 서원문 + 비움기록
+	assert_int(seen).is_equal(12)   # 기존 5장 + 필사 3장 + 서원문 + 비움기록 + 정리.zip 안의 둘

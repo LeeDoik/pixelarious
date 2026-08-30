@@ -143,6 +143,23 @@ func test_forward_history_is_cut_when_a_new_place_opens() -> void:
 	m.go_back()
 	assert_str(m.view_id()).is_equal("inbox")
 
+## 성진이 자기에게 보낸 메일 — 첨부 zip은 슬기만 아는 날짜로 잠겨 있고, 풀면 탐색기 창이 열린다
+func test_self_mail_zip_opens_an_explorer_window_after_her_birthday() -> void:
+	var m := _make()
+	var wm: WindowManager = auto_free(WindowManager.new())
+	wm.add_to_group("window_manager")
+	add_child(wm)
+	m.open_mail("m_self")
+	assert_bool(GameState.is_read("mail:m_self")).is_true()
+	assert_bool(m.open_attachment("m_self")).is_false()
+	assert_bool(m.submit_password("20020428")).is_false()   # 마이홈에 적힌 날짜 — 연도가 틀리다
+	assert_bool(m.submit_password("19761201")).is_false()   # 오빠 생일
+	assert_bool(m.submit_password("19810428")).is_true()
+	assert_bool(GameState.has_flag("puzzle5_solved")).is_true()
+	assert_bool(wm.is_open("zip:m_self")).is_true()
+	assert_str(wm.window_title("zip:m_self")).is_equal("정리.zip")
+	assert_str(m.view_id()).is_equal("mail:m_self")          # 메일 안의 자리는 그대로다
+
 func test_attachment_is_its_own_place() -> void:
 	# 첨부를 열면 한 자리로 쌓이고, 뒤로 누르면 그 메일로 돌아온다
 	var m := _make()

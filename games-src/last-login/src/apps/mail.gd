@@ -291,8 +291,9 @@ func _render(view: String) -> String:
 		var id := view.substr(ATTACH_PREFIX.length())
 		var m := _mail(id)
 		if not m.is_empty():
-			# 잠긴 첨부는 자리로 칠 수 없다 (기록을 되짚다 잠긴 자리에 닿는 경우)
-			if _attachment_open(m):
+			# 잠긴 첨부는 자리로 칠 수 없다 (기록을 되짚다 잠긴 자리에 닿는 경우).
+			# 압축 폴더 첨부는 메일 안의 자리가 아니라 별도 창이라 여기 올 일이 없다.
+			if _attachment_open(m) and not m["attachment"].has("folder"):
 				_show_attachment_page(m)
 				return view
 			_show_mail(m)
@@ -491,8 +492,21 @@ func open_attachment(mail_id: String) -> bool:
 		_dialog.ask_password("첨부파일 암호",
 			"'%s' 파일은 암호로 보호되어 있습니다." % String(a["name"]), ICON["locked"])
 		return false
+	if m["attachment"].has("folder"):
+		_open_zip_window(m)
+		return true
 	navigate(ATTACH_PREFIX + mail_id)
 	return true
+
+## 압축 파일 첨부는 메일 안의 한 자리가 아니라 탐색기 창이다 — 풀면 폴더 하나가 열린다
+func _open_zip_window(m: Dictionary) -> void:
+	var a: Dictionary = m["attachment"]
+	var wm := get_tree().get_first_node_in_group("window_manager")
+	if wm == null:
+		return
+	var ex := Explorer.new()
+	ex.start_folder = String(a["folder"])
+	wm.open_window("zip:" + String(m["id"]), String(a["name"]), ex, Vector2(600, 420), ICON["doc"])
 
 func submit_password(text: String) -> bool:
 	if _pending_attachment == "":

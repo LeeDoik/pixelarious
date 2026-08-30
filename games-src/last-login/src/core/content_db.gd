@@ -82,10 +82,19 @@ func validate(raw: Dictionary) -> Array[String]:
 			errors.append("fs node %s references missing doc %s" % [n["id"], n.get("cid", "?")])
 		if n.get("type") == "image" and n.has("cid"):
 			known_cids[n["cid"]] = true
-	# mail 첨부 cid
+	# mail 첨부 — 문서(cid)이거나 압축 폴더(folder: fs에 그 부모를 가진 노드가 있어야)
 	for m in raw["mail"]:
-		if m.has("attachment") and not docs.has(m["attachment"].get("cid", "")):
-			errors.append("mail %s attachment missing doc" % m["id"])
+		if m.has("attachment"):
+			var a: Dictionary = m["attachment"]
+			if a.has("folder"):
+				var inside := 0
+				for n in raw["fs"]["nodes"]:
+					if String(n.get("parent", "")) == String(a["folder"]):
+						inside += 1
+				if inside == 0:
+					errors.append("mail %s attachment folder %s is empty" % [m["id"], a["folder"]])
+			elif not docs.has(a.get("cid", "")):
+				errors.append("mail %s attachment missing doc" % m["id"])
 		known_cids["mail:" + m["id"]] = true
 	# chat 노드 연결
 	var nodes: Dictionary = raw["chat"]["nodes"]
@@ -101,10 +110,13 @@ func validate(raw: Dictionary) -> Array[String]:
 		for t in targets:
 			if not nodes.has(t):
 				errors.append("chat node %s -> missing %s" % [id, t])
-	# 말해주기 항목 — 읽을 수 있는 cid여야 하고, 응답 노드가 있어야 하고, 할 말이 있어야 한다
+	# 말해주기 항목 — 읽을 수 있는 cid(찾은 것)이거나 id(물어보기)여야 하고,
+	# 응답 노드가 있어야 하고, 할 말이 있어야 한다
 	for t in raw["chat"].get("tells", []):
 		var tcid := String(t.get("cid", ""))
-		if not known_cids.has(tcid):
+		if tcid == "" and String(t.get("id", "")) == "":
+			errors.append("tell without cid or id: " + str(t.get("say", "?")))
+		elif tcid != "" and not known_cids.has(tcid):
 			errors.append("tell cid missing: " + tcid)
 		if not nodes.has(String(t.get("node", ""))):
 			errors.append("tell %s -> missing node %s" % [tcid, t.get("node", "?")])
@@ -191,6 +203,10 @@ func web_page(url: String) -> Dictionary:
 
 func puzzle(id: String) -> Dictionary:
 	return _d["puzzles"].get(id, {})
+
+## puzzles.json에 적힌 순서 — 힌트 엔진이 첫 미해결 퍼즐을 이 순서로 고른다
+func puzzle_ids() -> Array:
+	return _d["puzzles"].keys()
 
 func records() -> Array:
 	return _d["records"]["records"]

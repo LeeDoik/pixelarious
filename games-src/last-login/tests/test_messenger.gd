@@ -226,6 +226,41 @@ func test_tell_slots_continue_after_the_choice_slots() -> void:
 			rows.append(c)
 	assert_str(String(rows[2].text)).starts_with("3.")
 
+## 물어보기 — 읽은 파일이 아니라 조건으로 열린다. 슬기의 삶은 슬기 입에서만 나온다
+func test_questions_open_on_their_condition_and_sit_after_the_tells() -> void:
+	var m := _make()
+	var ask := {}
+	for t in ContentDB.tells():
+		if t.get("ask", false):
+			ask = t
+			break
+	assert_bool(ask.is_empty()).override_failure_message("물어보기 항목이 없다").is_false()
+	m._auto_pending = false
+	m._try_continue()                          # n02
+	m._refresh_choices()
+	assert_int(m.ask_count()).is_equal(0)
+	GameState.set_flag(String(ask["require"]))
+	m._refresh_choices()
+	assert_int(m.ask_count()).is_greater(0)
+	var key := "ask:" + String(ask["id"])
+	assert_bool(key in m._tell_slots).is_true()
+	m._on_tell(key)
+	assert_bool(GameState.has_flag("told:" + key)).is_true()
+	assert_bool(m._cp.in_detour()).is_true()
+	m._refresh_choices()
+	assert_bool(key in m._tell_slots).is_false()
+
+## 힌트 자물쇠는 첫 미해결 퍼즐 — 단, hint_after가 안 찬 퍼즐은 건너뛴다
+func test_hint_gate_skips_a_puzzle_the_player_has_not_reached() -> void:
+	var m := _make()
+	for pid in ["puzzle1", "puzzle2", "puzzle3", "puzzle4"]:
+		GameState.set_flag(pid + "_solved")
+	assert_str(m._current_gate()).is_equal("")           # 내게 쓴 메일을 아직 못 봤다
+	GameState.mark_read("mail:m_self")
+	assert_str(m._current_gate()).is_equal("puzzle5")
+	GameState.set_flag("puzzle5_solved")
+	assert_str(m._current_gate()).is_equal("")
+
 ## 파일 내용을 짚는 힌트는 그 파일을 말해준 뒤에만 — 그 전엔 대체 문장
 func test_gated_hint_falls_back_until_the_player_has_told_her() -> void:
 	var m := _make()
