@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""필사 1~3 + 서원문 손글씨 사진 생성 — 성진이 제출 전에 디카로 찍어둔 것.
+"""필사 1~3 + 서원문 + 비움기록 손글씨 사진 생성 — 성진이 제출 전에 디카로 찍어둔 것.
 
 docs.json의 필사 본문에서 교리부만 뽑아(사적 주석 '(옮겨 적…)' 이후 제외)
 나눔손글씨 가람연꽃으로 줄공책에 앉히고, 디카 열화를 통과시킨다.
@@ -18,6 +18,7 @@ import json, math, os, random, sys
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
 
 FONT = os.path.join("scripts", "font_src", "garam_yeonkkot.ttf")
+PRINT_FONT = os.path.join("games-src", "last-login", "assets", "fonts", "Galmuri11.ttf")  # 교단 양식의 인쇄 글자
 DOCS = os.path.join("games-src", "last-login", "content", "docs.json")
 OUT = os.path.join("games-src", "last-login", "assets", "img", "photos")
 
@@ -236,6 +237,97 @@ def make_vow_page(lines):
     return canvas.convert("RGB")
 
 
+# 비움기록 — 교단 양식(인쇄된 칸·지시문)에 성진이 손으로 채운 것. §5.6 확정 텍스트.
+# 필사 1의 순서(미련 → 계획 → 이름 → 가족). 가족 칸은 비어 있다. 지장 없음.
+BIEUM_ROWS = [
+    ("미련", "낙방 수기 지움. 채점표 지움. 봄이 일지 지움."),
+    ("계획", "2002년 계획 지움. 이력서 지움. 자기소개서 지움."),
+    ("이름", "마이홈 글 셋 지움."),
+    ("가족", ""),
+]
+PRINT_INK = (46, 44, 48)         # 복사기 토너 — 검정에 가깝지만 완전한 검정은 아니다
+FORM_RULE = (96, 92, 96, 220)
+
+
+def draw_print(canvas, font, text, x, y, size, spacing=0.0):
+    """인쇄 글자 — 지터 없이 또박또박. 복사본이라 토너가 살짝 튄다."""
+    d = ImageDraw.Draw(canvas)
+    f = font.font_variant(size=size)
+    for ch in text:
+        d.text((x, y), ch, font=f, fill=PRINT_INK + (random.randint(225, 255),))
+        x += f.getlength(ch) + spacing
+    return x
+
+
+def print_width(font, text, size, spacing=0.0):
+    f = font.font_variant(size=size)
+    return sum(f.getlength(ch) + spacing for ch in text)
+
+
+def make_form_page():
+    """복사기로 뽑은 양식 한 장. 인쇄 칸은 게임 폰트(갈무리), 손글씨는 가람연꽃."""
+    W, H = 1440, 1560
+    HAND = 44
+    img = paper_base(W, H)
+    px = img.load()
+    for _ in range(W * H // 900):     # 복사기 토너 가루
+        x, y = random.randrange(W), random.randrange(H)
+        px[x, y] = (random.randint(150, 200),) * 3
+    canvas = img.convert("RGBA")
+    pf = ImageFont.truetype(PRINT_FONT, 40)
+    hf = ImageFont.truetype(FONT, HAND)
+    d = ImageDraw.Draw(canvas, "RGBA")
+    # 제목
+    title = "비 움 기 록"
+    tw = print_width(pf, title, 64, 6)
+    draw_print(canvas, pf, title, (W - tw) / 2, 120, 64, 6)
+    # 지시문
+    guide = "비운 것을 적으십시오. 비우지 못한 것은 비워 두십시오."
+    gw = print_width(pf, guide, 30)
+    draw_print(canvas, pf, guide, (W - gw) / 2, 232, 30)
+    # 표 — 라벨 칸 + 적는 칸
+    left, right, top, row_h, label_w = 120, W - 120, 330, 160, 190
+    rows = len(BIEUM_ROWS)
+    for i in range(rows + 1):
+        y = top + i * row_h
+        d.line([left, y, right, y], fill=FORM_RULE, width=3)
+    d.line([left, top, left, top + rows * row_h], fill=FORM_RULE, width=3)
+    d.line([left + label_w, top, left + label_w, top + rows * row_h], fill=FORM_RULE, width=3)
+    d.line([right, top, right, top + rows * row_h], fill=FORM_RULE, width=3)
+    for i, (label, hand) in enumerate(BIEUM_ROWS):
+        y = top + i * row_h
+        lw = print_width(pf, label, 40, 4)
+        draw_print(canvas, pf, label, left + (label_w - lw) / 2, y + 58, 40, 4)
+        if hand == "":
+            continue
+        lines = wrap_flow(hf, [hand], right - (left + label_w) - 70)
+        for j, ln in enumerate(lines):
+            by = y + 66 + j * 62 + random.randint(-2, 3)
+            draw_flow_text(canvas, hf, ln, left + label_w + 34 + random.randint(0, 6), by, HAND)
+    # 날짜 — "새빛력    년    월    일"에 손으로 4 / 9 / 30
+    y_date = top + rows * row_h + 150
+    x = W * 0.42
+    x = draw_print(canvas, pf, "새빛력", x, y_date, 36, 2) + 40
+    x_gap = x
+    x = draw_print(canvas, pf, "년", x + 70, y_date, 36) + 40
+    draw_flow_text(canvas, hf, "4", x_gap + 18, y_date + 40, 44)
+    x_gap = x
+    x = draw_print(canvas, pf, "월", x + 70, y_date, 36) + 40
+    draw_flow_text(canvas, hf, "9", x_gap + 18, y_date + 40, 44)
+    x_gap = x
+    x = draw_print(canvas, pf, "일", x + 100, y_date, 36)
+    draw_flow_text(canvas, hf, "30", x_gap + 14, y_date + 40, 44)
+    # 서명 — "비운 자 ________ (인)"에 손으로 새 벽. 지장은 없다.
+    y_sign = y_date + 110
+    x = W * 0.42
+    x = draw_print(canvas, pf, "비운 자", x, y_sign, 36, 2) + 60
+    x_blank0 = x
+    d.line([x, y_sign + 52, x + 300, y_sign + 52], fill=FORM_RULE, width=2)
+    draw_print(canvas, pf, "(인)", x + 330, y_sign, 36)
+    draw_flow_text(canvas, hf, "새 벽", x_blank0 + 70, y_sign + 42, 50, space_mul=2.2)
+    return canvas.convert("RGB")
+
+
 def make_page(title, lines, sign):
     W, LINE, TOP, SIZE = 1440, 68, 150, 46
     body_font = ImageFont.truetype(FONT, SIZE)
@@ -310,6 +402,14 @@ def main():
     out = os.path.join(OUT, "vow_photo.png")
     degrade(page).save(out)
     print("vow_photo ->", out, os.path.getsize(out), "bytes")
+    # 비움기록 — 서원한 그 밤(backup_0930 삭제 00:03과 같은 밤)에 찍어둔 제출본.
+    random.seed(20021001)
+    page = make_form_page()
+    if clean_dir:
+        page.save(os.path.join(clean_dir, "bieum_record_clean.png"))
+    out = os.path.join(OUT, "bieum_record.png")
+    degrade(page).save(out)
+    print("bieum_record ->", out, os.path.getsize(out), "bytes")
     print("ok")
 
 

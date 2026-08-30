@@ -83,4 +83,4 @@ func test_every_image_node_has_its_asset() -> void:
 		seen += 1
 		assert_bool(FileAccess.file_exists(String(n.get("image", "")))).override_failure_message(
 			"%s의 이미지 파일이 없다: %s" % [n.get("name"), n.get("image")]).is_true()
-	assert_int(seen).is_equal(9)   # 기존 5장 + 필사 3장 + 서원문
+	assert_int(seen).is_equal(10)   # 기존 5장 + 필사 3장 + 서원문 + 비움기록

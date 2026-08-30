@@ -25,6 +25,8 @@ const WRITTEN := {
 	"doc:budget_2002": "",
 	"doc:bookmarks_memo": "2002-08-20",   # "포맷하기 전에 백업 (2002. 8. 20)"
 	"doc:saebit_3weeks": "2002-07-02",    # 마지막 항목 "2002. 7. 2 (화) 3주"
+	"doc:saebit_assigned": "2002-11-01", # "11. 1 추가"
+	"doc:format_memo": "2002-08-20",     # "2002. 8. 20 (화)" — 포맷은 끝내 안 했다
 	"doc:doctrine_1": "2002-07-28",       # "(2002. 7. 28 옮겨 적음)"
 	"doc:doctrine_2": "2002-08-11",
 	"doc:doctrine_3": "2002-09-22",
@@ -147,6 +149,7 @@ const PHOTO_TAKEN := {
 	"s_photo2": "2002-08-11",
 	"s_photo3": "2002-09-22",
 	"s_photo4": "2002-09-30",   # 서원하러 가기 전에 찍어둔 원본    # 봉고차가 집 앞에 서 있던 날
+	"s_photo5": "2002-10-01",   # 비움기록 — 서원한 밤 자정 넘어 (backup_0930 삭제 00:03과 같은 밤)
 }
 
 func test_every_photo_is_dated_the_day_it_was_taken() -> void:
