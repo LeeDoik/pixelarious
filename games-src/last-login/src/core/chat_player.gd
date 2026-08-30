@@ -23,20 +23,35 @@ func at_end() -> bool:
 	var n := current()
 	return not n.has("next") and not n.has("choices")
 
-## require를 푼다. 문자열 하나이거나 배열(전부 차야 한다).
-## "read:<cid>"는 열람 기록, 그 밖은 플래그 — 말해주기의 "told:<cid>"도 플래그 이름 그대로라 접두만으로 갈린다.
-func gate_open(req) -> bool:
+## require를 푼다 — 대화·힌트·말해주기·엔딩이 전부 이 한 문법을 쓴다.
+##   "flag"            플래그
+##   "read:<cid>"      열람 기록
+##   "told:<cid>"      말해준 것 (플래그 이름 그대로)
+##   "!x"              부정
+##   ["a", "b"]        전부
+##   {"any": ["a","b"]} 하나라도
+static func open(req, state: Node) -> bool:
 	if req is Array:
 		for r in req:
-			if not gate_open(r):
+			if not open(r, state):
 				return false
 		return true
+	if req is Dictionary:
+		for r in req.get("any", []):
+			if open(r, state):
+				return true
+		return false
 	var s := String(req)
 	if s == "":
 		return true
+	if s.begins_with("!"):
+		return not open(s.substr(1), state)
 	if s.begins_with("read:"):
-		return _state.is_read(s.trim_prefix("read:"))
-	return _state.has_flag(s)
+		return state.is_read(s.trim_prefix("read:"))
+	return state.has_flag(s)
+
+func gate_open(req) -> bool:
+	return open(req, _state)
 
 ## 다음 노드의 자물쇠가 열려 있나 — 본선이 퍼즐 앞에 멈춰 있는지 메신저가 이걸로 안다
 func next_gate_open() -> bool:

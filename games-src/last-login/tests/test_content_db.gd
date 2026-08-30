@@ -119,6 +119,13 @@ func test_validator_checks_zip_attachments_and_questions() -> void:
 	no_key["chat"]["tells"][0].erase("id")
 	assert_array(db.validate(no_key)).is_not_empty()
 
+## 앱 쪽 자물쇠는 퍼즐 id를 박지 않고 종류로 묻는다 — 휴지통은 "restore", 누리넷은 페이지의 requires
+func test_puzzles_are_found_by_kind() -> void:
+	var db := _make()
+	assert_str(db.puzzle_of_kind("restore")).is_equal("puzzle4")
+	assert_str(db.puzzle_of_kind("url")).is_equal("puzzle3")
+	assert_str(db.puzzle_of_kind("nope")).is_equal("")
+
 func test_exactly_nine_records_enforced() -> void:
 	var db := _make()
 	assert_int(db.records().size()).is_equal(9)

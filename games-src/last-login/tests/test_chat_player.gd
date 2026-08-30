@@ -85,6 +85,16 @@ func test_gate_with_a_list_needs_every_item() -> void:
 	assert_bool(cp.gate_open(req)).is_true()
 	assert_bool(cp.gate_open([])).is_true()
 
+## 부정과 '하나라도' — 엔딩의 줄 갈아 끼우기가 이 둘로 선다
+func test_gate_negation_and_any() -> void:
+	assert_bool(CP.open("!puzzle5_solved", GameState)).is_true()
+	assert_bool(CP.open({"any": ["puzzle5_solved", "puzzle6_solved"]}, GameState)).is_false()
+	GameState.set_flag("puzzle6_solved")
+	assert_bool(CP.open("!puzzle6_solved", GameState)).is_false()
+	assert_bool(CP.open({"any": ["puzzle5_solved", "puzzle6_solved"]}, GameState)).is_true()
+	assert_bool(CP.open(["!puzzle5_solved", "puzzle6_solved"], GameState)).is_true()
+	assert_bool(CP.open({"any": []}, GameState)).is_false()
+
 ## 본선이 퍼즐 앞에 멈춰 있는지를 다음 노드의 자물쇠로 안다
 func test_next_gate_open_reports_the_lock_on_the_next_node() -> void:
 	var thread := {"start": "a", "nodes": {

@@ -168,7 +168,7 @@ func test_epilogue_types_all_lines_and_hidden_when_gated() -> void:
 	e.add_child(label)
 	for cid in ContentDB.records():
 		GameState.mark_read(cid)
-	await e._type_lines(label, e.EPILOGUE, true)
+	await e._type_lines(label, EndingScene.epilogue_lines(), true)
 	await get_tree().create_timer(2.2).timeout
 	var text := label.get_parsed_text()
 	assert_str(text).contains("LAST LOGIN")
@@ -176,10 +176,10 @@ func test_epilogue_types_all_lines_and_hidden_when_gated() -> void:
 
 func test_hidden_ending_echoes_only_what_the_player_said() -> void:
 	# 입을 닫았다면 돌아오지 않는다 — 그게 그 선택의 보상이다
-	assert_int(EndingScene.hidden_lines().size()).is_equal(EndingScene.HIDDEN.size())
+	assert_int(EndingScene.hidden_lines().size()).is_equal(EndingScene.hidden_base_count())
 	GameState.set_flag("pickup_told")
 	var lines := EndingScene.hidden_lines()
-	assert_int(lines.size()).is_equal(EndingScene.HIDDEN.size() + 1)
+	assert_int(lines.size()).is_equal(EndingScene.hidden_base_count() + 1)
 	assert_str(String(lines[-1])).contains("아까 말씀하셨죠")
 
 ## 침입자가 지운 점검표는 퍼즐 없이 복원된다 — 성진이 믿었던 트릭이
@@ -195,10 +195,69 @@ func test_checklist_restores_without_the_puzzle_and_marks_the_intruder() -> void
 func test_hidden_ending_acknowledges_the_recovered_checklist() -> void:
 	GameState.set_flag("intruder_found")
 	var lines := EndingScene.hidden_lines()
-	assert_int(lines.size()).is_equal(EndingScene.HIDDEN.size() + 1)
+	assert_int(lines.size()).is_equal(EndingScene.hidden_base_count() + 1)
 	assert_str(String(lines[-1])).contains("휴지통은 비우고")
 	GameState.set_flag("pickup_told")
-	assert_int(EndingScene.hidden_lines().size()).is_equal(EndingScene.HIDDEN.size() + 2)
+	assert_int(EndingScene.hidden_lines().size()).is_equal(EndingScene.hidden_base_count() + 2)
+
+## 결과의 폭 — 뼈대는 하나, 모은 증거에 따라 줄이 갈아 끼워진다
+func test_epilogue_widens_with_the_evidence() -> void:
+	var thin := "
+".join(EndingScene.epilogue_lines())
+	assert_str(thin).contains("출처를 물었어요")
+	assert_str(thin).contains("거기 가봤어요")
+	assert_str(thin).not_contains("차량 조회")
+	assert_str(thin).not_contains("계좌")
+	assert_str(thin).contains("LAST LOGIN")
+	GameState.set_flag("puzzle5_solved")
+	GameState.set_flag("puzzle6_solved")
+	GameState.set_flag("office_matched")
+	GameState.set_flag("accountant_named")
+	GameState.set_flag("letter_read_aloud")
+	var thick := "
+".join(EndingScene.epilogue_lines())
+	assert_str(thick).not_contains("출처를 물었어요")
+	assert_str(thick).contains("차량 조회")
+	assert_str(thick).contains("최영식")
+	assert_str(thick).contains("임대")
+	assert_str(thick).contains("편지")
+	assert_str(thick).contains("경찰이랑 같이")
+	assert_bool(thick.length() > thin.length()).is_true()
+
+## 컴퓨터의 행방 — 인쇄면 여기 남고(숨은 신은 이 길에서만), 원본이면 슬기 방으로 간다
+func test_the_computer_goes_where_the_last_choice_sends_it() -> void:
+	for cid in ContentDB.records():
+		GameState.mark_read(cid)
+	GameState.set_flag("ending_print")
+	var kept := "
+".join(EndingScene.epilogue_lines())
+	assert_str(kept).contains("컴퓨터를 껐다")
+	assert_str(kept).not_contains("슬기 방에")
+	assert_bool(EndingScene.should_show_hidden()).is_true()
+	GameState.reset()
+	for cid in ContentDB.records():
+		GameState.mark_read(cid)
+	GameState.set_flag("ending_original")
+	var sent := "
+".join(EndingScene.epilogue_lines())
+	assert_str(sent).contains("상자에 넣었다")
+	assert_str(sent).contains("슬기 방에")
+	assert_str(sent).contains("봄이")
+	assert_bool(EndingScene.should_show_hidden()).is_false()   # 그 질문은 여기로 오지 않는다
+
+## 마지막 선택지 여섯이 길 플래그를 찍는다 — 하나라도 빠지면 그 길의 엔딩은 인쇄 길로 새어 버린다
+func test_every_final_choice_names_its_route() -> void:
+	var nodes: Dictionary = ContentDB.chat_thread()["nodes"]
+	var seen := 0
+	for hub in ["g4l", "g4m", "iq4"]:
+		for c in nodes[hub]["choices"]:
+			var flags: Array = c.get("set", [])
+			if flags.has("ending_start"):
+				seen += 1
+				assert_bool(flags.has("ending_print") or flags.has("ending_original")).override_failure_message(
+					"%s의 '%s'가 길 플래그 없이 엔딩을 연다" % [hub, c["text"]]).is_true()
+				assert_int(flags.find("ending_start")).is_greater(0)   # 길 플래그가 먼저 찍힌다
+	assert_int(seen).is_equal(6)
 
 ## 점검표와 방명록은 서로를 인용한다 — 한쪽만 고치는 사고는 눈으로 안 잡힌다
 func test_checklist_and_guestbook_tell_the_same_story() -> void:

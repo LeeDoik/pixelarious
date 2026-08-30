@@ -31,7 +31,12 @@ func set_flag(name: String) -> void:
 func has_flag(name: String) -> bool:
 	return _flags.has(name)
 
+## 앰비언트가 한 겹씩 쌓이는 단 — 잠긴 폴더 → 관문 → 유서 → 성진이 남긴 마지막 증거(정리.zip 또는 회계의 이름)
 func current_act() -> int:
+	if has_flag("puzzle5_solved") or has_flag("puzzle6_solved"):
+		return 5
+	if has_flag("final_diary_read"):
+		return 4
 	if has_flag("puzzle3_solved"):
 		return 3
 	if has_flag("puzzle1_solved"):

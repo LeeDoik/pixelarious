@@ -396,6 +396,7 @@
      "text": "인쇄해서 경찰에 가세요",
      "next": "g5a",
      "set": [
+      "ending_print",
       "ending_start"
      ]
     },
@@ -403,6 +404,7 @@
      "text": "원본 그대로 보내드릴게요",
      "next": "g5b",
      "set": [
+      "ending_original",
       "ending_start"
      ]
     },
@@ -425,6 +427,7 @@
      "text": "인쇄해서 경찰에 가세요",
      "next": "g5a",
      "set": [
+      "ending_print",
       "ending_start"
      ]
     },
@@ -432,6 +435,7 @@
      "text": "원본 그대로 보내드릴게요",
      "next": "g5b",
      "set": [
+      "ending_original",
       "ending_start"
      ]
     },
@@ -484,6 +488,7 @@
      "text": "인쇄해서 경찰에 가세요",
      "next": "g5a",
      "set": [
+      "ending_print",
       "ending_start"
      ]
     },
@@ -491,6 +496,7 @@
      "text": "원본 그대로 보내드릴게요",
      "next": "g5b",
      "set": [
+      "ending_original",
       "ending_start"
      ]
     },
@@ -626,7 +632,10 @@
   },
   "t_letter_2": {
    "from": "seulgi",
-   "text": "…12월까지 채워놓겠다고요.\n오빠는 늘 12월이었어요."
+   "text": "…12월까지 채워놓겠다고요.\n오빠는 늘 12월이었어요.",
+   "set": [
+    "letter_read_aloud"
+   ]
   },
   "t_letter_3": {
    "from": "seulgi",

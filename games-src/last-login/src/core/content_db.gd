@@ -20,14 +20,15 @@ func load_all(base: String = "res://content") -> Array[String]:
 			var e: Array[String] = ["cannot parse " + path]
 			return e
 		raw[key] = parsed
-	# 도움말은 있어도 되고 없어도 된다 — 서사 데이터가 아니라 OS의 일부라 검증 대상이 아니다
-	var help_path := "%s/help.json" % base
-	if FileAccess.file_exists(help_path):
-		var help = JSON.parse_string(FileAccess.get_file_as_string(help_path))
-		if help == null:
-			var e: Array[String] = ["cannot parse " + help_path]
-			return e
-		raw["help"] = help
+	# 도움말·엔딩은 있어도 되고 없어도 된다 — 없으면 코드의 뼈대가 대신한다
+	for extra in ["help", "ending"]:
+		var extra_path := "%s/%s.json" % [base, extra]
+		if FileAccess.file_exists(extra_path):
+			var parsed_extra = JSON.parse_string(FileAccess.get_file_as_string(extra_path))
+			if parsed_extra == null:
+				var e: Array[String] = ["cannot parse " + extra_path]
+				return e
+			raw[extra] = parsed_extra
 	var errors := validate(raw)
 	if errors.is_empty():
 		_d = raw
@@ -190,6 +191,17 @@ func tells() -> Array:
 
 func help_topics() -> Array:
 	return _d.get("help", {}).get("topics", [])
+
+## 에필로그·숨은 신의 줄들 — {epilogue: [{text, require?}], hidden: [...]}
+func ending() -> Dictionary:
+	return _d.get("ending", {})
+
+## 퍼즐의 종류로 찾는다 — "restore"(휴지통 복원이 정답) 같은 앱 쪽 자물쇠는 id를 박지 않고 이걸로 묻는다
+func puzzle_of_kind(kind: String) -> String:
+	for pid in _d["puzzles"]:
+		if String(_d["puzzles"][pid].get("kind", "")) == kind:
+			return pid
+	return ""
 
 func mails() -> Array[Dictionary]:
 	var out: Array[Dictionary] = []

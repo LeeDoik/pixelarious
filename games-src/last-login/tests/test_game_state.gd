@@ -23,6 +23,10 @@ func test_act_progression() -> void:
 	assert_int(gs.current_act()).is_equal(2)
 	gs.set_flag("puzzle3_solved")
 	assert_int(gs.current_act()).is_equal(3)
+	gs.set_flag("final_diary_read")
+	assert_int(gs.current_act()).is_equal(4)
+	gs.set_flag("puzzle6_solved")          # 정리.zip이든 회계의 이름이든 — 마지막 증거
+	assert_int(gs.current_act()).is_equal(5)
 
 func test_try_answer_case_insensitive_and_flag() -> void:
 	var gs := _make()

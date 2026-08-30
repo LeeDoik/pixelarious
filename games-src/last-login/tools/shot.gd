@@ -4,7 +4,7 @@ extends SceneTree
 ##
 ##   godot --path . -s tools/shot.gd -- <출력경로> [시나리오]
 ##
-## 시나리오: explorer(기본) | details | locked | notepad | desktop | stack | settings | boot | splash | start | maximize | shutdown | msg | msgroom | msgchoice | msgwhere | msglogs | msgmissed | msgtell | msgask | msgname | help | mailzip | photo | photozoom | photobieum | mail | maillist | maillock | mailattach | web | webmyhome | webportal | web404 | webgate | webnotice | webboard | webboard231 | webdiary10 | trash | trashdetails | trashfail | trashpurge | trashblocked | trashdone
+## 시나리오: explorer(기본) | details | locked | notepad | desktop | stack | settings | boot | splash | start | maximize | shutdown | msg | msgroom | msgchoice | msgwhere | msglogs | msgmissed | msgtell | msgask | msgname | help | mailzip | ending | endingsent | photo | photozoom | photobieum | mail | maillist | maillock | mailattach | web | webmyhome | webportal | web404 | webgate | webnotice | webboard | webboard231 | webdiary10 | trash | trashdetails | trashfail | trashpurge | trashblocked | trashdone
 ##
 ## 주의: `-s`로 실행되는 스크립트는 오토로드가 등록되기 전에 컴파일된다.
 ## 여기서 프로젝트 클래스를 정적 타입으로 참조하면 그 스크립트가 딸려 컴파일되면서
@@ -29,7 +29,22 @@ func _run() -> void:
 	root.add_child(desktop)
 	await _settle()
 	var wm = desktop.wm
-	if scenario == "help":
+	if scenario in ["ending", "endingsent"]:
+		# 두터운 증거로 끝까지 간 뒤 — 인쇄 길(숨은 신 포함) / 원본 길(슬기 방)
+		var gs = root.get_node("/root/GameState")
+		for f in ["puzzle1_solved", "puzzle3_solved", "final_diary_read", "puzzle5_solved", "puzzle6_solved",
+				"office_matched", "accountant_named", "letter_read_aloud", "pickup_told", "intruder_found"]:
+			gs.set_flag(f)
+		for cid in root.get_node("/root/ContentDB").records():
+			gs.mark_read(cid)
+		gs.set_flag("ending_original" if scenario == "endingsent" else "ending_print")
+		var e = load("res://src/ending/ending.gd").new()
+		e.line_delay = 0.05
+		e.shutdown_hold = 0.2
+		root.add_child(e)
+		e.play(true)
+		await _settle(1200)
+	elif scenario == "help":
 		desktop.open_help()
 		await _settle()
 	elif scenario == "settings":

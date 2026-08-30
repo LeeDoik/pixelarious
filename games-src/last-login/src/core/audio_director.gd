@@ -7,7 +7,9 @@ const SFX := {
 	"startup": "res://assets/sfx/startup.wav",
 	"error": "res://assets/sfx/error.wav",
 }
-const LAYERS := ["res://assets/sfx/amb_fan.wav", "res://assets/sfx/amb_hum.wav", "res://assets/sfx/amb_drone.wav"]
+## 다섯 단 — 팬 · 형광등 험 · 불협 드론 · 심장처럼 뛰는 저음 · 들숨 같은 노이즈 (GameState.current_act 순)
+const LAYERS := ["res://assets/sfx/amb_fan.wav", "res://assets/sfx/amb_hum.wav", "res://assets/sfx/amb_drone.wav",
+	"res://assets/sfx/amb_pulse.wav", "res://assets/sfx/amb_breath.wav"]
 
 var _layer_players: Array[AudioStreamPlayer] = []
 var _variant_pools: Dictionary = {}  # 이름 -> 경로 배열 (매번 랜덤 재생)
