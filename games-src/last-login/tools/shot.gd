@@ -4,7 +4,7 @@ extends SceneTree
 ##
 ##   godot --path . -s tools/shot.gd -- <출력경로> [시나리오]
 ##
-## 시나리오: explorer(기본) | details | locked | notepad | desktop | stack | settings | boot | splash | start | maximize | shutdown | msg | msgroom | msgchoice | msgwhere | msglogs | msgmissed | msgtell | msgask | msgname | help | mailzip | ending | endingsent | photo | photozoom | photobieum | mail | maillist | maillock | mailattach | web | webmyhome | webportal | web404 | webgate | webnotice | webboard | webboard231 | webdiary10 | trash | trashdetails | trashfail | trashpurge | trashblocked | trashdone
+## 시나리오: explorer(기본) | details | locked | notepad | desktop | stack | settings | boot | splash | start | maximize | shutdown | msg | msgroom | msgchoice | msgwhere | msglogs | msgmissed | msgtell | msgask | msgname | help | mailzip | mailspam | weblucky | ending | endingsent | photo | photozoom | photobieum | mail | maillist | maillock | mailattach | web | webmyhome | webportal | web404 | webgate | webnotice | webboard | webboard231 | webdiary10 | trash | trashdetails | trashfail | trashpurge | trashblocked | trashdone
 ##
 ## 주의: `-s`로 실행되는 스크립트는 오토로드가 등록되기 전에 컴파일된다.
 ## 여기서 프로젝트 클래스를 정적 타입으로 참조하면 그 스크립트가 딸려 컴파일되면서
@@ -121,6 +121,12 @@ func _run() -> void:
 		await _settle()
 		mail.open_attachment("m_self")
 		await _settle()
+	elif scenario == "mailspam":
+		# 스팸 메일 — 본문 안의 "지금 바로 클릭"이 링크로 보인다
+		wm.open_app("mail")
+		await _settle()
+		_find_by_script(wm, "res://src/apps/mail.gd").open_mail("m_spam_1")
+		await _settle()
 	elif scenario in ["mail", "maillist", "maillock", "mailattach"]:
 		wm.open_app("mail")
 		await _settle()
@@ -132,7 +138,7 @@ func _run() -> void:
 		if scenario == "mailattach":
 			ml.submit_password("030703")  # 암호를 풀면 첨부도 한 장으로 열린다
 		await _settle()
-	elif scenario in ["web", "webmyhome", "webportal", "web404", "webgate", "webnotice", "webboard", "webboard231", "webdiary10"]:
+	elif scenario in ["web", "webmyhome", "webportal", "web404", "webgate", "webnotice", "webboard", "webboard231", "webdiary10", "weblucky"]:
 		wm.open_app("browser")
 		await _settle()
 		var br = _find_by_script(wm, "res://src/apps/browser.gd")
@@ -153,6 +159,8 @@ func _run() -> void:
 			target = "cafe.nurinet.co.kr/saebit/board/231"
 		elif scenario == "webdiary10":
 			target = "myhome.nurinet.co.kr/sj2002/diary/10"
+		elif scenario == "weblucky":
+			target = "nurinet-event.co.kr/lucky3"
 		br.navigate(target)
 		await _settle()
 	elif scenario in ["trash", "trashdetails", "trashfail", "trashpurge", "trashblocked", "trashdone"]:

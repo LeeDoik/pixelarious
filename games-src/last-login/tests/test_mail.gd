@@ -160,6 +160,33 @@ func test_self_mail_zip_opens_an_explorer_window_after_her_birthday() -> void:
 	assert_str(wm.window_title("zip:m_self")).is_equal("정리.zip")
 	assert_str(m.view_id()).is_equal("mail:m_self")          # 메일 안의 자리는 그대로다
 
+## 2002년의 메일은 본문 안의 주소가 문이었다 — 스팸의 "지금 바로 클릭"을 누르면 누리넷이 그 주소로 열린다
+func test_spam_call_to_action_opens_the_browser_at_its_address() -> void:
+	var m := _make()
+	var wm: WindowManager = auto_free(WindowManager.new())
+	wm.add_to_group("window_manager")
+	wm.register_app("browser", "누리넷", func() -> Control: return BrowserApp.new())
+	add_child(wm)
+	m.open_mail("m_spam_1")
+	var links: PackedStringArray = m.body_links()
+	assert_bool("nurinet-event.co.kr/lucky3" in links).is_true()
+	assert_str(m._view.get_parsed_text()).contains("지금 바로 클릭")      # 라벨은 남고
+	assert_str(m._view.get_parsed_text()).not_contains("[[link:")        # 마커는 안 보인다
+	assert_str(m._view.get_parsed_text()).contains("[백화점 상품권 100만원권]")   # 대괄호 글자는 그대로
+	m._open_link("nurinet-event.co.kr/lucky3")
+	assert_bool(wm.is_open("browser")).is_true()
+	var b := wm.content_of("browser")
+	assert_str(b.address_text()).is_equal("nurinet-event.co.kr/lucky3")
+	assert_str(b.page_title()).contains("당첨")
+
+## 맨몸 주소도 링크다 — 초대 메일 끝의 카페 공지 주소가 그렇다
+func test_bare_addresses_in_a_mail_become_links() -> void:
+	var m := _make()
+	m.open_mail("m_invite")
+	assert_bool("cafe.nurinet.co.kr/saebit/notice" in m.body_links()).is_true()
+	m.open_mail("m_demand_3")
+	assert_int(m.body_links().size()).is_equal(0)
+
 func test_attachment_is_its_own_place() -> void:
 	# 첨부를 열면 한 자리로 쌓이고, 뒤로 누르면 그 메일로 돌아온다
 	var m := _make()

@@ -20,6 +20,7 @@ var _title_label: Label
 var _max_btn: Button
 var _maximized := false
 var _restore_rect := Rect2()
+var _content: Control          # set_content로 들어온 앱 본체 — 창 관리자가 content_of로 꺼내준다
 
 func setup(id: String, title: String, win_size: Vector2, icon_path: String = "") -> void:
 	win_id = id
@@ -173,6 +174,10 @@ func set_content(c: Control) -> void:
 	c.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	m.add_child(c)
 	add_child(m)
+	_content = c
+
+func content() -> Control:
+	return _content
 
 func _on_titlebar_input(e: InputEvent) -> void:
 	if e is InputEventMouseButton and e.button_index == MOUSE_BUTTON_LEFT:
