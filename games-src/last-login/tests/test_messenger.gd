@@ -273,16 +273,20 @@ func test_naming_the_accountant_loops_until_right_and_solves_puzzle6() -> void:
 	assert_bool(GameState.has_flag("puzzle6_solved")).is_true()
 	assert_bool(m._cp.in_detour()).is_true()
 
-## 힌트 자물쇠는 첫 미해결 퍼즐 — 단, hint_after가 안 찬 퍼즐은 건너뛴다
+## 힌트 자물쇠는 첫 미해결 퍼즐 — 단, hint_after가 안 찬 퍼즐은 건너뛴다.
+## 후반 두 퍼즐의 hint_after는 "슬기가 본선에서 그 얘기를 꺼냈다"는 플래그다(p5_asked·p6_asked).
+## 본선이 자물쇠 앞에 멈추는 순간 힌트가 열리므로 힌트 없이 막히는 구간이 없다.
 func test_hint_gate_skips_a_puzzle_the_player_has_not_reached() -> void:
 	var m := _make()
 	for pid in ["puzzle1", "puzzle2", "puzzle3", "puzzle4"]:
 		GameState.set_flag(pid + "_solved")
-	assert_str(m._current_gate()).is_equal("")           # 내게 쓴 메일을 아직 못 봤다
-	GameState.mark_read("mail:m_self")
+	assert_str(m._current_gate()).is_equal("")           # 슬기가 아직 잠긴 것 얘기를 안 꺼냈다
+	GameState.set_flag("p5_asked")
 	assert_str(m._current_gate()).is_equal("puzzle5")
 	GameState.set_flag("puzzle5_solved")
-	assert_str(m._current_gate()).is_equal("")
+	assert_str(m._current_gate()).is_equal("")           # 회계 얘기는 아직 앞이다
+	GameState.set_flag("p6_asked")
+	assert_str(m._current_gate()).is_equal("puzzle6")
 
 ## 파일 내용을 짚는 힌트는 그 파일을 말해준 뒤에만 — 그 전엔 대체 문장
 func test_gated_hint_falls_back_until_the_player_has_told_her() -> void:

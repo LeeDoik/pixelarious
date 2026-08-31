@@ -201,24 +201,29 @@ func test_hidden_ending_acknowledges_the_recovered_checklist() -> void:
 	assert_int(EndingScene.hidden_lines().size()).is_equal(EndingScene.hidden_base_count() + 2)
 
 ## 결과의 폭 — 뼈대는 하나, 모은 증거에 따라 줄이 갈아 끼워진다
-func test_epilogue_widens_with_the_evidence() -> void:
-	var thin := "
-".join(EndingScene.epilogue_lines())
-	assert_str(thin).contains("출처를 물었어요")
-	assert_str(thin).contains("거기 가봤어요")
-	assert_str(thin).not_contains("차량 조회")
-	assert_str(thin).not_contains("계좌")
-	assert_str(thin).contains("LAST LOGIN")
+## 결과의 폭 — 이제 "무엇을 풀었나"가 아니라 "슬기에게 무엇을 말해줬나"로 갈린다.
+## 퍼즐 5·6이 본선 자물쇠가 되면서 '둘 다 안 풀었다'가 불가능해졌고(그 갈래는 걷어냈다),
+## 자물쇠 뒤에도 선택으로 남는 사진 둘이 그 자리를 대신한다.
+func test_epilogue_widens_with_what_you_told_her() -> void:
 	GameState.set_flag("puzzle5_solved")
 	GameState.set_flag("puzzle6_solved")
 	GameState.set_flag("office_matched")
 	GameState.set_flag("accountant_named")
+	var thin := "
+".join(EndingScene.epilogue_lines())
+	assert_str(thin).contains("사진이 더 있으면")        # 사진 얘기를 안 해준 갈래
+	assert_str(thin).not_contains("차량 조회")
+	assert_str(thin).not_contains("학교 정문")
+	assert_str(thin).contains("최영식")                  # 자물쇠를 지나왔으니 이건 항상
+	assert_str(thin).contains("LAST LOGIN")
+	GameState.set_flag("told:img:van_1029")
+	GameState.set_flag("told:img:envelope_1102")
 	GameState.set_flag("letter_read_aloud")
 	var thick := "
 ".join(EndingScene.epilogue_lines())
-	assert_str(thick).not_contains("출처를 물었어요")
+	assert_str(thick).not_contains("사진이 더 있으면")
 	assert_str(thick).contains("차량 조회")
-	assert_str(thick).contains("최영식")
+	assert_str(thick).contains("학교 정문")
 	assert_str(thick).contains("임대")
 	assert_str(thick).contains("편지")
 	assert_str(thick).contains("경찰이랑 같이")

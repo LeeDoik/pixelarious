@@ -125,3 +125,47 @@ func test_intruder_branch_is_wired_into_the_finale() -> void:
 		if Array(c.get("set", [])).has("ending_start"):
 			endings += 1
 	assert_int(endings).is_equal(2)
+
+## 퍼즐 5·6이 본선(next 사슬) 위에 있는가 — 확장이 우회로에만 쌓이는 것을 막는 회귀 가드.
+## 2026-08-30: 확장 1~4단계가 필수 경로를 한 글자도 늘리지 못한 채 끝난 일이 있다.
+## 만든 것을 경로에 올리지 않으면 아무도 밟지 않는다.
+func test_late_puzzles_gate_the_main_spine() -> void:
+	var nodes: Dictionary = ContentDB.chat_thread()["nodes"]
+	var gates: Array[String] = []
+	var cur := "g6"
+	for _i in 40:
+		if not nodes[cur].has("next"):
+			break
+		cur = String(nodes[cur]["next"])
+		var req: String = String(nodes[cur].get("require", ""))
+		if req != "":
+			gates.append(req)
+		if cur == "g4l":
+			break
+	assert_str(cur).override_failure_message(
+		"g6에서 엔딩 허브 g4l까지 next로 이어지지 않는다").is_equal("g4l")
+	assert_bool(gates.has("puzzle5_solved")).override_failure_message(
+		"본선이 puzzle5를 지나지 않는다 — 정리.zip이 우회로에만 있다").is_true()
+	assert_bool(gates.has("puzzle6_solved")).override_failure_message(
+		"본선이 puzzle6를 지나지 않는다 — 회계의 이름이 우회로에만 있다").is_true()
+
+## 힌트 자물쇠(hint_after)를 여는 노드가 퍼즐 자물쇠보다 앞에 있는가.
+## 없으면 본선이 퍼즐 앞에 멈춘 채 힌트도 안 나오는 완전 정체가 된다.
+func test_late_puzzle_hints_unlock_before_their_gate() -> void:
+	var nodes: Dictionary = ContentDB.chat_thread()["nodes"]
+	for pair in [["puzzle5", "p5_asked"], ["puzzle6", "p6_asked"]]:
+		var pid: String = pair[0]
+		var flag: String = pair[1]
+		assert_str(String(ContentDB.puzzle(pid).get("hint_after", ""))).is_equal(flag)
+		var opened := false
+		var cur := "g6"
+		for _i in 40:
+			if Array(nodes[cur].get("set", [])).has(flag):
+				opened = true
+			if String(nodes[cur].get("require", "")) == pid + "_solved":
+				break
+			if not nodes[cur].has("next"):
+				break
+			cur = String(nodes[cur]["next"])
+		assert_bool(opened).override_failure_message(
+			"%s의 힌트 자물쇠 %s를 여는 본선 노드가 퍼즐 자물쇠 앞에 없다" % [pid, flag]).is_true()

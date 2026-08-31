@@ -12,15 +12,19 @@
    "text": "다음 날, 슬기에게서 문자가 왔다."
   },
   {
-   "text": "\"경찰은 이번에도 출처를 물었어요. 제가 직접 갈게요.\"",
-   "require": [
-    "!puzzle5_solved",
-    "!puzzle6_solved"
-   ]
+   "text": "\"번호판 전체로 차량 조회가 됐대요.\"",
+   "require": "told:img:van_1029"
   },
   {
-   "text": "\"번호판 전체로 차량 조회가 됐대요.\"",
-   "require": "puzzle5_solved"
+   "text": "\"봉투 사진은 경찰이 제일 오래 봤어요. 제 학교 정문이라고 하니까요.\"",
+   "require": "told:img:envelope_1102"
+  },
+  {
+   "text": "\"사진이 더 있으면 좋겠대요. 얼굴이든 번호든요.\"",
+   "require": [
+    "!told:img:van_1029",
+    "!told:img:envelope_1102"
+   ]
   },
   {
    "text": "\"최영식 명의 계좌가 오늘 동결됐어요. 오빠 돈이 거기 있었어요.\"",
@@ -45,13 +49,6 @@
      "puzzle6_solved"
     ]
    }
-  },
-  {
-   "text": "\"거기 가봤어요. 오빠 물건이 있었어요. 고마워요.\"",
-   "require": [
-    "!puzzle5_solved",
-    "!puzzle6_solved"
-   ]
   },
   {
    "text": ""
