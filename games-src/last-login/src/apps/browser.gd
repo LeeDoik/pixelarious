@@ -433,8 +433,9 @@ func _render(url: String) -> Dictionary:
 	if page.is_empty():
 		_show_not_cached(u)
 		return {}
-	if String(page.get("requires", "")) == "puzzle3":
-		GameState.try_answer("puzzle3", u)
+	# 주소 자체가 정답인 페이지 — 어느 퍼즐인지는 페이지가 말한다
+	if page.has("requires"):
+		GameState.try_answer(String(page["requires"]), u)
 	_apply_skin(String(page.get("skin", DEFAULT_SKIN)), String(page.get("band", "")))
 	_title = String(page["title"])
 	_set_body(String(page["body"]))

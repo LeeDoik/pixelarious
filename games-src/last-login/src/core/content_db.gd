@@ -20,6 +20,15 @@ func load_all(base: String = "res://content") -> Array[String]:
 			var e: Array[String] = ["cannot parse " + path]
 			return e
 		raw[key] = parsed
+	# 도움말·엔딩은 있어도 되고 없어도 된다 — 없으면 코드의 뼈대가 대신한다
+	for extra in ["help", "ending"]:
+		var extra_path := "%s/%s.json" % [base, extra]
+		if FileAccess.file_exists(extra_path):
+			var parsed_extra = JSON.parse_string(FileAccess.get_file_as_string(extra_path))
+			if parsed_extra == null:
+				var e: Array[String] = ["cannot parse " + extra_path]
+				return e
+			raw[extra] = parsed_extra
 	var errors := validate(raw)
 	if errors.is_empty():
 		_d = raw
@@ -74,10 +83,19 @@ func validate(raw: Dictionary) -> Array[String]:
 			errors.append("fs node %s references missing doc %s" % [n["id"], n.get("cid", "?")])
 		if n.get("type") == "image" and n.has("cid"):
 			known_cids[n["cid"]] = true
-	# mail 첨부 cid
+	# mail 첨부 — 문서(cid)이거나 압축 폴더(folder: fs에 그 부모를 가진 노드가 있어야)
 	for m in raw["mail"]:
-		if m.has("attachment") and not docs.has(m["attachment"].get("cid", "")):
-			errors.append("mail %s attachment missing doc" % m["id"])
+		if m.has("attachment"):
+			var a: Dictionary = m["attachment"]
+			if a.has("folder"):
+				var inside := 0
+				for n in raw["fs"]["nodes"]:
+					if String(n.get("parent", "")) == String(a["folder"]):
+						inside += 1
+				if inside == 0:
+					errors.append("mail %s attachment folder %s is empty" % [m["id"], a["folder"]])
+			elif not docs.has(a.get("cid", "")):
+				errors.append("mail %s attachment missing doc" % m["id"])
 		known_cids["mail:" + m["id"]] = true
 	# chat 노드 연결
 	var nodes: Dictionary = raw["chat"]["nodes"]
@@ -93,15 +111,33 @@ func validate(raw: Dictionary) -> Array[String]:
 		for t in targets:
 			if not nodes.has(t):
 				errors.append("chat node %s -> missing %s" % [id, t])
-	# 퍼즐 정답 영숫자(+주소용 / .)
+	# 말해주기 항목 — 읽을 수 있는 cid(찾은 것)이거나 id(물어보기)여야 하고,
+	# 응답 노드가 있어야 하고, 할 말이 있어야 한다
+	for t in raw["chat"].get("tells", []):
+		var tcid := String(t.get("cid", ""))
+		if tcid == "" and String(t.get("id", "")) == "":
+			errors.append("tell without cid or id: " + str(t.get("say", "?")))
+		elif tcid != "" and not known_cids.has(tcid):
+			errors.append("tell cid missing: " + tcid)
+		if not nodes.has(String(t.get("node", ""))):
+			errors.append("tell %s -> missing node %s" % [tcid, t.get("node", "?")])
+		if String(t.get("say", "")) == "":
+			errors.append("tell %s has no say" % tcid)
+	# 퍼즐 정답 영숫자(+주소용 / .) · 힌트는 셋 — 문자열이거나 {text, require, fallback}
 	var re := RegEx.new()
 	re.compile("^[A-Za-z0-9/.]+$")
 	for pid in raw["puzzles"]:
 		var p: Dictionary = raw["puzzles"][pid]
-		if re.search(String(p.get("answer", ""))) == null:
+		# answer가 없는 퍼즐은 "질문이 열쇠" — 자물쇠 대신 대화 노드가 <id>_solved를 찍는다
+		if p.has("answer") and re.search(String(p["answer"])) == null:
 			errors.append("puzzle %s answer not alnum" % pid)
 		if p.get("hints", []).size() != 3:
 			errors.append("puzzle %s needs exactly 3 hints" % pid)
+		for h in p.get("hints", []):
+			if typeof(h) == TYPE_DICTIONARY and String(h.get("text", "")) == "":
+				errors.append("puzzle %s hint without text" % pid)
+			elif typeof(h) != TYPE_DICTIONARY and typeof(h) != TYPE_STRING:
+				errors.append("puzzle %s hint of wrong type" % pid)
 	# 기록물 존재 + 9개 (개발 중 완화 플래그)
 	var recs: Array = raw["records"]["records"]
 	for cid in recs:
@@ -149,6 +185,24 @@ func chat_thread() -> Dictionary:
 func chat_logs() -> Array:
 	return _d["chat"]["logs"]
 
+## 플레이어가 슬기에게 말해줄 수 있는 것들 — {cid, say, node}
+func tells() -> Array:
+	return _d["chat"].get("tells", [])
+
+func help_topics() -> Array:
+	return _d.get("help", {}).get("topics", [])
+
+## 에필로그·숨은 신의 줄들 — {epilogue: [{text, require?}], hidden: [...]}
+func ending() -> Dictionary:
+	return _d.get("ending", {})
+
+## 퍼즐의 종류로 찾는다 — "restore"(휴지통 복원이 정답) 같은 앱 쪽 자물쇠는 id를 박지 않고 이걸로 묻는다
+func puzzle_of_kind(kind: String) -> String:
+	for pid in _d["puzzles"]:
+		if String(_d["puzzles"][pid].get("kind", "")) == kind:
+			return pid
+	return ""
+
 func mails() -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
 	out.assign(_d["mail"])
@@ -162,6 +216,10 @@ func web_page(url: String) -> Dictionary:
 
 func puzzle(id: String) -> Dictionary:
 	return _d["puzzles"].get(id, {})
+
+## puzzles.json에 적힌 순서 — 힌트 엔진이 첫 미해결 퍼즐을 이 순서로 고른다
+func puzzle_ids() -> Array:
+	return _d["puzzles"].keys()
 
 func records() -> Array:
 	return _d["records"]["records"]

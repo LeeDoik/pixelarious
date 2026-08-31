@@ -194,9 +194,11 @@ func _build_reader() -> Control:
 	head_panel.add_child(_header)
 	box.add_child(head_panel)
 	_view = RichTextLabel.new()
-	_view.bbcode_enabled = false
+	_view.bbcode_enabled = true          # 본문의 링크만 bbcode로 — 나머지 글자는 _render_body가 이스케이프한다
 	_view.selection_enabled = true
 	_view.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_view.meta_clicked.connect(func(meta): _open_link(String(meta)))
+	_view.meta_underlined = true
 	box.add_child(_view)
 	box.add_child(_build_attach_bar())
 	_reader = box
@@ -291,8 +293,9 @@ func _render(view: String) -> String:
 		var id := view.substr(ATTACH_PREFIX.length())
 		var m := _mail(id)
 		if not m.is_empty():
-			# 잠긴 첨부는 자리로 칠 수 없다 (기록을 되짚다 잠긴 자리에 닿는 경우)
-			if _attachment_open(m):
+			# 잠긴 첨부는 자리로 칠 수 없다 (기록을 되짚다 잠긴 자리에 닿는 경우).
+			# 압축 폴더 첨부는 메일 안의 자리가 아니라 별도 창이라 여기 올 일이 없다.
+			if _attachment_open(m) and not m["attachment"].has("folder"):
 				_show_attachment_page(m)
 				return view
 			_show_mail(m)
@@ -318,7 +321,7 @@ func _show_mail(m: Dictionary) -> void:
 		["날짜", String(m["date"])],
 		["제목", String(m["subject"])],
 	])
-	_view.text = String(m["body"])
+	_view.text = _render_body(String(m["body"]))
 	_view.scroll_to_line(0)
 	_show_attachment(m)
 	GameState.mark_read("mail:" + id)
@@ -336,7 +339,7 @@ func _show_attachment_page(m: Dictionary) -> void:
 	_list.visible = false
 	_reader.visible = true
 	_set_header([["첨부", String(a["name"])], ["보낸사람", String(m["from"])]])
-	_view.text = String(d["title"]) + "\n\n" + String(d["body"])
+	_view.text = _render_body(String(d["title"]) + "\n\n" + String(d["body"]))
 	_view.scroll_to_line(0)
 	_attach_bar.visible = false   # 이미 그 첨부를 보고 있다 — 여는 막대를 또 달지 않는다
 	GameState.mark_read(String(a["cid"]))
@@ -491,8 +494,21 @@ func open_attachment(mail_id: String) -> bool:
 		_dialog.ask_password("첨부파일 암호",
 			"'%s' 파일은 암호로 보호되어 있습니다." % String(a["name"]), ICON["locked"])
 		return false
+	if m["attachment"].has("folder"):
+		_open_zip_window(m)
+		return true
 	navigate(ATTACH_PREFIX + mail_id)
 	return true
+
+## 압축 파일 첨부는 메일 안의 한 자리가 아니라 탐색기 창이다 — 풀면 폴더 하나가 열린다
+func _open_zip_window(m: Dictionary) -> void:
+	var a: Dictionary = m["attachment"]
+	var wm := get_tree().get_first_node_in_group("window_manager")
+	if wm == null:
+		return
+	var ex := Explorer.new()
+	ex.start_folder = String(a["folder"])
+	wm.open_window("zip:" + String(m["id"]), String(a["name"]), ex, Vector2(600, 420), ICON["doc"])
 
 func submit_password(text: String) -> bool:
 	if _pending_attachment == "":
@@ -506,6 +522,65 @@ func submit_password(text: String) -> bool:
 		return open_attachment(target)
 	_dialog.show_error("암호가 올바르지 않습니다.")
 	return false
+
+# ── 본문의 링크 ───────────────────────────────────────────────────────────
+
+const LINK_COLOR := "#1b4d8f"
+const LINK_PATTERN := "\\[\\[link:([^|\\]]+)\\|([^\\]]+)\\]\\]"          # [[link:주소|글자]]
+const URL_PATTERN := "\\b[a-z0-9-]+(?:\\.[a-z0-9-]+)*\\.co\\.kr(?:/[^\\s)\\]]*)?"   # 맨몸 주소도 링크다 (누리넷과 같은 규칙)
+
+## 본문을 bbcode로 — 글자는 전부 이스케이프하고, [[link:주소|글자]]와 맨몸 주소만 링크로 만든다.
+## 링크를 누르면 누리넷이 그 주소로 열린다 — 2002년의 메일이 그랬듯 본문 안의 주소가 문이다.
+func _render_body(body: String) -> String:
+	var out := ""
+	var re_link := RegEx.new()
+	re_link.compile(LINK_PATTERN)
+	var re_url := RegEx.new()
+	re_url.compile(URL_PATTERN)
+	var pos := 0
+	while pos < body.length():
+		var m := re_link.search(body, pos)
+		var chunk := body.substr(pos) if m == null else body.substr(pos, m.get_start() - pos)
+		out += _linkify_urls(chunk, re_url)
+		if m == null:
+			break
+		out += _link_bb(m.get_string(1).strip_edges(), m.get_string(2))
+		pos = m.get_end()
+	return out
+
+func _linkify_urls(text: String, re_url: RegEx) -> String:
+	var out := ""
+	var pos := 0
+	for m in re_url.search_all(text):
+		out += _escape_bb(text.substr(pos, m.get_start() - pos))
+		out += _link_bb(m.get_string(), m.get_string())
+		pos = m.get_end()
+	return out + _escape_bb(text.substr(pos))
+
+func _link_bb(url: String, label: String) -> String:
+	return "[url=%s][color=%s]%s[/color][/url]" % [url, LINK_COLOR, _escape_bb(label)]
+
+static func _escape_bb(s: String) -> String:
+	return s.replace("[", "[lb]")
+
+## 링크를 누르면 누리넷 창이 뜨고 그 주소로 간다 (캐시에 없으면 누리넷이 그렇게 말한다)
+func _open_link(url: String) -> void:
+	var wm := get_tree().get_first_node_in_group("window_manager") as WindowManager
+	if wm == null:
+		return
+	wm.open_app("browser")
+	var browser := wm.content_of("browser")
+	if browser != null and browser.has_method("navigate"):
+		browser.navigate(url)
+
+## 본문에서 링크로 만들어진 주소들 (테스트·검증용)
+func body_links() -> PackedStringArray:
+	var out := PackedStringArray()
+	var re := RegEx.new()
+	re.compile("\\[url=([^\\]]+)\\]")
+	for m in re.search_all(_view.text):
+		out.append(m.get_string(1))
+	return out
 
 func _explain(title: String, body: String) -> void:
 	_dialog.show_message(title, body, ICON["read"])

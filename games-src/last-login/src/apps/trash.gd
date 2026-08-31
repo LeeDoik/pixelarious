@@ -449,7 +449,7 @@ func restore(node_id: String) -> bool:
 	var n := ContentDB.fs_node(node_id)
 	if n.is_empty() or n.get("corrupt", false):
 		return false
-	var is_answer := GameState.try_answer("puzzle4", node_id)
+	var is_answer := GameState.try_answer(ContentDB.puzzle_of_kind("restore"), node_id)
 	if not is_answer and not n.get("restorable", false):
 		return false
 	GameState.restore_node(node_id)

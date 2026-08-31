@@ -116,7 +116,7 @@
   },
   "n11": {
    "from": "seulgi",
-   "text": "만약에 잠겨있는 폴더가 있다면..\n오빠가 비밀번호로 쓰는 건 늘 날짜예요.\n자기가 좋아하는 날짜.\n그 날짜는 오빠 마이홈에 있을 거예요.\n주소는 즐겨찾기에 담아뒀을 거고요.\n천천히 확인해주세요.\n계속 기다릴게요..",
+   "text": "만약에 잠겨있는 폴더가 있다면..\n오빠가 비밀번호로 쓰는 건 늘 날짜예요.\n자기가 좋아하는 날짜. 그게 뭔지는 저도 몰라요.\n천천히 확인해주세요.\n계속 기다릴게요..",
    "next": "g1",
    "delay_ms": 1800
   },
@@ -129,7 +129,7 @@
   },
   "g1b": {
    "from": "seulgi",
-   "text": "…봄이가 온 날이었네요.\n봄이는 지금 저희 집에 있어요.\n아직도 현관만 바라봐요.",
+   "text": "…봄이 온 날이었죠. 오빠가 제일 좋아하는 날이니까.\n봄이는 지금 저희 집에 있어요.\n아직도 현관만 바라봐요.",
    "next": "g1c",
    "delay_ms": 1600
   },
@@ -138,7 +138,7 @@
    "text": "안에 뭐가 있어요?",
    "choices": [
     {
-     "text": "입금내역이 있어요. 금액이 큽니다",
+     "text": "입금내역이 있어요. 넉 달에 삼백만 원이요",
      "next": "g1d"
     },
     {
@@ -206,7 +206,7 @@
   },
   "g2c": {
    "from": "seulgi",
-   "text": "…기준표요.\n사람을 고른다는 말이에요, 지금?",
+   "text": "…기준표요.\n사람을 고른다는 말이에요, 지금?\n읽어주세요.",
    "next": "g2e",
    "delay_ms": 1600
   },
@@ -248,14 +248,14 @@
   },
   "g2j": {
    "from": "seulgi",
-   "text": "카페는 폐쇄됐어요. 제가 백 번은 들어가 봤어요.\n근데 메일에 이상한 말이 있었거든요. '예전 주소 그대로'라고.\n캐시가 남아 있으면 주소를 직접 치면 열릴지도 몰라요.",
+   "text": "카페는 폐쇄됐어요. 제가 백 번은 들어가 봤어요.\n그래도 뭔가 남아 있을 것 같아요. 오빠는 뭐든 남기는 사람이니까.",
    "next": "g3",
    "delay_ms": 1900
   },
   "g3": {
    "from": "seulgi",
    "require": "puzzle3_solved",
-   "text": "……",
+   "text": "열렸어요.\n…읽어주세요. 천천히.",
    "next": "g3b",
    "delay_ms": 2200
   },
@@ -311,7 +311,7 @@
   },
   "g3i": {
    "from": "seulgi",
-   "text": "휴지통은 보셨어요?\n오빠가 마지막으로 접속한 게 11월 2일 밤이에요.\n그날 제가 마지막으로 말 걸었거든요.\n그 날짜가 붙은 파일이 있으면, 그게 오빠가 마지막으로 지운 파일일거에요.",
+   "text": "휴지통은 보셨어요?\n오빠가 마지막으로 접속한 게 11월 2일 밤이에요.\n그날 제가 마지막으로 말 걸었거든요.\n그날 밤에 뭔가 지웠을 거예요. 오빠는 지우기 전에 꼭 백업하거든요.",
    "next": "g4",
    "delay_ms": 2000
   },
@@ -348,7 +348,7 @@
   },
   "g4f": {
    "from": "seulgi",
-   "text": "마이홈 비밀글 17번도 꼭 봐주세요. 주소를 직접 치면 열린대요.\nmyhome.nurinet.co.kr/sj2002/diary/17 — 오빠가 편지에 적어둔 주소예요.\n저는 못 들어가 봤어요.\n비밀글은 목록에 안 뜨니까요.",
+   "text": "마이홈 비밀글 17번도 꼭 봐주세요. 주소를 직접 치면 열린대요.\nmyhome.nurinet.co.kr/sj2002/diary/17 — 방금 읽어주신 거기 적혀 있던 주소요.\n저는 못 들어가 봤어요.\n비밀글은 목록에 안 뜨니까요.",
    "next": "g4g",
    "delay_ms": 1800
   },
@@ -385,8 +385,58 @@
   "g6": {
    "from": "seulgi",
    "text": "경찰서에서 세 번 다 그랬어요.\n증거가 어디 있냐고.\n이번엔 있어요. 오빠가 자기 손으로 쓴 거요.",
-   "next": "g4l",
+   "next": "g6b",
    "delay_ms": 2000
+  },
+  "g6b": {
+   "from": "seulgi",
+   "text": "근데 갈 때마다 같은 걸 물었어요.\n그거 어디서 났냐고. 출처가 뭐냐고.",
+   "next": "g6c",
+   "delay_ms": 1400
+  },
+  "g6c": {
+   "from": "seulgi",
+   "text": "오빠는요. 잠글 게 있으면 꼭 자기 메일로 보냈어요.\n저한테 그랬어요. 메일함에 넣어두면 안 잃어버린다고.\n…한 번 봐주세요.",
+   "next": "g6d",
+   "set": [
+    "p5_asked"
+   ],
+   "delay_ms": 1600
+  },
+  "g6d": {
+   "from": "seulgi",
+   "text": "…뭐 나왔어요?",
+   "next": "g6e",
+   "require": "puzzle5_solved",
+   "delay_ms": 1200
+  },
+  "g6e": {
+   "from": "seulgi",
+   "text": "그럴 줄 알았어요. 오빠는 겁먹은 만큼 적어놔요.\n경찰이 마지막엔 그랬어요. 받은 사람 이름을 가져오라고.",
+   "next": "g6e2",
+   "delay_ms": 1500
+  },
+  "g6e2": {
+   "from": "seulgi",
+   "text": "저한테 물어보실 게 있으면 물어보세요.\n저 그 동네에서 석 달을 살았어요.",
+   "next": "g6f",
+   "set": [
+    "p6_asked"
+   ],
+   "delay_ms": 1500
+  },
+  "g6f": {
+   "from": "seulgi",
+   "text": "…찾았어요?",
+   "next": "g6g",
+   "require": "puzzle6_solved",
+   "delay_ms": 1200
+  },
+  "g6g": {
+   "from": "seulgi",
+   "text": "이제 가져갈 게 생겼어요.\n세 번 갔다가 세 번 다 빈손이었는데.",
+   "next": "g4l",
+   "delay_ms": 1500
   },
   "g4l": {
    "from": "seulgi",
@@ -396,6 +446,7 @@
      "text": "인쇄해서 경찰에 가세요",
      "next": "g5a",
      "set": [
+      "ending_print",
       "ending_start"
      ]
     },
@@ -403,6 +454,7 @@
      "text": "원본 그대로 보내드릴게요",
      "next": "g5b",
      "set": [
+      "ending_original",
       "ending_start"
      ]
     },
@@ -425,6 +477,7 @@
      "text": "인쇄해서 경찰에 가세요",
      "next": "g5a",
      "set": [
+      "ending_print",
       "ending_start"
      ]
     },
@@ -432,6 +485,7 @@
      "text": "원본 그대로 보내드릴게요",
      "next": "g5b",
      "set": [
+      "ending_original",
       "ending_start"
      ]
     },
@@ -484,6 +538,7 @@
      "text": "인쇄해서 경찰에 가세요",
      "next": "g5a",
      "set": [
+      "ending_print",
       "ending_start"
      ]
     },
@@ -491,6 +546,7 @@
      "text": "원본 그대로 보내드릴게요",
      "next": "g5b",
      "set": [
+      "ending_original",
       "ending_start"
      ]
     },
@@ -499,8 +555,637 @@
      "next": "g4m"
     }
    ]
+  },
+  "t_jesa_1": {
+   "from": "seulgi",
+   "text": "…10월 16일이요.",
+   "next": "t_jesa_2",
+   "delay_ms": 1500
+  },
+  "t_jesa_2": {
+   "from": "seulgi",
+   "text": "제가 그날 밤에 전화해서 5분 동안 아무 말 안 하고 있었던 거요. 할 말이 없어서가 아니에요.\n오빠가 먼저 말하길 기다린 거였어요."
+  },
+  "t_demand3_1": {
+   "from": "seulgi",
+   "text": "…3차요. 세 번이나 보냈네요.",
+   "choices": [
+    {
+     "text": "동생분 학교 근처에 모임 장소가 생겼다고 써 있어요. 걸어서 5분이래요",
+     "next": "t_demand3_2"
+    },
+    {
+     "text": "(그 부분은 말하지 않는다)",
+     "next": "t_demand3_4"
+    }
+   ]
+  },
+  "t_demand3_2": {
+   "from": "seulgi",
+   "text": "…걸어서 5분이요.\n그 건물 알아요. 후문 쪽에 작년 10월에 간판 없는 사무실이 생겼어요. 저녁마다 불이 켜져 있었어요.",
+   "next": "t_demand3_3",
+   "delay_ms": 1500
+  },
+  "t_demand3_3": {
+   "from": "seulgi",
+   "text": "12월에 빠졌대요. 지금은 비어 있어요."
+  },
+  "t_demand3_4": {
+   "from": "seulgi",
+   "text": "오빠한테 돈 달라고 세 번 쓴 사람들이네요.\n오빠는 한 번 말하면 알아듣는 사람이에요. 세 번 쓸 필요가 없었을 텐데요."
+  },
+  "t_window_1": {
+   "from": "seulgi",
+   "text": "10월 29일이요..",
+   "choices": [
+    {
+     "text": "골목 끝에 사람이 서 있어요",
+     "next": "t_window_2"
+    },
+    {
+     "text": "가로등뿐이에요",
+     "next": "t_window_3"
+    }
+   ]
+  },
+  "t_window_2": {
+   "from": "seulgi",
+   "text": "골목 끝이면 가로등 바로 밑이에요.\n거기 서 있으면 오빠 방에서 다 보여요. 보라고 서 있었던 거예요."
+  },
+  "t_window_3": {
+   "from": "seulgi",
+   "text": "오빠는 창밖을 찍는 사람이 아니에요.\n뭔가 있었으니까 찍은 거예요."
+  },
+  "t_welcome_1": {
+   "from": "seulgi",
+   "text": "예전 주소요? 카페는 폐쇄됐는데…\n남은 게 있다는 말 같은데요.",
+   "next": "t_welcome_2",
+   "delay_ms": 1500
+  },
+  "t_welcome_2": {
+   "from": "seulgi",
+   "text": "오빠는 주소도 백업하는 사람이에요. 적어둔 게 어디 있을 거예요."
+  },
+  "t_essay_1": {
+   "from": "seulgi",
+   "text": "'아직 안 나왔어'라고 했던 날이요.\n저는 알고 있었어요. 발표 날짜는 저도 아니까요.",
+   "next": "t_essay_2",
+   "delay_ms": 1500
+  },
+  "t_essay_2": {
+   "from": "seulgi",
+   "text": "모른 척한 게 잘한 건지 지금도 모르겠어요."
+  },
+  "t_plan_1": {
+   "from": "seulgi",
+   "text": "강아지는 제가 조른 거 맞아요. 매일 졸랐어요.",
+   "next": "t_plan_2",
+   "delay_ms": 1500
+  },
+  "t_plan_2": {
+   "from": "seulgi",
+   "text": "등록금은 몰랐어요. 오빠가 그런 걸 계획에 썼는지.\n그 통장에서 오십만 원이 나갔는데요."
+  },
+  "t_log1005_1": {
+   "from": "seulgi",
+   "text": "민규 오빠가 보여준 게 작년 12월이에요. 반쯤 읽고 껐다고 했죠.",
+   "next": "t_log1005_2",
+   "delay_ms": 1500
+  },
+  "t_log1005_2": {
+   "from": "seulgi",
+   "text": "사실은 끝까지 읽었어요. '슬기한테 말하지 마'까지요."
+  },
+  "t_vow_1": {
+   "from": "seulgi",
+   "text": "벽에 붙어 있던 그 종이요.",
+   "next": "t_vow_2",
+   "delay_ms": 1500
+  },
+  "t_vow_2": {
+   "from": "seulgi",
+   "text": "다섯 번째 줄은 그때도 읽었어요. 무슨 뜻인지 몰라서 안 물어봤어요."
+  },
+  "t_letter_1": {
+   "from": "seulgi",
+   "text": "…",
+   "choices": [
+    {
+     "text": "읽어드릴까요",
+     "next": "t_letter_2"
+    },
+    {
+     "text": "(내용은 말하지 않는다)",
+     "next": "t_letter_3"
+    }
+   ]
+  },
+  "t_letter_2": {
+   "from": "seulgi",
+   "text": "…12월까지 채워놓겠다고요.\n오빠는 늘 12월이었어요.",
+   "set": [
+    "letter_read_aloud"
+   ]
+  },
+  "t_letter_3": {
+   "from": "seulgi",
+   "text": "안 읽어주셔도 돼요. 있다는 것만 알면 돼요."
+  },
+  "t_3weeks_1": {
+   "from": "seulgi",
+   "text": "6월이면 봄이 데려오고 석 달 뒤예요.\n그때 오빠 얼굴이 제일 괜찮았어요. 뭔가 좋은 일이 있는 줄 알았어요.",
+   "next": "t_3weeks_2",
+   "delay_ms": 1500
+  },
+  "t_3weeks_2": {
+   "from": "seulgi",
+   "text": "좋은 일이 맞긴 했네요. 그 사람들한테는."
+  },
+  "t_assigned_1": {
+   "from": "seulgi",
+   "text": "오빠가요? 남에 대해서요.",
+   "next": "t_assigned_2",
+   "delay_ms": 1500
+  },
+  "t_assigned_2": {
+   "from": "seulgi",
+   "text": "오빠는 남 얘기를 못 하는 사람이에요. 제 친구 이름도 못 외웠어요.\n그런 사람한테 그걸 시켰네요."
+  },
+  "t_format_1": {
+   "from": "seulgi",
+   "text": "포맷이요?\n오빠 컴퓨터에 저희 엄마 사진이 있어요. 2001년 설에 찍은 거.",
+   "next": "t_format_2",
+   "delay_ms": 1500
+  },
+  "t_format_2": {
+   "from": "seulgi",
+   "text": "안 했죠? …네. 그럴 줄 알았어요. 오빠는 못 버리는 사람이에요."
+  },
+  "t_bieum_1": {
+   "from": "seulgi",
+   "text": "새벽이요?",
+   "next": "t_bieum_2",
+   "delay_ms": 1500
+  },
+  "t_bieum_2": {
+   "from": "seulgi",
+   "text": "…오빠 이름은 성진이에요. 한성진.\n이름을 누가 바꿔요.",
+   "next": "t_bieum_3",
+   "delay_ms": 1500
+  },
+  "t_bieum_3": {
+   "from": "seulgi",
+   "text": "9월 30일이면 봄이 보낸 지 3주째예요.\n그날 밤에 전화가 안 됐어요."
+  },
+  "t_bomi_1": {
+   "from": "seulgi",
+   "text": "9월 8일에 봄이를 저한테 보냈어요. 집을 자주 비운다고.",
+   "next": "t_bomi_2",
+   "delay_ms": 1500
+  },
+  "t_bomi_2": {
+   "from": "seulgi",
+   "text": "지웠다가 되살렸다는 건 봄이를 못 비웠다는 거잖아요.\n봄이는 아직 현관만 봐요."
+  },
+  "t_missed_1": {
+   "from": "seulgi",
+   "text": "…그게 거기 있어요?",
+   "next": "t_missed_2",
+   "delay_ms": 1500
+  },
+  "t_missed_2": {
+   "from": "seulgi",
+   "text": "1월 31일 새벽이요.\n오빠 컴퓨터가 그때 켜져 있었다는 거네요. 누가요.",
+   "next": "t_missed_3",
+   "delay_ms": 1500
+  },
+  "t_missed_3": {
+   "from": "seulgi",
+   "text": "큰오빠도 보냈네요. 큰오빠가 오빠한테 먼저 연락한 거 처음 봐요."
+  },
+  "t_diary10_1": {
+   "from": "seulgi",
+   "text": "4월 3일이요. 그날 전화 열 번 했어요.",
+   "next": "t_diary10_2",
+   "delay_ms": 1500
+  },
+  "t_diary10_2": {
+   "from": "seulgi",
+   "text": "지웠구나, 그 글.\n지우면 없던 일이 되는 줄 알았나 봐요."
+  },
+  "t_231_1": {
+   "from": "seulgi",
+   "text": "두 시간이요.\n제가 방명록에 쓴 글은 석 달째 그대로 있어요. 그 사람들은 안 지웠어요.",
+   "next": "t_231_2",
+   "delay_ms": 1500
+  },
+  "t_231_2": {
+   "from": "seulgi",
+   "text": "지울 건 지우고 둘 건 두는 사람들이에요. 제 글은 두는 쪽이었고요."
+  },
+  "t_quit_1": {
+   "from": "seulgi",
+   "text": "10월 21일이요. 제사 닷새 뒤예요.",
+   "next": "t_quit_2",
+   "delay_ms": 1500
+  },
+  "t_quit_2": {
+   "from": "seulgi",
+   "text": "…그때 그만두려고 했었구나.\n저한테는 다 끝난 뒤에 말하려고 했겠죠. 오빠는 늘 그래요."
+  },
+  "t_warn1_1": {
+   "from": "seulgi",
+   "text": "10월 30일이면… 토요일이 11월 2일이에요.",
+   "next": "t_warn1_2",
+   "delay_ms": 1500
+  },
+  "t_warn1_2": {
+   "from": "seulgi",
+   "text": "오빠가 저한테 온다고 한 날이 3일 아침이에요.\n그 전날 밤에 차가 온 거네요."
+  },
+  "t_evidence_1": {
+   "from": "seulgi",
+   "text": "오빠가 길을 외웠다고요? 오빠는 길치예요. 제 학교도 세 번 헤맸어요.",
+   "next": "t_evidence_2",
+   "delay_ms": 1500
+  },
+  "t_evidence_2": {
+   "from": "seulgi",
+   "text": "…그걸 외웠다는 건 무서웠다는 거예요. 무서우면 오빠는 적어요."
+  },
+  "t_doctrine2_1": {
+   "from": "seulgi",
+   "text": "새빛력 3년이요.\n서원문이 4년이었으니까 그 전 해네요.",
+   "next": "t_doctrine2_2",
+   "delay_ms": 1500
+  },
+  "t_doctrine2_2": {
+   "from": "seulgi",
+   "text": "오빠가 옮겨 적은 건 그 사람들 말이에요. 오빠 말이 아니라."
+  },
+  "t_ledger_1": {
+   "from": "seulgi",
+   "text": "네 번이요.",
+   "next": "t_ledger_2",
+   "delay_ms": 1500
+  },
+  "t_ledger_2": {
+   "from": "seulgi",
+   "text": "오빠는 통장 하나를 십 년 썼어요. 첫 통장이요.\n이름이 바뀌는 게 이상하다고 생각은 했을 거예요. 물어보진 못했겠지만.",
+   "next": "t_ledger_3",
+   "delay_ms": 1500
+  },
+  "t_notes_1": {
+   "from": "seulgi",
+   "text": "사진을 회수해요?",
+   "next": "t_notes_2",
+   "delay_ms": 1500
+  },
+  "t_notes_2": {
+   "from": "seulgi",
+   "text": "오빠 방에 그 사진 한 장 있었어요. 폐교 앞에서 찍은 거.\n사람 얼굴이 하나도 안 보여서 이상하다고 생각했어요."
+  },
+  "t_self_1": {
+   "from": "seulgi",
+   "text": "오빠가 오빠한테요?",
+   "next": "t_self_2",
+   "delay_ms": 1500
+  },
+  "t_self_2": {
+   "from": "seulgi",
+   "text": "…저는 알 거다.\n그 사람들이 모르고 저만 아는 걸로 잠갔다는 거네요.",
+   "next": "t_self_3",
+   "delay_ms": 1500
+  },
+  "t_self_3": {
+   "from": "seulgi",
+   "text": "물어보세요. 저한테요.\n제가 아는 건 다 말할게요. 오빠는 저한테 안 물어봤지만."
+  },
+  "t_van_1": {
+   "from": "seulgi",
+   "text": "번호가 다 나왔네요.",
+   "next": "t_van_2",
+   "delay_ms": 1500
+  },
+  "t_van_2": {
+   "from": "seulgi",
+   "text": "경찰서에서 뒷자리 넷으로는 못 찾는다고 했어요.\n이제 다 있어요. 앞자리까지."
+  },
+  "t_env_1": {
+   "from": "seulgi",
+   "text": "…정문이요.\n제가 매일 지나는 데예요.",
+   "next": "t_env_2",
+   "delay_ms": 1500
+  },
+  "t_env_2": {
+   "from": "seulgi",
+   "text": "오빠가 이걸 받고 다음 날 아침에 온다고 한 거네요.\n저 때문에요. 오빠는 저 때문에 나온 거예요."
+  },
+  "t_num_1": {
+   "from": "seulgi",
+   "text": "02-312-8069요.",
+   "next": "t_num_2",
+   "delay_ms": 1500
+  },
+  "t_num_2": {
+   "from": "seulgi",
+   "text": "…그 번호 알아요. 후문 사무실 유리에 붙어 있던 거예요.\n'상담 문의'라고 써 있었어요. 매일 지나면서 봤어요.",
+   "next": "t_num_3",
+   "delay_ms": 1500
+  },
+  "t_num_3": {
+   "from": "seulgi",
+   "text": "오빠한테 전화한 사무실이 제 학교 후문이었네요.",
+   "set": [
+    "office_matched"
+   ]
+  },
+  "a_birthday_1": {
+   "from": "seulgi",
+   "text": "4월 28일이요. 1981년 4월 28일.",
+   "next": "a_birthday_2",
+   "delay_ms": 1500
+  },
+  "a_birthday_2": {
+   "from": "seulgi",
+   "text": "오빠가 제 생일로 뭘 잠갔다면… 그건 저한테 남긴 거예요."
+  },
+  "a_brother_1": {
+   "from": "seulgi",
+   "text": "12월 1일이요. 1976년.",
+   "next": "a_brother_2",
+   "delay_ms": 1500
+  },
+  "a_brother_2": {
+   "from": "seulgi",
+   "text": "작년 12월 1일에 방명록에 썼어요. 오빠 생일이라고. 답은 없었어요."
+  },
+  "a_jesa_1": {
+   "from": "seulgi",
+   "text": "음력 9월 12일이요. 작년엔 10월 17일이었어요.",
+   "next": "a_jesa_2",
+   "delay_ms": 1500
+  },
+  "a_jesa_2": {
+   "from": "seulgi",
+   "text": "그날 오빠가 안 왔어요.\n그 사람들도 아는 날이에요. 오빠가 말했을 테니까."
+  },
+  "t_ledger_3": {
+   "from": "seulgi",
+   "text": "경찰이 그랬어요. 돈을 받은 사람 이름이 있어야 한다고.\n이름이 넷이면 넷 다 가짜라는 말밖에 안 돼요. 그중에 진짜가 하나라도 있으면 좋겠는데."
+  },
+  "a_office_1": {
+   "from": "seulgi",
+   "text": "40대 남자요. 저녁마다 문을 잠갔어요.\n12월에 짐 뺄 때도 그 사람이었어요.",
+   "next": "a_office_2",
+   "delay_ms": 1500
+  },
+  "a_office_2": {
+   "from": "seulgi",
+   "text": "문 옆 우편함에 이름이 있었어요. 세 글자, 최로 시작해요.\n뒤는… 매일 봤는데 기억이 안 나요.",
+   "next": "a_office_3",
+   "delay_ms": 1500
+  },
+  "a_office_3": {
+   "from": "seulgi",
+   "text": "이름을 대면 알아볼 것 같아요."
+  },
+  "a_name_1": {
+   "from": "seulgi",
+   "text": "말해보세요.",
+   "choices": [
+    {
+     "text": "김정애",
+     "next": "a_name_no1"
+    },
+    {
+     "text": "이현우",
+     "next": "a_name_no2"
+    },
+    {
+     "text": "박순덕",
+     "next": "a_name_no3"
+    },
+    {
+     "text": "최영식",
+     "next": "a_name_ok"
+    }
+   ]
+  },
+  "a_name_no1": {
+   "from": "seulgi",
+   "text": "아니에요. 여자 이름이잖아요.",
+   "next": "a_name_1",
+   "delay_ms": 1200
+  },
+  "a_name_no2": {
+   "from": "seulgi",
+   "text": "아니에요. 최로 시작한다니까요.",
+   "next": "a_name_1",
+   "delay_ms": 1200
+  },
+  "a_name_no3": {
+   "from": "seulgi",
+   "text": "아니에요. 최요. 최.",
+   "next": "a_name_1",
+   "delay_ms": 1200
+  },
+  "a_name_ok": {
+   "from": "seulgi",
+   "text": "최영식.\n…그거예요. 최영식.",
+   "next": "a_name_ok2",
+   "delay_ms": 1500,
+   "set": [
+    "accountant_named",
+    "puzzle6_solved"
+   ]
+  },
+  "a_name_ok2": {
+   "from": "seulgi",
+   "text": "회계가 자기 이름으로 받았네요.\n그 사람 이름으로 오빠 돈이 갔다는 거잖아요.",
+   "next": "a_name_ok3",
+   "delay_ms": 1500
+  },
+  "a_name_ok3": {
+   "from": "seulgi",
+   "text": "이름 하나 있어요. 이제."
   }
  },
+ "tells": [
+  {
+   "cid": "doc:jesa_memo",
+   "say": "어머니 제사 준비 메모가 있어요. 10월 16일에 못 간다고 형한테 전화했대요",
+   "node": "t_jesa_1"
+  },
+  {
+   "cid": "mail:m_demand_3",
+   "say": "회계가 보낸 3차 안내 메일이 있어요",
+   "node": "t_demand3_1"
+  },
+  {
+   "cid": "img:window_night",
+   "say": "10월 29일 밤에 창밖을 찍은 사진이 있어요",
+   "node": "t_window_1"
+  },
+  {
+   "cid": "mail:m_welcome",
+   "say": "정회원 안내 메일에 '예전 주소 그대로'라고 써 있어요. 관문이라는 말도 나와요",
+   "node": "t_welcome_1"
+  },
+  {
+   "cid": "doc:essay_2001",
+   "say": "낙방 수기가 있어요. 2001년 10월 거요",
+   "node": "t_essay_1"
+  },
+  {
+   "cid": "doc:plan_2002",
+   "say": "2002년 계획 파일이 있어요. 강아지 키우기랑 동생 등록금 보태기가 있어요",
+   "node": "t_plan_1"
+  },
+  {
+   "cid": "chatlog:2002-10-05",
+   "say": "민규 씨와 10월 5일에 한 대화가 있어요",
+   "node": "t_log1005_1"
+  },
+  {
+   "cid": "img:vow_photo",
+   "say": "서원문 원본 사진이 있어요",
+   "node": "t_vow_1"
+  },
+  {
+   "cid": "doc:letter_unsent",
+   "say": "슬기 씨한테 쓴 편지가 있어요. 부치지 못한 거요",
+   "node": "t_letter_1"
+  },
+  {
+   "cid": "doc:saebit_3weeks",
+   "say": "3주 과정을 다닌 기록이 있어요. 6월이요",
+   "node": "t_3weeks_1"
+  },
+  {
+   "cid": "doc:saebit_assigned",
+   "say": "오빠가 수련회에서 다른 사람을 맡아 적어 낸 소견이 있어요",
+   "node": "t_assigned_1"
+  },
+  {
+   "cid": "doc:format_memo",
+   "say": "8월에 컴퓨터를 포맷하려고 했던 메모가 있어요",
+   "node": "t_format_1"
+  },
+  {
+   "cid": "img:bieum_record",
+   "say": "비움기록이라는 종이가 있어요. 9월 30일, 서명이 '새벽'이에요",
+   "node": "t_bieum_1"
+  },
+  {
+   "cid": "doc:bomi_log",
+   "say": "봄이 일지가 있어요. 9월에 지웠다가 되살렸대요",
+   "node": "t_bomi_1"
+  },
+  {
+   "cid": "chatlog:2003-01-31",
+   "say": "부재중 쪽지가 있어요. 슬기 씨, 민규 씨, 큰형이 보낸 거요. 1월 31일 새벽에 받은 걸로 떠요",
+   "node": "t_missed_1"
+  },
+  {
+   "cid": "web:myhome_10",
+   "say": "마이홈에 지워진 글의 캐시가 있어요. 4월 3일, 떨어진 날 글이요",
+   "node": "t_diary10_1"
+  },
+  {
+   "cid": "web:cafe_231",
+   "say": "카페 게시판에 '조금 쉬고 싶습니다'라는 글이 있었어요. 두 시간 만에 지워졌고요",
+   "node": "t_231_1"
+  },
+  {
+   "cid": "doc:quit_plan",
+   "say": "'탈퇴하려면'이라는 파일이 있어요. 10월 21일에 정리한 거요",
+   "node": "t_quit_1"
+  },
+  {
+   "cid": "mail:m_warn_1",
+   "say": "10월 30일에 인도자가 보낸 메일이 있어요. 주말에 차를 보내겠다고요",
+   "node": "t_warn1_1"
+  },
+  {
+   "cid": "doc:evidence_memo",
+   "say": "'기억나는대로'라는 메모가 있어요. 수련원 가는 길을 적어놨어요",
+   "node": "t_evidence_1"
+  },
+  {
+   "cid": "doc:doctrine_2",
+   "say": "필사 2에 '첫 비움의 날'이 나와요. 새빛력 3년 7월 3일이래요",
+   "node": "t_doctrine2_1"
+  },
+  {
+   "cid": "doc:donation_ledger",
+   "say": "입금내역에 예금주가 넉 달 동안 네 번 바뀌었어요",
+   "node": "t_ledger_1"
+  },
+  {
+   "cid": "doc:retreat_notes",
+   "say": "수련회 메모에 단체사진을 회수해 갔다고 써 있어요",
+   "node": "t_notes_1"
+  },
+  {
+   "cid": "mail:m_self",
+   "say": "오빠가 자기한테 보낸 메일이 있어요. 잠긴 파일이 붙어 있고 '슬기는 알 거다'라고 써 있어요",
+   "node": "t_self_1"
+  },
+  {
+   "cid": "img:van_1029",
+   "say": "번호판이 다 나온 봉고 사진이 있어요. 뒷유리에 빛 모양 스티커도요",
+   "node": "t_van_1"
+  },
+  {
+   "cid": "img:envelope_1102",
+   "say": "봉투에 들어 있던 사진을 다시 찍은 게 있어요. 슬기 씨 학교 정문이요",
+   "node": "t_env_1"
+  },
+  {
+   "cid": "doc:numbers",
+   "say": "번호.txt에 전화번호가 넷 있어요. 02-312-8069는 '사무실'이라고 적혀 있고요",
+   "node": "t_num_1"
+  },
+  {
+   "id": "birthday",
+   "ask": true,
+   "require": "told:mail:m_self",
+   "say": "슬기 씨 생일이 언제예요?",
+   "node": "a_birthday_1"
+  },
+  {
+   "id": "brother",
+   "ask": true,
+   "require": "told:mail:m_self",
+   "say": "오빠 생일은 언제예요?",
+   "node": "a_brother_1"
+  },
+  {
+   "id": "jesa",
+   "ask": true,
+   "require": "told:mail:m_self",
+   "say": "어머니 기일이 언제예요?",
+   "node": "a_jesa_1"
+  },
+  {
+   "id": "office_man",
+   "ask": true,
+   "require": "office_matched",
+   "say": "후문 사무실에 누가 있었어요?",
+   "node": "a_office_1"
+  },
+  {
+   "id": "mailbox_name",
+   "ask": true,
+   "require": [
+    "told:ask:office_man",
+    "told:doc:donation_ledger"
+   ],
+   "say": "우편함 이름, 이 중에 있었어요?",
+   "node": "a_name_1"
+  }
+ ],
  "logs": [
   {
    "date": "2002-06-26",
@@ -747,6 +1432,112 @@
     {
      "from": "시스템",
      "text": "(마지막 접속 : 2002년 11월 2일 오후 11시 41분)"
+    }
+   ]
+  },
+  {
+   "date": "2003-01-31",
+   "with": "부재중 쪽지",
+   "lines": [
+    {
+     "from": "시스템",
+     "text": "부재중 쪽지 15통 · 2003년 1월 31일 오전 4시 06분에 받음"
+    },
+    {
+     "from": "시스템",
+     "text": "2002년 11월 3일"
+    },
+    {
+     "from": "슬기",
+     "text": "오빠 어디야. 봄이 데리고 병원 앞에서 기다려."
+    },
+    {
+     "from": "슬기",
+     "text": "한 시간 지났어. 전화 좀 받아."
+    },
+    {
+     "from": "시스템",
+     "text": "2002년 11월 5일"
+    },
+    {
+     "from": "슬기",
+     "text": "오빠 집 앞이야. 불 꺼져 있어."
+    },
+    {
+     "from": "슬기",
+     "text": "컴퓨터 켜져 있으면 이거 보이지. 보이면 아무거나 써."
+    },
+    {
+     "from": "시스템",
+     "text": "2002년 11월 12일"
+    },
+    {
+     "from": "민규",
+     "text": "성진아 슬기한테 연락 왔다. 니가 어디 있는지 나는 모른다고 했다"
+    },
+    {
+     "from": "민규",
+     "text": "모른다고 하면서 그날 내가 한 말이 자꾸 생각난다"
+    },
+    {
+     "from": "시스템",
+     "text": "2002년 11월 20일"
+    },
+    {
+     "from": "슬기",
+     "text": "경찰서 두 번째 갔다 왔어. 성인이라 기다려보래."
+    },
+    {
+     "from": "슬기",
+     "text": "학교 후문에 간판 없는 사무실이 생겼어. 저녁마다 불이 켜져 있어. 오빠 모임이랑 상관없지."
+    },
+    {
+     "from": "시스템",
+     "text": "2002년 12월 1일"
+    },
+    {
+     "from": "슬기",
+     "text": "생일 축하해. 미역국 끓였는데 봄이가 다 먹었어."
+    },
+    {
+     "from": "시스템",
+     "text": "2002년 12월 24일"
+    },
+    {
+     "from": "슬기",
+     "text": "오빠 컴퓨터가 없다는 게 자꾸 걸려. 오빠는 컴퓨터 없이 어디 안 가잖아."
+    },
+    {
+     "from": "시스템",
+     "text": "2003년 1월 14일"
+    },
+    {
+     "from": "슬기",
+     "text": "봄이 접종 혼자 갔다 왔어. 3일에 같이 가기로 했던 거."
+    },
+    {
+     "from": "슬기",
+     "text": "오빠 미안해. 8월에 이상하다고 해놓고 더 안 물어봤어."
+    },
+    {
+     "from": "시스템",
+     "text": "2003년 1월 29일"
+    },
+    {
+     "from": "슬기",
+     "text": "컴퓨터만 찾으면 다 나온대. 오빠 컴퓨터 어디 갔어."
+    },
+    {
+     "from": "슬기",
+     "text": "이거 보고 있는 게 오빠면 아무 말이라도 해줘."
+    },
+    {
+     "from": "시스템",
+     "text": "2003년 1월 30일"
+    },
+    {
+     "from": "큰형",
+     "text": "성진아. 형이다. 전화해라."
     }
    ]
   }

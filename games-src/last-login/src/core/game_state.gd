@@ -4,6 +4,7 @@ extends Node
 signal flag_changed(name: String)
 signal act_changed(act: int)
 signal record_read(cid: String, total: int)
+signal read_changed(cid: String)   # 무엇이든 처음 열람했을 때 — 메신저의 "찾은 것 말하기"가 이걸 듣는다
 
 const SAVE_PATH := "user://save.json"
 
@@ -30,7 +31,12 @@ func set_flag(name: String) -> void:
 func has_flag(name: String) -> bool:
 	return _flags.has(name)
 
+## 앰비언트가 한 겹씩 쌓이는 단 — 잠긴 폴더 → 관문 → 유서 → 성진이 남긴 마지막 증거(정리.zip 또는 회계의 이름)
 func current_act() -> int:
+	if has_flag("puzzle5_solved") or has_flag("puzzle6_solved"):
+		return 5
+	if has_flag("final_diary_read"):
+		return 4
 	if has_flag("puzzle3_solved"):
 		return 3
 	if has_flag("puzzle1_solved"):
@@ -43,10 +49,15 @@ func mark_read(cid: String) -> void:
 	_read[cid] = true
 	if cid in records_source.call():
 		record_read.emit(cid, records_count())
+	read_changed.emit(cid)
 	save_game()
 
 func is_read(cid: String) -> bool:
 	return _read.has(cid)
+
+## 몇 번째로 읽었나 (안 읽었으면 -1). 사전이 넣은 순서를 지키므로 그 순번이 곧 시간이다.
+func read_order(cid: String) -> int:
+	return _read.keys().find(cid)
 
 func records_count() -> int:
 	var n := 0
@@ -68,8 +79,8 @@ func is_restored(id: String) -> bool:
 
 func try_answer(puzzle_id: String, input: String) -> bool:
 	var p: Dictionary = puzzle_source.call(puzzle_id)
-	if p.is_empty():
-		return false
+	if p.is_empty() or not p.has("answer"):
+		return false   # 자물쇠가 없는 퍼즐(질문이 열쇠)은 대화 노드가 <id>_solved를 찍는다
 	if input.strip_edges().to_lower() == String(p["answer"]).to_lower():
 		set_flag(puzzle_id + "_solved")
 		return true

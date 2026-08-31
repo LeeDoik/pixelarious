@@ -2,7 +2,7 @@
   {"id": "mydocs", "parent": "root", "name": "내 문서", "type": "folder", "mtime": "2002-11-02 23:40"},
 
   {"id": "photos", "parent": "mydocs", "name": "사진", "type": "folder", "mtime": "2002-10-29 23:14"},
-  {"id": "saebit", "parent": "mydocs", "name": "새빛수련회", "type": "folder", "mtime": "2002-09-30 22:14"},
+  {"id": "saebit", "parent": "mydocs", "name": "새빛수련회", "type": "folder", "mtime": "2002-11-01 04:33"},
   {"id": "locked", "parent": "mydocs", "name": "성진이만", "type": "folder", "locked_by": "puzzle1", "mtime": "2002-11-01 23:26"},
 
   {"id": "f_essay", "parent": "mydocs", "name": "낙방 수기.txt", "type": "doc", "cid": "doc:essay_2001", "record": true, "size": 783, "mtime": "2002-04-09 01:20"},
@@ -13,6 +13,7 @@
   {"id": "f_jesa", "parent": "mydocs", "name": "어머니 제사 준비.txt", "type": "doc", "cid": "doc:jesa_memo", "size": 975, "mtime": "2002-10-16 22:40"},
   {"id": "f_bomi", "parent": "mydocs", "name": "봄이 일지.txt", "type": "doc", "cid": "doc:bomi_log", "size": 769, "mtime": "2002-10-30 21:06"},
   {"id": "f_budget", "parent": "mydocs", "name": "생활비 정리.txt", "type": "doc", "cid": "doc:budget_2002", "size": 789, "mtime": "2002-10-31 23:48"},
+  {"id": "f_format", "parent": "mydocs", "name": "포맷 전.txt", "type": "doc", "cid": "doc:format_memo", "size": 527, "mtime": "2002-08-20 23:12"},
   {"id": "f_bookmarks", "parent": "mydocs", "name": "즐겨찾기 백업.txt", "type": "doc", "cid": "doc:bookmarks_memo", "size": 492, "mtime": "2002-08-20 21:05"},
 
   {"id": "p_family", "parent": "photos", "name": "가족사진_2001설.jpg", "type": "image", "cid": "img:family_photo", "image": "res://assets/img/photos/family_photo.png", "record": true, "size": 96512, "mtime": "2001-01-24 13:05"},
@@ -21,6 +22,8 @@
   {"id": "p_retreat", "parent": "photos", "name": "수련회_단체_0804.jpg", "type": "image", "cid": "img:retreat_2002", "image": "res://assets/img/photos/retreat_2002.png", "size": 118390, "mtime": "2002-08-04 15:52"},
   {"id": "p_window", "parent": "photos", "name": "창밖_1029.jpg", "type": "image", "cid": "img:window_night", "image": "res://assets/img/photos/window_night.png", "size": 52218, "mtime": "2002-10-29 23:11"},
 
+  {"id": "s_3weeks", "parent": "saebit", "name": "새빛_3주.txt", "type": "doc", "cid": "doc:saebit_3weeks", "size": 2346, "mtime": "2002-07-02 23:52"},
+  {"id": "s_assigned", "parent": "saebit", "name": "맡은 사람.txt", "type": "doc", "cid": "doc:saebit_assigned", "size": 1478, "mtime": "2002-11-01 04:33"},
   {"id": "s_doc1", "parent": "saebit", "name": "필사_1_빛과그릇.txt", "type": "doc", "cid": "doc:doctrine_1", "size": 875, "mtime": "2002-08-11 22:30"},
   {"id": "s_doc2", "parent": "saebit", "name": "필사_2_새빛력.txt", "type": "doc", "cid": "doc:doctrine_2", "record": true, "size": 1074, "mtime": "2002-08-18 22:52"},
   {"id": "s_doc3", "parent": "saebit", "name": "필사_3_비움.txt", "type": "doc", "cid": "doc:doctrine_3", "size": 883, "mtime": "2002-09-22 23:10"},
@@ -31,12 +34,18 @@
   {"id": "s_photo2", "parent": "saebit", "name": "필사_2_제출본.jpg", "type": "image", "cid": "img:pilsa_2", "image": "res://assets/img/photos/pilsa_2.png", "size": 282440, "mtime": "2002-08-11 23:05"},
   {"id": "s_photo3", "parent": "saebit", "name": "필사_3_제출본.jpg", "type": "image", "cid": "img:pilsa_3", "image": "res://assets/img/photos/pilsa_3.png", "size": 258506, "mtime": "2002-09-22 23:18"},
   {"id": "s_photo4", "parent": "saebit", "name": "서원문_원본.jpg", "type": "image", "cid": "img:vow_photo", "image": "res://assets/img/photos/vow_photo.png", "size": 189573, "mtime": "2002-09-30 19:47"},
+  {"id": "s_photo5", "parent": "saebit", "name": "비움기록_제출본.jpg", "type": "image", "cid": "img:bieum_record", "image": "res://assets/img/photos/bieum_record.png", "size": 175281, "mtime": "2002-10-01 00:24"},
 
   {"id": "l_ledger", "parent": "locked", "name": "입금내역.txt", "type": "doc", "cid": "doc:donation_ledger", "record": true, "size": 1531, "mtime": "2002-11-01 23:26"},
   {"id": "l_quit", "parent": "locked", "name": "탈퇴하려면.txt", "type": "doc", "cid": "doc:quit_plan", "size": 949, "mtime": "2002-11-01 02:31"},
   {"id": "l_evidence", "parent": "locked", "name": "기억나는대로.txt", "type": "doc", "cid": "doc:evidence_memo", "size": 1185, "mtime": "2002-11-01 03:48"},
   {"id": "l_debt", "parent": "locked", "name": "빚 정리.txt", "type": "doc", "cid": "doc:debt_note", "size": 498, "mtime": "2002-11-01 04:02"},
   {"id": "l_letter", "parent": "locked", "name": "슬기에게(부치지못함).txt", "type": "doc", "cid": "doc:letter_unsent", "size": 1202, "mtime": "2002-11-01 04:16"},
+
+  {"id": "zip_self", "parent": "attach", "name": "정리.zip", "type": "folder", "mtime": "2002-11-02 19:12"},
+  {"id": "z_van", "parent": "zip_self", "name": "봉고_1029.jpg", "type": "image", "cid": "img:van_1029", "image": "res://assets/img/photos/van_1029.png", "size": 335440, "mtime": "2002-10-29 23:13"},
+  {"id": "z_envelope", "parent": "zip_self", "name": "봉투_1102.jpg", "type": "image", "cid": "img:envelope_1102", "image": "res://assets/img/photos/envelope_1102.png", "size": 272172, "mtime": "2002-11-02 14:26"},
+  {"id": "z_numbers", "parent": "zip_self", "name": "번호.txt", "type": "doc", "cid": "doc:numbers", "size": 363, "mtime": "2002-11-02 19:08"},
 
   {"id": "t1", "parent": "trash", "name": "backup_1102.txt", "type": "doc", "cid": "doc:diary_final", "record": true, "size": 1454, "mtime": "2002-11-02 23:38", "origin": "mydocs", "deleted": "2002-11-02 23:40"},
   {"id": "t2", "parent": "trash", "name": "backup_0930.txt", "type": "doc", "cid": "doc:corrupt_0930", "corrupt": true, "size": 0, "mtime": "2002-09-30 23:58", "origin": "mydocs", "deleted": "2002-10-01 00:03", "error": "0x0000001E"},

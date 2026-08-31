@@ -1,0 +1,88 @@
+{
+ "epilogue": [
+  {
+   "text": "당신은 마지막 대화 내용을 저장하고 컴퓨터를 껐다.",
+   "require": "!ending_original"
+  },
+  {
+   "text": "당신은 마지막 대화 내용을 저장하고 컴퓨터를 상자에 넣었다.",
+   "require": "ending_original"
+  },
+  {
+   "text": "다음 날, 슬기에게서 문자가 왔다."
+  },
+  {
+   "text": "\"번호판 전체로 차량 조회가 됐대요.\"",
+   "require": "told:img:van_1029"
+  },
+  {
+   "text": "\"봉투 사진은 경찰이 제일 오래 봤어요. 제 학교 정문이라고 하니까요.\"",
+   "require": "told:img:envelope_1102"
+  },
+  {
+   "text": "\"사진이 더 있으면 좋겠대요. 얼굴이든 번호든요.\"",
+   "require": [
+    "!told:img:van_1029",
+    "!told:img:envelope_1102"
+   ]
+  },
+  {
+   "text": "\"최영식 명의 계좌가 오늘 동결됐어요. 오빠 돈이 거기 있었어요.\"",
+   "require": "puzzle6_solved"
+  },
+  {
+   "text": "\"후문 사무실 임대 계약서에도 그 이름이 있대요.\"",
+   "require": [
+    "office_matched",
+    "accountant_named"
+   ]
+  },
+  {
+   "text": "\"편지는 제가 가져갈게요. 부친 걸로 할게요.\"",
+   "require": "letter_read_aloud"
+  },
+  {
+   "text": "\"경찰이랑 같이 갔어요. 오빠 물건이 있었어요. 고마워요.\"",
+   "require": {
+    "any": [
+     "puzzle5_solved",
+     "puzzle6_solved"
+    ]
+   }
+  },
+  {
+   "text": ""
+  },
+  {
+   "text": "오빠 컴퓨터는 이제 슬기 방에 있다.",
+   "require": "ending_original"
+  },
+  {
+   "text": "봄이가 그 앞에 앉는다.",
+   "require": "ending_original"
+  },
+  {
+   "text": "",
+   "require": "ending_original"
+  },
+  {
+   "text": "LAST LOGIN"
+  }
+ ],
+ "hidden": [
+  {
+   "text": "…전원을 끄기 직전, 메신저가 울렸다."
+  },
+  {
+   "text": "[알 수 없음]: 그 컴퓨터, 어디서 나셨어요?"
+  },
+  {
+   "text": "[알 수 없음]: 아, 아까 말씀하셨죠.",
+   "require": "pickup_told"
+  },
+  {
+   "text": "[알 수 없음]: 휴지통은 비우고 쓰셔야죠.",
+   "require": "intruder_found"
+  }
+ ]
+}

@@ -20,6 +20,10 @@ const ROOT_LABEL := "내 컴퓨터"
 const DRIVE := "C:"
 const GRID_COLUMN_W := 148.0
 
+## 창을 열기 전에 채우면 그 폴더에서 시작하고 그 위로는 못 올라간다 —
+## 메일 첨부 압축 파일을 풀어 놓은 폴더가 이렇게 열린다(내 컴퓨터 트리 밖의 섬)
+var start_folder := ""
+var _top := ROOT_ID
 var _cwd := "mydocs"
 var _selected := ""          # 보기를 바꿔도 유지할 선택
 var _pending_locked := ""      # 암호 대기 중인 폴더 id
@@ -54,6 +58,9 @@ func _ready() -> void:
 	add_child(_dialog)
 	_dialog.submitted.connect(submit_password)
 	_dialog.closed.connect(func(): _pending_locked = "")
+	if start_folder != "":
+		_cwd = start_folder
+		_top = start_folder
 	set_view_mode(ViewMode.ICONS)
 	_refresh()
 
@@ -233,7 +240,7 @@ func _refresh() -> void:
 	var here := ContentDB.fs_node(_cwd)
 	_addr_icon.texture = _texture(ICON["folder"] if here.is_empty() else _icon_path(here))
 	_back_btn.disabled = _history.is_empty()
-	_up_btn.disabled = _cwd == ROOT_ID
+	_up_btn.disabled = _cwd == _top
 	_status_left.text = "개체 %d개" % entries.size()
 	_status_right.text = _folder_size_text(entries)
 
@@ -269,7 +276,8 @@ static func path_text(id: String) -> String:
 	while cur != ROOT_ID and cur != "" and guard < 16:
 		var n := ContentDB.fs_node(cur)
 		if n.is_empty():
-			break
+			# 내 컴퓨터 트리에 닿지 않는 섬(압축 폴더) — 드라이브 글자 없이 그 이름부터
+			return "\\".join(parts)
 		parts.insert(0, String(n["name"]))
 		cur = String(n.get("parent", ROOT_ID))
 		guard += 1
@@ -302,7 +310,7 @@ func _go_back() -> void:
 	_refresh()
 
 func _go_up() -> void:
-	if _cwd == ROOT_ID:
+	if _cwd == ROOT_ID or _cwd == _top:
 		return
 	_navigate(String(ContentDB.fs_node(_cwd).get("parent", ROOT_ID)))
 

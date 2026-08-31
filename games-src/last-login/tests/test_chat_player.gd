@@ -40,6 +40,75 @@ func test_staying_silent_about_where_leaves_no_trace() -> void:
 	cp.choose(2)   # (어디서 주웠는지는 말하지 않는다)
 	assert_bool(GameState.has_flag("pickup_told")).is_false()
 
+## 말해주기 — 본선을 제자리에 두고 응답으로 샜다가, 응답이 끝나면 그 자리로 돌아온다
+func test_detour_returns_to_where_the_main_line_was() -> void:
+	var thread := {"start": "a", "nodes": {
+		"a": {"from": "seulgi", "text": "q", "choices": [{"text": "x", "next": "b"}]},
+		"b": {"from": "seulgi", "text": "t"},
+		"t1": {"from": "seulgi", "text": "r1", "next": "t2"},
+		"t2": {"from": "seulgi", "text": "r2", "set": ["heard"]}
+	}}
+	var cp := CP.new(thread, GameState)
+	assert_bool(cp.in_detour()).is_false()
+	cp.detour("t1")
+	assert_bool(cp.in_detour()).is_true()
+	assert_str(cp.current_id()).is_equal("t1")
+	assert_bool(cp.advance()).is_true()
+	assert_bool(GameState.has_flag("heard")).is_true()     # 응답 노드의 set도 그대로 먹는다
+	assert_bool(cp.at_end()).is_true()
+	assert_bool(cp.advance()).is_false()
+	assert_bool(cp.pop_detour()).is_true()
+	assert_str(cp.current_id()).is_equal("a")                # 본선 선택지는 아직 그대로
+	assert_int(cp.current()["choices"].size()).is_equal(1)
+	assert_bool(cp.pop_detour()).is_false()
+
+## require에 접두가 붙는다 — read:<cid>는 열람 기록, told:<cid>는 플래그 이름 그대로
+func test_gate_reads_told_and_read_prefixes() -> void:
+	var cp := CP.new(ContentDB.chat_thread(), GameState)
+	assert_bool(cp.gate_open("")).is_true()
+	assert_bool(cp.gate_open("read:doc:essay_2001")).is_false()
+	GameState.mark_read("doc:essay_2001")
+	assert_bool(cp.gate_open("read:doc:essay_2001")).is_true()
+	assert_bool(cp.gate_open("told:mail:m_welcome")).is_false()
+	GameState.set_flag("told:mail:m_welcome")
+	assert_bool(cp.gate_open("told:mail:m_welcome")).is_true()
+	assert_bool(cp.gate_open("puzzle1_solved")).is_false()
+
+## require가 배열이면 전부 차야 열린다 — 물어보기 하나가 두 사실 위에 서는 경우
+func test_gate_with_a_list_needs_every_item() -> void:
+	var cp := CP.new(ContentDB.chat_thread(), GameState)
+	var req := ["office_matched", "told:doc:donation_ledger"]
+	assert_bool(cp.gate_open(req)).is_false()
+	GameState.set_flag("office_matched")
+	assert_bool(cp.gate_open(req)).is_false()
+	GameState.set_flag("told:doc:donation_ledger")
+	assert_bool(cp.gate_open(req)).is_true()
+	assert_bool(cp.gate_open([])).is_true()
+
+## 부정과 '하나라도' — 엔딩의 줄 갈아 끼우기가 이 둘로 선다
+func test_gate_negation_and_any() -> void:
+	assert_bool(CP.open("!puzzle5_solved", GameState)).is_true()
+	assert_bool(CP.open({"any": ["puzzle5_solved", "puzzle6_solved"]}, GameState)).is_false()
+	GameState.set_flag("puzzle6_solved")
+	assert_bool(CP.open("!puzzle6_solved", GameState)).is_false()
+	assert_bool(CP.open({"any": ["puzzle5_solved", "puzzle6_solved"]}, GameState)).is_true()
+	assert_bool(CP.open(["!puzzle5_solved", "puzzle6_solved"], GameState)).is_true()
+	assert_bool(CP.open({"any": []}, GameState)).is_false()
+
+## 본선이 퍼즐 앞에 멈춰 있는지를 다음 노드의 자물쇠로 안다
+func test_next_gate_open_reports_the_lock_on_the_next_node() -> void:
+	var thread := {"start": "a", "nodes": {
+		"a": {"from": "seulgi", "text": "q", "next": "b"},
+		"b": {"from": "seulgi", "text": "t", "require": "puzzle1_solved"}
+	}}
+	var cp := CP.new(thread, GameState)
+	assert_bool(cp.next_gate_open()).is_false()
+	assert_bool(cp.advance()).is_false()
+	GameState.set_flag("puzzle1_solved")
+	assert_bool(cp.next_gate_open()).is_true()
+	assert_bool(cp.advance()).is_true()
+	assert_bool(cp.next_gate_open()).is_false()   # 끝 노드 — 다음이 없다
+
 ## 침입자 분기가 종반 허브 양쪽에 걸려 있고, 그 끝이 엔딩 선택지에 닿는지
 func test_intruder_branch_is_wired_into_the_finale() -> void:
 	var nodes: Dictionary = ContentDB.chat_thread()["nodes"]
@@ -56,3 +125,47 @@ func test_intruder_branch_is_wired_into_the_finale() -> void:
 		if Array(c.get("set", [])).has("ending_start"):
 			endings += 1
 	assert_int(endings).is_equal(2)
+
+## 퍼즐 5·6이 본선(next 사슬) 위에 있는가 — 확장이 우회로에만 쌓이는 것을 막는 회귀 가드.
+## 2026-08-30: 확장 1~4단계가 필수 경로를 한 글자도 늘리지 못한 채 끝난 일이 있다.
+## 만든 것을 경로에 올리지 않으면 아무도 밟지 않는다.
+func test_late_puzzles_gate_the_main_spine() -> void:
+	var nodes: Dictionary = ContentDB.chat_thread()["nodes"]
+	var gates: Array[String] = []
+	var cur := "g6"
+	for _i in 40:
+		if not nodes[cur].has("next"):
+			break
+		cur = String(nodes[cur]["next"])
+		var req: String = String(nodes[cur].get("require", ""))
+		if req != "":
+			gates.append(req)
+		if cur == "g4l":
+			break
+	assert_str(cur).override_failure_message(
+		"g6에서 엔딩 허브 g4l까지 next로 이어지지 않는다").is_equal("g4l")
+	assert_bool(gates.has("puzzle5_solved")).override_failure_message(
+		"본선이 puzzle5를 지나지 않는다 — 정리.zip이 우회로에만 있다").is_true()
+	assert_bool(gates.has("puzzle6_solved")).override_failure_message(
+		"본선이 puzzle6를 지나지 않는다 — 회계의 이름이 우회로에만 있다").is_true()
+
+## 힌트 자물쇠(hint_after)를 여는 노드가 퍼즐 자물쇠보다 앞에 있는가.
+## 없으면 본선이 퍼즐 앞에 멈춘 채 힌트도 안 나오는 완전 정체가 된다.
+func test_late_puzzle_hints_unlock_before_their_gate() -> void:
+	var nodes: Dictionary = ContentDB.chat_thread()["nodes"]
+	for pair in [["puzzle5", "p5_asked"], ["puzzle6", "p6_asked"]]:
+		var pid: String = pair[0]
+		var flag: String = pair[1]
+		assert_str(String(ContentDB.puzzle(pid).get("hint_after", ""))).is_equal(flag)
+		var opened := false
+		var cur := "g6"
+		for _i in 40:
+			if Array(nodes[cur].get("set", [])).has(flag):
+				opened = true
+			if String(nodes[cur].get("require", "")) == pid + "_solved":
+				break
+			if not nodes[cur].has("next"):
+				break
+			cur = String(nodes[cur]["next"])
+		assert_bool(opened).override_failure_message(
+			"%s의 힌트 자물쇠 %s를 여는 본선 노드가 퍼즐 자물쇠 앞에 없다" % [pid, flag]).is_true()

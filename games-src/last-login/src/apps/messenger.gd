@@ -5,6 +5,8 @@ extends Control
 ## 대화창이 열린다 — 를 한 창 안의 화면 전환으로 옮겼다.
 ## 라이브 대화는 목록을 보고 있는 동안에도 계속 흐르고, 안 본 줄은 빨간 점으로 쌓인다.
 ## 힌트는 슬기가 보낸 줄로 섞여 들어온다.
+## 파일을 읽으면 "보낼 말" 상자에 찾은 것을 슬기에게 말해줄 수 있는 항목이 생긴다 —
+## 플레이어가 전달자다. 말하지 않는 것도 선택이고, 슬기는 자기가 아는 것으로만 답한다.
 
 const STATUS_ON := "res://assets/img/icons/status_on.png"
 const STATUS_OFF := "res://assets/img/icons/status_off.png"
@@ -32,6 +34,9 @@ const BUBBLE_MIN_W := 56.0
 const ROOM_ROW_H := 48
 const COMPOSE_MIN_H := 92
 const PREVIEW_CHARS := 26
+const TELL_COLOR := Color("3c6e3a")      # 찾은 것 말하기 — 본선 대사(붉은 띠)와 갈린다
+const TELL_PREFIX := "told:"
+const DETOUR_RETURN_MS := 700            # 응답이 끝나고 본선 선택지가 돌아오기까지
 
 var _cp: ChatPlayer
 var _hints: HintEngine
@@ -69,6 +74,7 @@ var _live_preview := ""
 var _live_stamp := ""
 var _last_live_from := ""
 var _choice_slots: Array[int] = []
+var _tell_slots: Array[String] = []   # 숫자 키 슬롯은 본선 선택지 뒤에 이어 붙는다 (cid)
 var _auto_pending := false
 var _catching_up := false
 
@@ -736,6 +742,8 @@ func _start_script() -> void:
 			call_deferred("_try_continue")
 		# 휴지통에서 점검표를 복원하고 돌아온 경우 — 열려 있던 선택지에 조건부가 나타난다
 		call_deferred("_refresh_choices"))
+	# 파일을 하나 읽을 때마다 말해줄 수 있는 것이 하나 늘 수 있다
+	GameState.read_changed.connect(func(_cid): call_deferred("_refresh_choices"))
 	_hints.set_gate(_current_gate())
 	_catching_up = GameState.has_flag("met_seulgi")
 	_show_current()
@@ -745,10 +753,16 @@ func _start_script() -> void:
 	timer.timeout.connect(_hints.poll)
 	add_child(timer)
 
+## 힌트를 줄 자물쇠 — 첫 미해결 퍼즐. hint_after가 있으면 그 조건이 찰 때까지 그 퍼즐은 건너뛴다
+## (내게 쓴 메일을 아직 못 찾은 사람에게 그 메일 힌트를 주지 않는다)
 func _current_gate() -> String:
-	for pid in ["puzzle1", "puzzle2", "puzzle3", "puzzle4"]:
-		if not GameState.has_flag(pid + "_solved"):
-			return pid
+	for pid in ContentDB.puzzle_ids():
+		if GameState.has_flag(pid + "_solved"):
+			continue
+		var after = ContentDB.puzzle(pid).get("hint_after", "")
+		if String(after) != "" and not _cp.gate_open(after):
+			continue
+		return pid
 	return ""
 
 func _bubble(from: String, text: String) -> void:
@@ -793,29 +807,126 @@ func _render_choices(n: Dictionary) -> void:
 		c.hide()
 		c.queue_free()
 	_choice_slots.clear()
+	_tell_slots.clear()
 	if n.has("choices"):
 		for i in n["choices"].size():
 			var c: Dictionary = n["choices"][i]
 			# 조건이 안 찬 선택지는 아예 없다 — 회색 잠금은 '뭔가 있다'는 스포일러다.
 			# 걸러도 원 인덱스를 넘기므로 ChatPlayer.choose와 어긋나지 않는다.
-			var req := String(c.get("require", ""))
-			if req != "" and not GameState.has_flag(req):
+			if not _cp.gate_open(c.get("require", "")):
 				continue
 			_choice_slots.append(i)
 			_choice_box.add_child(_choice_row(String(c["text"]), i, _choice_slots.size()))
+		_render_tells()
 	elif n.has("next"):
+		if _cp.next_gate_open():
+			_auto_pending = true
+			_choice_box.add_child(_waiting_row())
+			get_tree().create_timer((n.get("delay_ms", 900) if not _catching_up else 50) / 1000.0).timeout.connect(func():
+				_auto_pending = false
+				_try_continue())
+		else:
+			# 본선이 자물쇠 앞에 멈춰 있다 — 슬기는 기다리고, 그동안 찾은 것을 말해줄 수 있다
+			_catching_up = false
+			_render_tells()
+	elif _cp.in_detour():
+		# 응답이 끝 노드에 닿았다 — 잠시 뒤 본선으로 돌아온다 (본선 대사는 다시 찍지 않는다)
 		_auto_pending = true
-		_choice_box.add_child(_waiting_row())
-		get_tree().create_timer((n.get("delay_ms", 900) if not _catching_up else 50) / 1000.0).timeout.connect(func():
+		get_tree().create_timer((DETOUR_RETURN_MS if not _catching_up else 50) / 1000.0).timeout.connect(func():
 			_auto_pending = false
-			_try_continue())
+			_cp.pop_detour()
+			_after_detour())
+	else:
+		_render_tells()
 
-func _refresh_choices() -> void:
-	if _cp != null and is_instance_valid(_choice_box) and _cp.current().has("choices"):
+## 우회 중에 본선의 자물쇠가 열렸을 수 있다 — 말해준 것이 곧 조건인 경우
+func _after_detour() -> void:
+	if _cp.advance():
+		_show_current()
+	else:
 		_render_choices(_cp.current())
 
+func _refresh_choices() -> void:
+	if _cp == null or not is_instance_valid(_choice_box) or _auto_pending:
+		return
+	_render_choices(_cp.current())
+
+# ── 찾은 것 말하기 ────────────────────────────────────────────────────────
+
+## 항목의 열쇠 — 찾은 것은 cid, 물어보기는 "ask:<id>". told 플래그도 이 열쇠로 찍힌다.
+func _tell_key(t: Dictionary) -> String:
+	return String(t["cid"]) if t.has("cid") else "ask:" + String(t.get("id", ""))
+
+## 읽었고(찾은 것) 또는 조건이 찼고(물어보기) · 아직 말하지 않았고 · 슬기가 접속중일 때만.
+## 찾은 것은 최근에 읽은 것이 위, 물어보기는 적힌 순서. 둘을 [tells, asks]로 돌려준다.
+func _available_tells() -> Array:
+	var tells: Array = []
+	var asks: Array = []
+	if not _online:
+		return [tells, asks]
+	for t in ContentDB.tells():
+		if GameState.has_flag(TELL_PREFIX + _tell_key(t)):
+			continue
+		if t.has("cid") and not GameState.is_read(String(t["cid"])):
+			continue
+		if not _cp.gate_open(t.get("require", "")):
+			continue
+		if t.get("ask", false):
+			asks.append(t)
+		else:
+			tells.append(t)
+	tells.sort_custom(func(a, b) -> bool:
+		return GameState.read_order(String(a["cid"])) > GameState.read_order(String(b["cid"])))
+	return [tells, asks]
+
+func _render_tells() -> void:
+	var groups := _available_tells()
+	for i in 2:
+		var items: Array = groups[i]
+		if items.is_empty():
+			continue
+		_choice_box.add_child(_tells_head("찾은 것 말하기" if i == 0 else "물어보기"))
+		for t in items:
+			var key := _tell_key(t)
+			_tell_slots.append(key)
+			_choice_box.add_child(_choice_row(String(t["say"]), -1, _choice_slots.size() + _tell_slots.size(), key))
+
+func _tells_head(text: String) -> Control:
+	var l := Label.new()
+	l.text = text
+	l.add_theme_font_size_override("font_size", 12)
+	l.add_theme_color_override("font_color", NuriTheme.TEXT_DIM)
+	return l
+
+func tell_count() -> int:
+	return _tell_slots.size()
+
+func ask_count() -> int:
+	var n := 0
+	for k in _tell_slots:
+		if k.begins_with("ask:"):
+			n += 1
+	return n
+
+func _tell_by_key(key: String) -> Dictionary:
+	for t in ContentDB.tells():
+		if _tell_key(t) == key:
+			return t
+	return {}
+
+## 말해준다(또는 묻는다): 내 말풍선 → told 플래그 → 응답 노드로 우회. 응답이 끝나면 본선으로.
+func _on_tell(key: String) -> void:
+	var t := _tell_by_key(key)
+	if t.is_empty() or GameState.has_flag(TELL_PREFIX + key):
+		return
+	_bubble("player", String(t["say"]))
+	GameState.set_flag(TELL_PREFIX + key)
+	_cp.detour(String(t["node"]))
+	_show_current()
+
 ## 괄호로 감싼 선택지는 대사가 아니라 지문이다 — 보낼 말과 한눈에 갈려야 한다.
-func _choice_row(text: String, index: int, slot: int) -> Button:
+## tell_cid가 있으면 본선 선택지가 아니라 "찾은 것 말하기" 항목이다.
+func _choice_row(text: String, index: int, slot: int, tell_cid: String = "") -> Button:
 	var spoken := not (text.begins_with("(") and text.ends_with(")"))
 	var b := Button.new()
 	b.text = "%d.  %s" % [slot, text]
@@ -824,8 +935,8 @@ func _choice_row(text: String, index: int, slot: int) -> Button:
 	b.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	b.add_theme_font_size_override("font_size", 15)
 	b.tooltip_text = "" if spoken else "말하지 않고 행동만 합니다"
-	b.add_theme_stylebox_override("normal",
-		_choice_style(Color(0, 0, 0, 0), SELF_COLOR if spoken else NuriTheme.GUIDE))
+	var accent: Color = TELL_COLOR if tell_cid != "" else (SELF_COLOR if spoken else NuriTheme.GUIDE)
+	b.add_theme_stylebox_override("normal", _choice_style(Color(0, 0, 0, 0), accent))
 	b.add_theme_stylebox_override("hover",
 		_choice_style(NuriTheme.SELECT.lerp(NuriTheme.FIELD, 0.80), NuriTheme.SELECT))
 	b.add_theme_stylebox_override("pressed",
@@ -833,7 +944,11 @@ func _choice_row(text: String, index: int, slot: int) -> Button:
 	b.add_theme_color_override("font_color", NuriTheme.TEXT if spoken else NuriTheme.TEXT_DIM)
 	b.add_theme_color_override("font_hover_color", NuriTheme.TEXT)
 	b.add_theme_color_override("font_pressed_color", NuriTheme.TEXT)
-	b.pressed.connect(_on_choice.bind(index))
+	if tell_cid != "":
+		b.set_meta("tell_cid", tell_cid)
+		b.pressed.connect(_on_tell.bind(tell_cid))
+	else:
+		b.pressed.connect(_on_choice.bind(index))
 	return b
 
 func _choice_style(bg: Color, accent: Color) -> StyleBoxFlat:
@@ -908,7 +1023,7 @@ func _on_choice(i: int) -> void:
 func _unhandled_key_input(e: InputEvent) -> void:
 	if not (e is InputEventKey and e.pressed and not e.echo):
 		return
-	if _room_id != LIVE_ROOM or not is_visible_in_tree() or _choice_slots.is_empty():
+	if _room_id != LIVE_ROOM or not is_visible_in_tree() or (_choice_slots.is_empty() and _tell_slots.is_empty()):
 		return
 	var wm := _wm()
 	if wm != null and String(wm.active_id()) != "messenger":
@@ -919,10 +1034,13 @@ func _unhandled_key_input(e: InputEvent) -> void:
 		slot = k - KEY_1
 	elif k >= KEY_KP_1 and k <= KEY_KP_9:
 		slot = k - KEY_KP_1
-	if slot < 0 or slot >= _choice_slots.size():
+	if slot < 0 or slot >= _choice_slots.size() + _tell_slots.size():
 		return
 	accept_event()
-	_on_choice(_choice_slots[slot])
+	if slot < _choice_slots.size():
+		_on_choice(_choice_slots[slot])
+	else:
+		_on_tell(_tell_slots[slot - _choice_slots.size()])
 
 func _try_continue() -> void:
 	if _auto_pending:
@@ -935,8 +1053,20 @@ func _try_continue() -> void:
 func _on_hint(puzzle_id: String, level: int) -> void:
 	var hints: Array = ContentDB.puzzle(puzzle_id).get("hints", [])
 	if level - 1 < hints.size():
+		var text := _hint_text(hints[level - 1])
+		if text == "":
+			return
 		AudioDirector.play_sfx("msg")
-		_bubble("seulgi", hints[level - 1])
+		_bubble("seulgi", text)
+
+## 힌트는 문자열이거나 {text, require, fallback}. 슬기는 화면을 못 보므로 파일 내용을
+## 짚는 힌트는 플레이어가 그 파일을 말해준 뒤(told:)에만 나온다 — 그 전엔 대체 문장.
+func _hint_text(h) -> String:
+	if typeof(h) != TYPE_DICTIONARY:
+		return String(h)
+	if _cp.gate_open(h.get("require", "")):
+		return String(h.get("text", ""))
+	return String(h.get("fallback", ""))
 
 # ── 잡동사니 ──────────────────────────────────────────────────────────────
 

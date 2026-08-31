@@ -120,6 +120,20 @@ func test_corrupt_file_reports_instead_of_opening() -> void:
 	assert_str(e.last_message()).is_equal("파일이 손상되어 열 수 없습니다.")
 	assert_bool(wm.is_open("doc:t2")).is_false()
 
+## 메일에서 풀어 놓은 압축 폴더는 내 컴퓨터 트리 밖의 섬이다 — 그 안에서 시작하고 위로는 못 간다
+func test_zip_folder_opens_as_an_island_with_no_way_up() -> void:
+	var e: Control = auto_free(Explorer.new())
+	e.start_folder = "zip_self"
+	add_child(e)
+	assert_str(e.cwd()).is_equal("zip_self")
+	assert_int(e.item_count()).is_equal(ContentDB.fs_children("zip_self").size())
+	assert_int(e.item_count()).is_greater_equal(3)
+	assert_bool(e._up_btn.disabled).is_true()
+	e._go_up()
+	assert_str(e.cwd()).is_equal("zip_self")
+	assert_str(e.address_text()).is_equal("정리.zip")     # 드라이브 글자가 없다
+	assert_str(e.address_text()).not_contains("C:")
+
 func test_every_node_carries_display_metadata() -> void:
 	# 자세히 보기의 크기·수정한 날짜 칸이 비지 않도록 콘텐츠 쪽을 강제한다
 	var raw: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://content/fs.json"))

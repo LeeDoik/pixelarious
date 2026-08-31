@@ -24,6 +24,9 @@ const WRITTEN := {
 	"doc:bomi_log": "2002-10-30",
 	"doc:budget_2002": "",
 	"doc:bookmarks_memo": "2002-08-20",   # "포맷하기 전에 백업 (2002. 8. 20)"
+	"doc:saebit_3weeks": "2002-07-02",    # 마지막 항목 "2002. 7. 2 (화) 3주"
+	"doc:saebit_assigned": "2002-11-01", # "11. 1 추가"
+	"doc:format_memo": "2002-08-20",     # "2002. 8. 20 (화)" — 포맷은 끝내 안 했다
 	"doc:doctrine_1": "2002-07-28",       # "(2002. 7. 28 옮겨 적음)"
 	"doc:doctrine_2": "2002-08-11",
 	"doc:doctrine_3": "2002-09-22",
@@ -40,6 +43,7 @@ const WRITTEN := {
 	"doc:corrupt_1015": "",
 	"doc:corrupt_doctrine4": "",
 	"doc:corrupt_temp": "",
+	"doc:numbers": "2002-11-02",       # "(11. 2 저녁에 정리)" — 정리.zip 안
 	"doc:sweep_checklist": "2003-01-31",  # 침입자의 회수 확인 — 마지막 접속 석 달 뒤
 	"doc:corrupt_wiper": "",
 }
@@ -146,6 +150,9 @@ const PHOTO_TAKEN := {
 	"s_photo2": "2002-08-11",
 	"s_photo3": "2002-09-22",
 	"s_photo4": "2002-09-30",   # 서원하러 가기 전에 찍어둔 원본    # 봉고차가 집 앞에 서 있던 날
+	"s_photo5": "2002-10-01",   # 비움기록 — 서원한 밤 자정 넘어 (backup_0930 삭제 00:03과 같은 밤)
+	"z_van": "2002-10-29",      # 창밖(23:11) 두 분 뒤 창을 열고 당겨 찍은 봉고 — 정리.zip 안
+	"z_envelope": "2002-11-02", # 낮에 문틈으로 들어온 봉투 속 사진을 다시 찍은 것
 }
 
 func test_every_photo_is_dated_the_day_it_was_taken() -> void:

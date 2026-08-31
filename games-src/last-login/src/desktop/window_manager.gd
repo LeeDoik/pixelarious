@@ -67,6 +67,12 @@ func open_window(id: String, title: String, content: Control, win_size: Vector2 
 	app_focused.emit(id)
 	_update_active_states()
 
+## 열린 창의 내용물 — 메일의 링크가 누리넷 창을 잡아 주소를 넘길 때 쓴다
+func content_of(id: String) -> Control:
+	if not _windows.has(id):
+		return null
+	return (_windows[id] as OSWindow).content()
+
 func close_app(id: String) -> void:
 	if not _windows.has(id):
 		return
