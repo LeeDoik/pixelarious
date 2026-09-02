@@ -9,7 +9,7 @@
   필사 제출본 사진(scripts/gen_pilsa_photos.py)에만 래스터로 쓰인다 — 폰트 파일은 게임에 실리지 않는다.
 - Engine: Godot Engine — MIT License
 - 사운드: 전량 자체 신디사이징 (scripts/gen_audio.py) — 표준 라이브러리만 사용, 라이선스 청정
-- 엔딩곡·긴장 알림음·종료음·창밖 앰비언트: AI 생성 (Higgsfield — Sonilo Music, Seed Audio 1.0), scripts/gen_audio_higgsfield.py로 가공.
+- 엔딩곡·메신저 알림음·종료음·창밖 앰비언트: AI 생성 (Higgsfield — Sonilo Music, Seed Audio 1.0), scripts/gen_audio_higgsfield.py로 가공.
   원본과 탈락 후보는 scripts/audio_src/higgsfield/. 상업 이용 조건은 조사 문서(2026-08-19-last-login-research.md §4.3) 참조.
 - 클릭·키보드 효과음: 사용자 제공 녹음을 분할·정규화 (scripts/split_clicks.py, 원본 scripts/audio_src/) — 입력마다 랜덤 변주 재생
 - 아이콘: AI 생성 픽셀 아트 (PixelLab) — 초기 절차 생성판은 scripts/gen_icons.py

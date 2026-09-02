@@ -4,7 +4,7 @@
 gen_audio.py는 다시 돌리지 않는다 — 이 스크립트는 여기 적힌 파일만 만든다.
 
   ending_theme.ogg      엔딩곡 (설계서 §"음악은 엔딩 1곡") — 후보 ending_a/b/c 중 하나
-  msg_tense.wav         4·5단에서 msg.wav 대신 울리는 알림음 — 후보 msg_tense_1/2/3 중 하나
+  msg.wav               메신저 알림음 — 후보 msg_tense_1/2/3 중 하나 (액트와 무관하게 하나로 통일, 옛 신디사이즈판은 audio_src/msg_synth_2002.wav)
   shutdown.wav          엔딩의 "시스템을 종료하는 중" 화면에 — 후보 shutdown_1/2 중 하나
   amb_window_night.wav  창밖(1~3단) — 6번째 앰비언트 층, 6초 루프
   amb_window_dawn.wav   창밖(4·5단) — 새벽
@@ -116,7 +116,7 @@ if __name__ == "__main__":
     a = ap.parse_args()
     os.makedirs(OUT, exist_ok=True)
     music("ending_theme.ogg", os.path.join(SRC, "ending_%s.m4a" % a.ending))
-    one_shot("msg_tense.wav", os.path.join(SRC, "msg_tense_%s.wav" % a.msg))
+    one_shot("msg.wav", os.path.join(SRC, "msg_tense_%s.wav" % a.msg))
     one_shot("shutdown.wav", os.path.join(SRC, "shutdown_%s.wav" % a.shutdown), tail=0.3, fade=0.15)
     loop_layer("amb_window_night.wav", os.path.join(SRC, "amb_window_night.wav"))
     loop_layer("amb_window_dawn.wav", os.path.join(SRC, "amb_window_dawn.wav"))

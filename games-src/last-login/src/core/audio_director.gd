@@ -6,7 +6,6 @@ const SFX := {
 	"click": "res://assets/sfx/click.wav", "boot": "res://assets/sfx/boot.wav",
 	"startup": "res://assets/sfx/startup.wav",
 	"error": "res://assets/sfx/error.wav",
-	"msg_tense": "res://assets/sfx/msg_tense.wav",   # 4단부터 msg 대신 — 반갑던 소리가 긴장되는 소리로
 	"shutdown": "res://assets/sfx/shutdown.wav",     # 엔딩 "시스템을 종료하는 중"
 }
 ## 다섯 단 — 팬 · 형광등 험 · 불협 드론 · 심장처럼 뛰는 저음 · 들숨 같은 노이즈 (GameState.current_act 순)
@@ -17,8 +16,8 @@ const WINDOW := {"night": "res://assets/sfx/amb_window_night.wav", "dawn": "res:
 const WINDOW_DB := -6.0
 const MUSIC := {"ending_theme": "res://assets/sfx/ending_theme.ogg"}
 const MUSIC_DB := -8.0
-## msg가 긴장된 소리로 바뀌는 액트
-const TENSE_FROM_ACT := 4
+## 창밖이 새벽으로 바뀌는 액트
+const DAWN_FROM_ACT := 4
 
 var _layer_players: Array[AudioStreamPlayer] = []
 var _window_players: Dictionary = {}  # "night"/"dawn" -> AudioStreamPlayer
@@ -78,12 +77,10 @@ func active_layers() -> int:
 
 ## 창밖 소리 — 1~3단은 밤, 4단(유서 복원)부터 새벽
 static func window_for_act(act: int) -> String:
-	return "dawn" if act >= TENSE_FROM_ACT else "night"
+	return "dawn" if act >= DAWN_FROM_ACT else "night"
 
-## 이름이 가리키는 파일 — msg는 4단부터 msg_tense로 바뀐다 (파일이 없으면 원래 소리)
+## 이름이 가리키는 파일 — 변주 풀이 있으면 그중 하나
 func sfx_path(name: String) -> String:
-	if name == "msg" and GameState.current_act() >= TENSE_FROM_ACT and ResourceLoader.exists(SFX["msg_tense"]):
-		return SFX["msg_tense"]
 	if _variant_pools.has(name):
 		var pool: Array = _variant_pools[name]
 		return pool[randi() % pool.size()]
