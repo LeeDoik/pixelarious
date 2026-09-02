@@ -1,0 +1,22 @@
+[
+  {
+    "created_at": "2026-09-02T12:08:54.417456Z",
+    "display_name": "Seed Audio 1.0",
+    "id": "2795028f-96b7-43b7-9d91-3f3ca01befac",
+    "job_type": "seed_audio",
+    "min_result_url": null,
+    "params": {
+      "batch_size": 1,
+      "expression_intensity": 5,
+      "format": "wav",
+      "loudness_rate": 0,
+      "mood": 0,
+      "pitch_rate": 0,
+      "prompt": "Night ambience heard through a closed apartment window in a Korean city, 2003: distant traffic hum, occasional far car passing, faint crickets, a dog barking far away once, muffled, constant level, no fade in or out, no music, no voices, 20 seconds",
+      "sample_rate": 44100,
+      "speech_rate": 0
+    },
+    "result_url": "https://d8j0ntlcm91z4.cloudfront.net/user_340xdWkC7wtPGK79FSu9lhRflYH/hf_20260902_120854_2795028f-96b7-43b7-9d91-3f3ca01befac.wav",
+    "status": "completed"
+  }
+]

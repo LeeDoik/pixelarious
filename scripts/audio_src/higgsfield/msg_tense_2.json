@@ -1,0 +1,22 @@
+[
+  {
+    "created_at": "2026-09-02T12:07:02.259673Z",
+    "display_name": "Seed Audio 1.0",
+    "id": "355e4e06-53fc-4a28-bddc-53a33d9c121b",
+    "job_type": "seed_audio",
+    "min_result_url": null,
+    "params": {
+      "batch_size": 1,
+      "expression_intensity": 5,
+      "format": "wav",
+      "loudness_rate": 0,
+      "mood": 0,
+      "pitch_rate": 0,
+      "prompt": "Short unsettling computer chat notification chime: a single flat digital tone that bends downward at the end, thin and cold, low-fi 8-bit sound card quality, cheap tinny speaker, 0.6 seconds, no music, no reverb",
+      "sample_rate": 44100,
+      "speech_rate": 0
+    },
+    "result_url": "https://d8j0ntlcm91z4.cloudfront.net/user_340xdWkC7wtPGK79FSu9lhRflYH/hf_20260902_120702_355e4e06-53fc-4a28-bddc-53a33d9c121b.wav",
+    "status": "completed"
+  }
+]

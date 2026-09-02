@@ -78,12 +78,15 @@ func play(hidden: bool) -> void:
 	label.add_theme_font_override("normal_font", load("res://assets/fonts/Galmuri11.ttf"))
 	label.add_theme_font_size_override("normal_font_size", 20)
 	add_child(label)
+	AudioDirector.play_sfx("shutdown")        # 종료음 — 그리고 팬·창밖이 함께 멎는다
+	AudioDirector.silence(shutdown_hold + 1.0)
 	var tw := create_tween()
 	tw.tween_interval(shutdown_hold)          # "종료하는 중" 한 장을 보여주고
 	tw.tween_property(bg, "modulate:a", 1.0, 2.0)   # 그 위로 검은 화면이 덮는다
 	tw.tween_callback(func():
 		if is_instance_valid(shutdown):
 			shutdown.queue_free())
+	tw.tween_callback(func(): AudioDirector.play_music("ending_theme"))  # 음악은 이 한 곡뿐
 	tw.tween_callback(func(): _type_lines(label, epilogue_lines(), hidden))
 
 func _shutdown_screen() -> Control:

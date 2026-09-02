@@ -1,0 +1,15 @@
+[
+  {
+    "created_at": "2026-09-02T12:05:46.549125Z",
+    "display_name": "Sonilo Music",
+    "id": "9e75c9a3-bc52-4461-a299-5b1a139cbb55",
+    "job_type": "sonilo_music",
+    "min_result_url": null,
+    "params": {
+      "duration": 90,
+      "prompt": "Lo-fi ambient piano ballad: muted felt piano and a soft detuned electric piano, warm slow analog pad, faint vinyl crackle, very slow around 58 BPM, minor key, melancholic and tender like the last message before a computer is switched off, no drums, no vocals, sparse, ends on an unresolved chord that fades"
+    },
+    "result_url": "https://d8j0ntlcm91z4.cloudfront.net/user_340xdWkC7wtPGK79FSu9lhRflYH/hf_20260902_120546_9e75c9a3-bc52-4461-a299-5b1a139cbb55.m4a",
+    "status": "completed"
+  }
+]

@@ -17,3 +17,29 @@ func test_recorded_variant_pools_discovered() -> void:
 	# 분할된 클릭·키보드 녹음이 임포트되어 랜덤 풀에 잡혀야 한다
 	assert_int(AudioDirector.variant_count("click")).is_greater(1)
 	assert_int(AudioDirector.variant_count("key")).is_greater(1)
+
+func test_msg_turns_tense_from_act_4() -> void:
+	# 반갑던 알림음이 유서를 복원한 뒤부터 긴장된 소리로 바뀐다
+	GameState.reset()
+	assert_str(AudioDirector.sfx_path("msg")).is_equal(AudioDirector.SFX["msg"])
+	GameState.set_flag("puzzle1_solved")
+	GameState.set_flag("puzzle3_solved")
+	assert_str(AudioDirector.sfx_path("msg")).is_equal(AudioDirector.SFX["msg"])
+	GameState.set_flag("final_diary_read")
+	assert_str(AudioDirector.sfx_path("msg")).is_equal(AudioDirector.SFX["msg_tense"])
+	GameState.set_flag("puzzle5_solved")
+	assert_str(AudioDirector.sfx_path("msg")).is_equal(AudioDirector.SFX["msg_tense"])
+	GameState.reset()
+
+func test_window_night_then_dawn() -> void:
+	assert_str(AudioDirector.window_for_act(1)).is_equal("night")
+	assert_str(AudioDirector.window_for_act(3)).is_equal("night")
+	assert_str(AudioDirector.window_for_act(4)).is_equal("dawn")
+	assert_str(AudioDirector.window_for_act(5)).is_equal("dawn")
+
+func test_new_sounds_exist() -> void:
+	for key in ["msg_tense", "shutdown"]:
+		assert_bool(ResourceLoader.exists(AudioDirector.SFX[key])).override_failure_message(key).is_true()
+	for key in AudioDirector.WINDOW:
+		assert_bool(ResourceLoader.exists(AudioDirector.WINDOW[key])).override_failure_message(key).is_true()
+	assert_bool(ResourceLoader.exists(AudioDirector.MUSIC["ending_theme"])).is_true()

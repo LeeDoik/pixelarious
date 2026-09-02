@@ -1,0 +1,22 @@
+[
+  {
+    "created_at": "2026-09-02T12:09:17.262811Z",
+    "display_name": "Seed Audio 1.0",
+    "id": "f29f4d66-33aa-4fe3-9b72-ea2c37b2c3c7",
+    "job_type": "seed_audio",
+    "min_result_url": null,
+    "params": {
+      "batch_size": 1,
+      "expression_intensity": 5,
+      "format": "wav",
+      "loudness_rate": 0,
+      "mood": 0,
+      "pitch_rate": 0,
+      "prompt": "Early dawn ambience heard through a closed apartment window: sparse first birds chirping, very distant traffic, a faint breeze, muffled and quiet but constant level, no fade in or out, no music, no voices, 20 seconds",
+      "sample_rate": 44100,
+      "speech_rate": 0
+    },
+    "result_url": "https://d8j0ntlcm91z4.cloudfront.net/user_340xdWkC7wtPGK79FSu9lhRflYH/hf_20260902_120917_f29f4d66-33aa-4fe3-9b72-ea2c37b2c3c7.wav",
+    "status": "completed"
+  }
+]
