@@ -1,103 +1,117 @@
 # PIXELARIOUS
 
-1인 개발자 LeeDoik의 게임을 브라우저에서 바로 플레이하는 픽셀 아케이드.
+직접 만든 게임을 설치 없이 브라우저에서 바로 플레이하는 픽셀 아케이드 사이트.
 
-- 디자인 스펙: `docs/superpowers/specs/2026-08-13-neo-kido-design.md`
-- 시각 기준 목업: `docs/superpowers/specs/2026-08-13-neo-kido-mockup.html`
+| | |
+|---|---|
+| ▶ **사이트** | **https://www.pixelarious.online** |
+| 👤 **개발** | 이도익 1인 — 기획 · 개발 · 배포 · 운영 |
+| 🛠 **스택** | Next.js 15 · React 19 · TypeScript · Vitest · Vercel / 게임: Godot 4 (웹 익스포트) |
 
-## 개발
+---
 
-```bash
-npm install
-npm run dev    # http://localhost:3000
-npm test       # vitest
-npm run build  # 프로덕션 빌드
-```
+## 수록 게임
 
-## 게임 추가하는 법 (게임 = 데이터 레코드)
+| 게임 | 장르 | 한 줄 소개 |
+|---|---|---|
+| **STARFALL DRIFT** | 원버튼 아케이드 | 탭 한 번으로 궤도를 바꿔, 별이 부서지기 전에 다음 별로 건너간다 |
+| **IT SLEEPS BELOW** | 로그라이크 채굴 | 곡괭이 하나로 내려갈수록 어두워지는 갱도를 판다 |
+| **LAST LOGIN** | 미스터리 어드벤처 | 2003년 겨울 주워 온 컴퓨터에서 3개월 전에 멈춘 한 사람의 삶을 따라간다 |
+| **PIXEL PONG.EXE** | 아케이드 (1-day jam) | 공이 벽에 닿을 때마다 규칙이 하나씩 바뀌는 퐁 |
 
-1. 게임 웹 빌드를 `public/games/<slug>/`에 넣는다 (`index.html` 필수).
-   - Godot 4.3+: 웹 익스포트 시 **Thread Support 비활성화** (특수 헤더 불필요)
-2. `content/games/<순번>-<slug>.json` 레코드를 만든다:
+STARFALL DRIFT는 크롬 사이드 패널에서 띄우는 확장으로도 만들었습니다 (`extension/`, 권한 `sidePanel` 하나).
+
+---
+
+## 설계
+
+### 게임 하나 = JSON 레코드 하나
+
+게임을 추가할 때 코드를 고치지 않습니다. `public/games/<slug>/`에 웹 빌드를 넣고
+`content/games/*.json` 레코드를 하나 추가하면 목록 카트리지와 플레이 화면(`/play/[slug]`)이 만들어집니다.
+레지스트리 테스트가 slug 중복과 빌드 파일 존재를 검사합니다.
 
 ```json
 {
-  "slug": "my-game",
-  "order": 40,
-  "title": "MY GAME",
-  "subtitle": "한글 부제 (선택)",
-  "description": "한국어 설명.",
-  "tags": ["GODOT 4", "2D", "WEB"],
+  "slug": "starfall-drift",
+  "order": 10,
+  "title": "STARFALL DRIFT",
+  "description": "탭 한 번으로 궤도를 변경하세요. …",
+  "tags": ["GODOT 4", "2D", "ARCADE"],
   "coverScene": "starfall",
-  "playPath": "/games/my-game/index.html"
+  "playPath": "/games/starfall-drift/index.html"
 }
 ```
 
-3. `npm test` — 레지스트리가 슬러그 중복·파일 존재를 검증한다.
-4. `src/lib/games.test.ts`의 playable 목록 테스트에 슬러그를 추가한다.
-5. 커밋하고 푸시하면 Vercel이 자동 배포한다.
+### 편집기와 배포 버튼 — 개발 서버에서만
 
-`coverScene`은 `starfall | cave | pong | system` 중 하나 (절차적 커버).
-이미지 커버는 Phase 1.5에서 추가 예정.
+문구 하나를 고칠 때마다 터미널을 열지 않도록, 사이트 안에 편집기(`/editor`)와 배포 버튼을 두었습니다.
+공개 사이트를 바꾸는 기능이라 경계를 좁게 잡았습니다.
 
-## 사이트 편집기
+- **개발 서버 전용.** `/editor` · `/api/editor` · `/api/deploy`는 `NODE_ENV=development`에서만 열립니다. 배포된 사이트에서는 404입니다.
+- **바꿀 수 있는 필드를 제한.** 라우팅을 결정하는 `slug` · `order` · `playPath`는 편집기에서 수정할 수 없습니다.
+- **검증을 통과한 내용만 저장.** 실패하면 파일을 그대로 둡니다.
+- **배포는 `content/`만.** 커밋 대상을 `content/`로 한정해(`src/lib/deploy-git.ts`의 `DEPLOY_PATHS`) 작업 중인 다른 변경이 딸려 올라가지 않습니다. 푸시가 거절되면 이유를 그대로 화면에 띄웁니다.
+- **두 번 눌러야 나간다.** 한 번은 확인, 두 번째가 푸시입니다.
 
-```bash
-npm run dev   # http://localhost:3000/editor
-```
+### 테스트
 
-위쪽 탭에서 편집 대상을 고른다.
+Vitest 23개 파일 · 190개 테스트. 배포 경로 제한 · 새 파일 반영 · 푸시 거절 처리는
+실제 임시 git 저장소를 만들어 확인하는 통합 테스트(`deploy.integration.test.ts`)로 검증합니다.
 
-- **게임 카트리지** — 제목·부제·설명·태그·커버 → `content/games/*.json`
-- **PLAYER 1** — 소개글·링크 버튼·배지 → `content/profile.json`
+---
 
-오른쪽에는 실제 컴포넌트가 그대로 프리뷰로 뜬다.
+## AI 활용 방식
 
-설명과 소개글에서 **엔터로 줄을 나누면 화면에도 그대로 나온다** (빈 줄 = 문단 구분).
-`.desc`와 `.about p`가 `white-space: pre-wrap`이라 개행이 보존된다.
+Claude Code로 개발했습니다. 기능마다 먼저 설계 문서와 실행 계획을 쓰고
+(`docs/superpowers/specs/`, `docs/superpowers/plans/`), 계획에 **수정할 파일 · 보존할 기능 · 테스트 방법**을 적어
+AI의 변경 범위를 묶었습니다. 결과는 테스트와 실제 화면을 함께 확인한 뒤 반영했습니다.
 
-링크는 이름과 주소를 **둘 다** 채운 것만 저장되고 화면에 나온다 (죽은 링크 금지 — 스펙 §4.3).
-링크를 모두 지우면 버튼 줄이 통째로 숨겨진다.
+---
 
-편집기와 저장 API(`/api/editor`)는 **개발 서버에서만** 열린다. 배포된 사이트에서는 둘 다 404다.
-
-### 배포 버튼
-
-EDIT 패널 아래 **DEPLOY** — 저장한 `content/` 파일을 커밋하고 `origin`에 푸시한다.
-푸시하면 Vercel이 알아서 빌드하므로, 터미널을 열지 않고 편집기에서 배포까지 끝난다.
-
-- 공개 사이트가 바뀌는 일이라 **두 번 눌러야** 나간다 (한 번 = 확인, 두 번 = 푸시).
-- 스테이징 대상은 `content/`뿐이다. `games-src/`나 실험용 스크립트처럼 아직 커밋할
-  생각이 없는 변경은 딸려 올라가지 않는다 (`src/lib/deploy-git.ts`의 `DEPLOY_PATHS`).
-- 커밋 메시지는 파일 목록에서 자동으로 만든다 — `chore(content): 편집기에서 … 갱신`.
-- 폼에 **저장하지 않은** 내용은 배포에 들어가지 않는다. 먼저 저장할 것.
-- 푸시가 거절되면(리모트가 앞서 있는 등) 이유를 그대로 화면에 띄운다. 그럴 땐 터미널에서
-  `git pull --rebase` 후 다시 누른다.
-
-`/api/deploy`도 개발 서버 전용이다. 게임 콘텐츠 편집기(`/editor/game`, `/editor/text`)는
-웹 익스포트를 다시 해야 반영되므로 배포 버튼이 없다.
-
-## 브랜드 자산 (SNS)
+## 실행
 
 ```bash
-npm run dev   # http://localhost:3000/brand
+npm install
+npm run dev     # http://localhost:3000
+npm test        # Vitest
+npm run build   # 프로덕션 빌드
 ```
 
-프로필·파비콘·유튜브 배너·쇼츠 카드·포스트 템플릿 4종을 실제 크기로 렌더하고
-"PNG 내보내기"로 받는다. 디자인 툴을 쓰지 않는 이유는 팔레트와 폰트를 사이트와
-공유해서 색이 어긋나지 않게 하기 위해서다.
+> **Node.js 22 LTS 권장.** Node 25 이상에서는 Node 내장 `localStorage`가 jsdom의 것을 가려
+> `ThemeProvider` 테스트 3개가 실패합니다. 이때는 `NODE_OPTIONS=--no-experimental-webstorage npm test`로 실행합니다.
 
-- 스펙: `docs/superpowers/specs/2026-08-16-pixelarious-brand-design.md`
-- 렌더링 로직: `src/lib/brand.ts` (DOM 비의존 — 전부 단위 테스트됨)
-- **내보낸 PNG는 저장소에 커밋하지 않는다.** 필요할 때 다시 렌더한다
+### 게임 추가
 
-`/brand`는 `/editor`와 같이 **개발 서버에서만** 열린다. 배포된 사이트에서는 404다.
+1. 웹 빌드를 `public/games/<slug>/`에 넣는다 (`index.html` 필수). Godot 4.3+는 웹 익스포트 시 **Thread Support를 끈다** (특수 헤더 불필요).
+2. `content/games/<순번>-<slug>.json` 레코드를 만든다. `coverScene`은 `starfall | cave | pong | system` 중 하나.
+3. `npm test` — 레지스트리 검증 통과 확인.
+4. `src/lib/games.test.ts`의 playable 목록에 slug를 추가한다.
+5. 푸시하면 Vercel이 자동 배포한다.
 
-포스트 템플릿은 용도로 나눠 쓴다 — 출시는 B(카트리지), 게임 화면은 A(풀블리드),
-개발일지는 C(터미널 로그), 의견 수집은 D(질문 카드).
-이미지 안에는 제목·라벨·질문만 넣는다. 캡션은 인스타·스레드에서 이미지 바깥에 붙는다.
+### 개발 서버 전용 페이지
 
-## 테마
+| 경로 | 용도 |
+|---|---|
+| `/editor` | 게임 카트리지(제목 · 부제 · 설명 · 태그 · 커버)와 PLAYER 1 프로필 편집, 실제 컴포넌트 프리뷰, DEPLOY 버튼 |
+| `/brand` | 프로필 · 파비콘 · 유튜브 배너 · 쇼츠 카드 · 포스트 템플릿을 실제 크기로 렌더해 PNG로 내보내기 (사이트와 팔레트·폰트 공유) |
 
-NIGHT(PICO-8 계열) / DMG(게임보이 4색) — 우상단 PALETTE SWAP.
-선택은 localStorage(`palette`)에 저장된다. 새 UI는 두 팔레트 모두에서 확인할 것.
+### 테마
+
+NIGHT(PICO-8 계열) / DMG(게임보이 4색) — 우상단 PALETTE SWAP. 선택은 `localStorage`의 `palette`에 저장됩니다.
+
+---
+
+## 구조
+
+```
+src/
+  app/               Next.js App Router — 홈 · play · editor · brand · api(editor, deploy, game-editor)
+  components/        Shelf · Hero · PlayFrame · Player1 · ThemeProvider …
+  lib/               games 레지스트리 · editor · deploy(-git) · brand 렌더링 (DOM 비의존, 단위 테스트)
+content/             게임 레코드 · 프로필 (편집기가 쓰는 유일한 대상)
+public/games/        게임 웹 빌드
+games-src/           Godot 프로젝트 원본
+extension/           크롬 사이드 패널 확장 (npm 의존성 없음)
+docs/superpowers/    설계 문서(specs) · 실행 계획(plans) · 플레이테스트 기록
+```
