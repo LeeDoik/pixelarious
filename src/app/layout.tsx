@@ -6,7 +6,7 @@ import { ThemeProvider } from '@/components/ThemeProvider'
 
 export const metadata: Metadata = {
   title: 'PIXELARIOUS',
-  description: '1인 개발자 LeeDoik의 게임을 브라우저에서 바로 플레이하는 픽셀 아케이드',
+  description: '1인 개발자 LeeDoik이 만든 게임과 소프트웨어를 직접 만나보는 네온 오락실',
 }
 
 const themeInit =

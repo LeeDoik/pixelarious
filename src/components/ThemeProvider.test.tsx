@@ -48,8 +48,10 @@ describe('theme system', () => {
   it('usePalette used outside a provider falls back to the default context', () => {
     captured = null
     render(<PaletteProbe />)
-    expect(captured?.palette).toBe('night')
-    expect(typeof captured?.toggle).toBe('function')
-    expect(() => captured?.toggle()).not.toThrow()
+    // React fills the probe during render; TypeScript cannot see that assignment.
+    const value = captured as ReturnType<typeof usePalette> | null
+    expect(value?.palette).toBe('night')
+    expect(typeof value?.toggle).toBe('function')
+    expect(() => value?.toggle()).not.toThrow()
   })
 })

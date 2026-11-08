@@ -1,0 +1,13 @@
+[
+  {
+    "slug": "starfall-side-panel",
+    "category": "CHROME EXTENSION",
+    "title": "SIDE PANEL",
+    "subtitle": "STARFALL DRIFT · 크롬 확장",
+    "description": "브라우저 한쪽에 작은 오락실 하나.\nSTARFALL DRIFT를 크롬 사이드 패널에서 실행하는 확장입니다.\n저장소에서 설치 방법을 확인할 수 있습니다.",
+    "tags": ["CHROME", "EXTENSION", "SIDE PANEL"],
+    "coverScene": "starfall",
+    "coverImage": "/covers/starfall-drift.png",
+    "href": "https://github.com/LeeDoik/pixelarious/tree/master/extension"
+  }
+]

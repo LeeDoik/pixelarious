@@ -30,7 +30,7 @@ export default async function PlayPage({ params }: { params: Promise<{ slug: str
   return (
     <div className="play-shell">
       <div className="play-bar">
-        <Link className="btn btn-small" href="/">
+        <Link className="btn btn-small" href="/#games">
           ◀ BACK
         </Link>
         <span className="play-title">{game.title}</span>
