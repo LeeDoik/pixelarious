@@ -202,8 +202,8 @@ export function NeonArcade({ projects }: { projects: ArcadeProject[] }) {
       }}
     >
       <header className={styles.header}>
-        <div><span className={styles.openDot} /> THE ARCADE <span className={styles.headerCaption}>작은 소프트웨어 전시실</span></div>
-        <button className={styles.entrance} onClick={() => go(-1)}>↑ 입구</button>
+        <div>01 / THE ARCADE <span className={styles.headerCaption}>작은 소프트웨어 전시실</span></div>
+        <span className="room-status">PICK YOUR PLAY</span>
       </header>
 
       <div
@@ -233,9 +233,9 @@ export function NeonArcade({ projects }: { projects: ArcadeProject[] }) {
         <p className={styles.platform}>{external ? '설치 방법과 소스 보기' : project.pcRecommended ? '마우스를 사용하는 PC 플레이 권장' : '설치 없이 브라우저에서 바로 플레이'}</p>
         <div className={styles.actions}>
           {project.href ? external ? (
-            <a className={styles.start} href={project.href} target="_blank" rel="noopener noreferrer">{action}</a>
+            <a className={`arcade-button ${styles.start}`} href={project.href} target="_blank" rel="noopener noreferrer">{action}</a>
           ) : (
-            <Link className={styles.start} href={project.href} prefetch={false} onClick={play}>{action}</Link>
+            <Link className={`arcade-button ${styles.start}`} href={project.href} prefetch={false} onClick={play}>{action}</Link>
           ) : <span className={styles.unavailable}>COMING SOON</span>}
           <button className={styles.more} onClick={() => setDialog('details')}>작품 소개 <span aria-hidden="true">↗</span></button>
         </div>
@@ -266,7 +266,7 @@ export function NeonArcade({ projects }: { projects: ArcadeProject[] }) {
             <p className={styles.detailCopy}>{dialog === 'pc' ? '이 게임은 마우스 조작에 맞춰 만들었습니다. PC에서 플레이하면 더 편하게 즐길 수 있어요.' : project.description}</p>
             {dialog === 'details' && <ul className={styles.tags}>{project.tags.map((tag) => <li key={tag}>{tag}</li>)}</ul>}
             <div className={styles.dialogActions}>
-              {dialog === 'pc' && project.href && <Link href={project.href} className={styles.start} prefetch={false}>그래도 플레이</Link>}
+              {dialog === 'pc' && project.href && <Link href={project.href} className={`arcade-button ${styles.start}`} prefetch={false}>그래도 플레이</Link>}
               <button className={styles.more} onClick={() => setDialog(null)} autoFocus>{dialog === 'pc' ? '돌아가기' : '닫기 ×'}</button>
             </div>
           </div>

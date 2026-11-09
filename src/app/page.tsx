@@ -1,6 +1,6 @@
 import { getArcadeProjects } from '@/lib/projects'
 import { getProfile } from '@/lib/profile'
-import { PaletteSwap } from '@/components/PaletteSwap'
+import { ArcadeHeader } from '@/components/ArcadeHeader'
 import { Hero } from '@/components/Hero'
 import { NeonArcade } from '@/components/NeonArcade'
 import { Player1 } from '@/components/Player1'
@@ -11,17 +11,17 @@ export default function Home() {
   const projects = getArcadeProjects()
   const profile = getProfile()
   return (
-    <>
-      <PaletteSwap />
+    <div className="arcade-world">
+      <ArcadeHeader />
       <Hero />
       <main>
         <NeonArcade projects={projects} />
-        <div className="wrap">
-          <CoinSlot href={profile.donate} />
+        <div className="arcade-lounge">
           <Player1 profile={profile} />
+          <CoinSlot href={profile.donate} />
         </div>
       </main>
       <Footer />
-    </>
+    </div>
   )
 }

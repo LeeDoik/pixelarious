@@ -18,14 +18,22 @@ function readSaved(): Palette {
 }
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [palette, setPalette] = useState<Palette>(readSaved)
+  const [palette, setPalette] = useState<Palette>('night')
+  const [restored, setRestored] = useState(false)
 
   useEffect(() => {
+    setPalette(readSaved())
+    setRestored(true)
+  }, [])
+
+  useEffect(() => {
+    // Hydrate the server's palette first, then persist the saved client choice.
+    if (!restored) return
     document.body.classList.toggle('dmg', palette === 'dmg')
     try {
       localStorage.setItem('palette', palette)
     } catch {}
-  }, [palette])
+  }, [palette, restored])
 
   const toggle = () => setPalette((p) => (p === 'night' ? 'dmg' : 'night'))
 

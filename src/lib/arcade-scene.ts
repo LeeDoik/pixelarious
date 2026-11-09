@@ -340,23 +340,8 @@ export function createArcadeScene(host: HTMLElement, projects: ArcadeProject[], 
       machines.push({ screen: screenMaterial, neons, halo: haloMaterial, pool: poolMaterial, light, color })
     })
 
-    const signMap = texture(1024, 128, (ctx, w, h) => {
-      ctx.textAlign = 'center'
-      ctx.textBaseline = 'middle'
-      ctx.font = '24px PS2P, monospace'
-      ctx.fillStyle = neonColor('#c378ff')
-      ctx.shadowColor = neonColor('#9c48ef')
-      ctx.shadowBlur = 14
-      ctx.fillText('TAKE YOUR TIME. FIND YOUR PLAY.', w / 2, h / 2)
-      ctx.shadowBlur = 0
-    })
-    const sign = new THREE.Mesh(own(new THREE.PlaneGeometry(10, 1.25)), basic({ map: signMap, transparent: true, toneMapped: false, depthWrite: false }))
-    sign.position.set(midpoint, 4.08, -1.86)
-    scene.add(sign)
-
     function resize() {
       if (disposed || !host.clientWidth || !host.clientHeight) return
-      sign.visible = host.clientWidth > 720
       renderer.setSize(host.clientWidth, host.clientHeight, false)
       camera.aspect = host.clientWidth / host.clientHeight
       camera.updateProjectionMatrix()

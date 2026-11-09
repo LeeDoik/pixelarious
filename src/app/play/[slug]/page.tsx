@@ -28,12 +28,13 @@ export default async function PlayPage({ params }: { params: Promise<{ slug: str
   if (!game || !game.playPath) notFound()
 
   return (
-    <div className="play-shell">
+    <div className="play-shell arcade-world">
       <div className="play-bar">
-        <Link className="btn btn-small" href="/#games">
+        <Link className="arcade-button arcade-button-outline play-back" href="/#games">
           ◀ BACK
         </Link>
         <span className="play-title">{game.title}</span>
+        <span className="play-status"><span className="room-led" /> NOW PLAYING</span>
       </div>
       <PlayFrame slug={game.slug} title={game.title} playPath={game.playPath} />
     </div>
