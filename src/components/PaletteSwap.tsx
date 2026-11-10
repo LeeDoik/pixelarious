@@ -11,7 +11,7 @@ export function PaletteSwap({ compact = false }: { compact?: boolean }) {
   const label = mounted && palette === 'dmg' ? 'DMG' : 'NIGHT'
   return (
     <button className={compact ? 'swap swap-inline' : 'swap'} type="button" onClick={toggle} aria-label={`PALETTE: ${label} ▸ SWAP`}>
-      {compact ? <><span className="palette-light" aria-hidden="true" /> LIGHTS / </> : 'PALETTE: '}
+      {compact ? <span className="palette-light" aria-hidden="true" /> : 'PALETTE: '}
       <span className="lab">{label}</span> {compact ? '↔' : '▸ SWAP'}
     </button>
   )

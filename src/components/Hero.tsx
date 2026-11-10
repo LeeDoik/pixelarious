@@ -35,9 +35,7 @@ export function Hero() {
     <header className="hero" id="entrance">
       <div className="lobby-scenery" aria-hidden="true">
         <div className="lobby-portal" />
-        <div className="lobby-portal lobby-portal-inner" />
         <div className="lobby-floor" />
-        <span className="lobby-wall-label">GAMES<br />&amp; SOFTWARE</span>
       </div>
       <div className="lobby-meta room-eyebrow"><span>00 / THE LOBBY</span><span className="room-status">FREE PLAY</span></div>
       <div className="lobby-sign"><span className="room-led" /> OPEN TO CURIOSITY</div>
@@ -60,7 +58,7 @@ export function Hero() {
         </a>
         <span className="lobby-scroll">SCROLL TO EXPLORE <span className="arr" aria-hidden="true">↓</span></span>
       </div>
-      <div className="lobby-bottom"><span>INDEPENDENT GAMES &amp; SOFTWARE</span><span>NO COINS. JUST CURIOSITY.</span></div>
+      <div className="lobby-bottom"><span>INDEPENDENT GAMES &amp; SOFTWARE</span><span>설치 없이, 가볍게 한 판.</span></div>
     </header>
   )
 }

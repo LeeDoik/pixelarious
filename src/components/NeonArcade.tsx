@@ -202,8 +202,8 @@ export function NeonArcade({ projects }: { projects: ArcadeProject[] }) {
       }}
     >
       <header className={styles.header}>
-        <div>01 / THE ARCADE <span className={styles.headerCaption}>작은 소프트웨어 전시실</span></div>
-        <span className="room-status">PICK YOUR PLAY</span>
+        <div>01 / THE ARCADE</div>
+        <span className="room-status">{String(count).padStart(2, '0')} PROJECTS</span>
       </header>
 
       <div
@@ -224,7 +224,6 @@ export function NeonArcade({ projects }: { projects: ArcadeProject[] }) {
         )}
       </div>
       <div className={styles.shade} aria-hidden="true" />
-      <span className={styles.floorLabel} aria-hidden="true">NO COINS NEEDED. JUST CURIOSITY.</span>
       <div className={styles.copy} key={project.slug}>
         <p className={styles.eyebrow}>{String(index + 1).padStart(2, '0')} / {project.category ?? (external ? 'SOFTWARE' : 'PLAYABLE GAME')}</p>
         <h2 className={styles.title}>{project.title}</h2>
