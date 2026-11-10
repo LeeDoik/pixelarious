@@ -37,8 +37,6 @@ export function Hero() {
         <div className="lobby-portal" />
         <div className="lobby-floor" />
       </div>
-      <div className="lobby-meta room-eyebrow"><span>00 / THE LOBBY</span><span className="room-status">FREE PLAY</span></div>
-      <div className="lobby-sign"><span className="room-led" /> OPEN TO CURIOSITY</div>
       <h1 aria-label={done ? SITE_NAME : undefined}>
         <span>
           {SITE_NAME.slice(0, count)
@@ -51,14 +49,11 @@ export function Hero() {
         </span>
         <span className="cursor">█</span>
       </h1>
-      <p className="lobby-intro">작은 게임과 소프트웨어가 모이는 곳.<br />마음에 드는 자리에서, 바로 시작하세요.</p>
       <div className="lobby-actions">
-        <a href="#games" className={`arcade-button scroll-hint${done ? ' show' : ''}`}>
-          ENTER THE ARCADE <span aria-hidden="true">↘</span>
+        <a href="#games" aria-label="작품 둘러보기" className={`arcade-button scroll-hint${done ? ' show' : ''}`}>
+          ENTER <span aria-hidden="true">↘</span>
         </a>
-        <span className="lobby-scroll">SCROLL TO EXPLORE <span className="arr" aria-hidden="true">↓</span></span>
       </div>
-      <div className="lobby-bottom"><span>INDEPENDENT GAMES &amp; SOFTWARE</span><span>설치 없이, 가볍게 한 판.</span></div>
     </header>
   )
 }

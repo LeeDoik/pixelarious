@@ -11,12 +11,9 @@ function paragraphs(intro: string): string[] {
 export function Player1({ profile }: { profile: Profile }) {
   return (
     <section className="player-desk" id="about" aria-labelledby="player-title">
-      <div className="room-eyebrow desk-meta"><span>02 / THE MAKER</span><span className="room-status">SAY HELLO</span></div>
       <div className="desk-layout">
         <div className="desk-identity">
-          <div className="desk-nameplate" aria-hidden="true"><span>PLAYER ID</span><strong>P1</strong></div>
-          <h2 id="player-title">PLAYER 1<span>게임기 뒤의 사람</span></h2>
-          <p className="desk-note">만들고, 고치고, 다시 플레이합니다.</p>
+          <h2 id="player-title">PLAYER 1</h2>
         </div>
         <div className="about">
           <div className="desk-intro">

@@ -34,7 +34,6 @@ export default async function PlayPage({ params }: { params: Promise<{ slug: str
           ◀ BACK
         </Link>
         <span className="play-title">{game.title}</span>
-        <span className="play-status"><span className="room-led" /> NOW PLAYING</span>
       </div>
       <PlayFrame slug={game.slug} title={game.title} playPath={game.playPath} />
     </div>

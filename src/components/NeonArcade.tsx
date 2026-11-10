@@ -201,11 +201,6 @@ export function NeonArcade({ projects }: { projects: ArcadeProject[] }) {
         if (direction) { event.preventDefault(); go(current.current.index + direction) }
       }}
     >
-      <header className={styles.header}>
-        <div>01 / THE ARCADE</div>
-        <span className="room-status">{String(count).padStart(2, '0')} PROJECTS</span>
-      </header>
-
       <div
         className={styles.stage} onPointerDown={pointerDown} onPointerUp={pointerUp}
         onPointerCancel={() => { drag.current = null }} onLostPointerCapture={() => { drag.current = null }}
@@ -218,18 +213,16 @@ export function NeonArcade({ projects }: { projects: ArcadeProject[] }) {
               <div className={styles.marquee}>{project.title}</div>
               <div className={styles.screen}><CoverCanvas scene={project.coverScene} image={project.coverImage} /></div>
               <div className={styles.deck}>● <span>● ● ●</span></div>
-              <div className={styles.coin}>INSERT CURIOSITY</div>
             </div>
           </div>
         )}
       </div>
       <div className={styles.shade} aria-hidden="true" />
       <div className={styles.copy} key={project.slug}>
-        <p className={styles.eyebrow}>{String(index + 1).padStart(2, '0')} / {project.category ?? (external ? 'SOFTWARE' : 'PLAYABLE GAME')}</p>
         <h2 className={styles.title}>{project.title}</h2>
         {project.subtitle && <p className={styles.subtitle}>{project.subtitle}</p>}
         <p className={styles.description}>{project.description.split('\n')[0]}</p>
-        <p className={styles.platform}>{external ? '설치 방법과 소스 보기' : project.pcRecommended ? '마우스를 사용하는 PC 플레이 권장' : '설치 없이 브라우저에서 바로 플레이'}</p>
+        {project.pcRecommended && <p className={styles.platform}>PC 권장</p>}
         <div className={styles.actions}>
           {project.href ? external ? (
             <a className={`arcade-button ${styles.start}`} href={project.href} target="_blank" rel="noopener noreferrer">{action}</a>
@@ -250,17 +243,15 @@ export function NeonArcade({ projects }: { projects: ArcadeProject[] }) {
               </button>
             ))}
           </div>
-          <span className={styles.count}>{String(index + 1).padStart(2, '0')} / {String(count).padStart(2, '0')}</span>
         </div>
-        <button className={styles.step} onClick={() => go(index + 1)}>{index === count - 1 ? 'PLAYER 1' : '다음 자리'} <span aria-hidden="true">→</span></button>
+        <button className={styles.step} onClick={() => go(index + 1)}>{index === count - 1 ? '제작자' : '다음 자리'} <span aria-hidden="true">→</span></button>
       </nav>
-      <p className={styles.gesture}>드래그 · 스크롤 · 방향키로 한 자리씩</p>
+      <p className={styles.gesture}>드래그로 이동</p>
       <p className={styles.srOnly} role="status" aria-live="polite">{index + 1} / {count} — {project.title}</p>
 
       {dialog && (
         <dialog ref={modal} className={styles.dialog} aria-labelledby="arcade-dialog-title" onCancel={() => setDialog(null)} onClick={(event) => { if (event.target === event.currentTarget) setDialog(null) }}>
           <div className={styles.dialogBody}>
-            <p className={styles.eyebrow}>{dialog === 'pc' ? 'PC RECOMMENDED' : 'ABOUT THIS PROJECT'}</p>
             <h2 id="arcade-dialog-title">{project.title}</h2>
             <p className={styles.detailCopy}>{dialog === 'pc' ? '이 게임은 마우스 조작에 맞춰 만들었습니다. PC에서 플레이하면 더 편하게 즐길 수 있어요.' : project.description}</p>
             {dialog === 'details' && <ul className={styles.tags}>{project.tags.map((tag) => <li key={tag}>{tag}</li>)}</ul>}

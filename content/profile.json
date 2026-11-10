@@ -1,5 +1,5 @@
 {
-  "intro": "작은 게임과 소프트웨어를 만드는 1인 개발자입니다.\n직접 만든 것들을 이 오락실에 한 자리씩 채워갑니다.\n사용해 본 이야기와 피드백을 기다립니다.\n\nI build games and small software projects.\nThis arcade is where you can try them, one at a time.\nFeedback is always welcome.",
+  "intro": "게임과 소프트웨어를 만드는 1인 개발자입니다.",
   "links": [
     {
       "label": "EMAIL",
@@ -10,8 +10,6 @@
       "href": "https://www.threads.com/@pixelari0us"
     }
   ],
-  "badges": [
-    "ENGINE: GODOT 4"
-  ],
+  "badges": [],
   "donateDisabled": "https://toon.at/donate/pixelarious"
 }

@@ -4,9 +4,9 @@ import { useEffect, useState } from 'react'
 import { PaletteSwap } from './PaletteSwap'
 
 const rooms = [
-  { id: 'entrance', number: '00', label: '입구' },
-  { id: 'games', number: '01', label: '작품' },
-  { id: 'about', number: '02', label: '제작자' },
+  { id: 'entrance', label: '입구' },
+  { id: 'games', label: '작품' },
+  { id: 'about', label: '제작자' },
 ]
 
 export function ArcadeHeader() {
@@ -36,7 +36,7 @@ export function ArcadeHeader() {
       <nav className="arcade-wayfinding" aria-label="오락실 안내">
         {rooms.map((room) => (
           <a key={room.id} href={`#${room.id}`} aria-current={active === room.id ? 'location' : undefined}>
-            <span>{room.number}</span> {room.label}
+            {room.label}
           </a>
         ))}
       </nav>

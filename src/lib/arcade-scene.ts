@@ -248,10 +248,6 @@ export function createArcadeScene(host: HTMLElement, projects: ArcadeProject[], 
         } else {
           ctx.drawImage(cover, 0, 30, w, 280)
         }
-        ctx.fillStyle = neonColor(color)
-        ctx.textAlign = 'center'
-        ctx.font = '19px PS2P, monospace'
-        ctx.fillText(project.kind === 'software' ? 'SIDE PANEL' : 'PRESS START', w / 2, 373)
         ctx.fillStyle = 'rgba(0,0,0,.16)'
         for (let row = 0; row < h; row += 4) ctx.fillRect(0, row, w, 1)
       })
@@ -331,8 +327,6 @@ export function createArcadeScene(host: HTMLElement, projects: ArcadeProject[], 
         ctx.font = '45px PS2P, monospace'
         ctx.fillStyle = neonColor(color)
         ctx.fillText(String(index + 1).padStart(2, '0'), w / 2, 74)
-        ctx.font = '17px NeoDGM, monospace'
-        ctx.fillText(project.kind === 'software' ? 'SOFTWARE' : 'ARCADE', w / 2, 108)
       })
       const number = new THREE.Mesh(own(new THREE.PlaneGeometry(.72, .36)), basic({ map: signMap, toneMapped: false }))
       number.position.set(-1.51, 3.1, -1.87)

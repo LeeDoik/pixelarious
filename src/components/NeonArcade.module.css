@@ -15,25 +15,17 @@
 .arcade button, .arcade a { -webkit-tap-highlight-color: transparent; }
 .arcade button { cursor: pointer; font: inherit; }
 .arcade :is(button, a):focus-visible, .arcade:focus-visible { outline: 2px solid var(--arc-accent); outline-offset: 5px; }
-.header {
-  position: absolute; z-index: 3; inset: 90px 0 auto;
-  display: flex; align-items: center; justify-content: space-between; gap: 16px;
-  padding: 18px var(--room-pad);
-  font-family: var(--font-display); font-size: 8px; line-height: 1.8; letter-spacing: .6px; color: var(--arc-dim);
-}
-.header > * { background: var(--room-bg); box-shadow: 0 0 18px 9px var(--room-bg); }
 .stage { position: absolute; inset: 0; touch-action: none; cursor: grab; user-select: none; }
 .stage:active { cursor: grabbing; }
 .render { width: 100%; height: 100%; }
 .render canvas { display: block; width: 100%; height: 100%; }
 .shade { position: absolute; inset: 0; pointer-events: none; background: linear-gradient(90deg, #080914d9 0%, #0809147a 24%, transparent 57%), linear-gradient(0deg, #080914 0%, transparent 25%); }
 [data-palette='dmg'] .shade { background: linear-gradient(90deg, #071b12df, transparent 57%), linear-gradient(0deg, #071b12, transparent 25%); }
-.copy { position: absolute; left: var(--room-pad); bottom: 170px; width: min(38%, 460px); animation: appear .35s ease-out both; }
-.eyebrow { margin: 0 0 24px; color: var(--arc-accent); font: 8px/1.8 var(--font-display); letter-spacing: .5px; }
+.copy { position: absolute; left: var(--room-pad); top: 50%; translate: 0 -40%; width: min(38%, 460px); animation: appear .35s ease-out both; }
 .title { font: clamp(24px, 3.25vw, 48px)/1.45 var(--font-display); letter-spacing: -1.5px; margin: 0 0 24px; text-wrap: balance; overflow-wrap: anywhere; }
 .subtitle { font-size: 15px; line-height: 1.5; color: var(--arc-dim); margin: -12px 0 18px; }
-.description { font-size: 18px; font-weight: 500; line-height: 1.75; margin: 0 0 9px; max-width: 380px; letter-spacing: -.35px; word-break: keep-all; }
-.platform { color: var(--arc-dim); font-size: 13px; margin: 0 0 28px; word-break: keep-all; }
+.description { font-size: 18px; font-weight: 500; line-height: 1.75; margin: 0 0 28px; max-width: 380px; letter-spacing: -.35px; word-break: keep-all; }
+.platform { color: var(--arc-dim); font-size: 12px; margin: -14px 0 24px; word-break: keep-all; }
 .actions, .dialogActions { display: flex; align-items: center; flex-wrap: wrap; gap: 20px; }
 .start { white-space: nowrap; }
 .arcade .more { border: 0; background: none; padding: 12px 2px; min-height: 44px; color: var(--arc-dim); font-size: 13px; transition: color .18s; }
@@ -50,7 +42,6 @@
 .station { border: 0; background: none; padding: 14px 10px; min-height: 44px; min-width: 36px; }
 .station span { display: block; width: 7px; height: 7px; border: 1px solid var(--arc-dim); transition: background .2s, box-shadow .2s; }
 .station[aria-current] span { background: var(--arc-accent); border-color: var(--arc-accent); box-shadow: 0 0 8px color-mix(in srgb, var(--arc-accent) 35%, transparent); }
-.count { font: 8px var(--font-display); color: var(--arc-dim); white-space: nowrap; }
 .gesture { position: absolute; bottom: 10px; left: 0; width: 100%; text-align: center; color: var(--arc-dim); font-size: 11px; letter-spacing: .2px; margin: 0; pointer-events: none; }
 .srOnly { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .fallback { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding-left: 35%; background: radial-gradient(ellipse at 68% 58%, color-mix(in srgb, var(--arc-accent) 13%, #080914), #080914 65%); }
@@ -60,7 +51,6 @@
 .screen canvas { width: 100%; height: 100%; object-fit: contain; image-rendering: pixelated; }
 .deck { padding: 10px; background: #222338; border-bottom: 3px solid var(--arc-accent); color: var(--arc-accent); font-size: 25px; }
 .deck span { float: right; font-size: 16px; }
-.coin { text-align: center; margin-top: 35px; font: 6px PS2P, monospace; color: var(--arc-dim); }
 .dialog { position: fixed; inset: 0; margin: auto; width: min(580px, calc(100% - 32px)); max-height: calc(100svh - 48px); padding: 0; border: 1px solid var(--room-line); border-top: 2px solid var(--arc-accent); border-radius: 3px; color: var(--arc-ink); background: var(--room-panel); box-shadow: 0 24px 100px #0008; }
 .dialog::backdrop { background: #04040cd9; backdrop-filter: blur(7px); }
 .dialogBody { padding: clamp(24px, 5vw, 42px); }
@@ -76,23 +66,21 @@
 
 @media (min-width: 1600px) { .render { max-width: 1800px; margin: auto; } }
 @media (max-width: 900px) and (min-width: 721px) {
-  .copy { width: 42%; left: 32px; bottom: 144px; }
+  .copy { width: 42%; left: 32px; }
   .title { font-size: 28px; }
   .description { font-size: 18px; }
   .actions { gap: 10px; }
 }
 @media (max-width: 720px) {
-  .arcade { min-height: 800px; max-height: 1000px; }
-  .header { inset-block-start: 96px; padding: 20px 24px 16px; background: var(--room-bg); font-size: 7px; letter-spacing: .5px; }
+  .arcade { min-height: 740px; max-height: 1000px; }
   .stage { top: 98px; height: 43%; }
   .shade { background: linear-gradient(0deg, #080914 44%, transparent 62%); }
   [data-palette='dmg'] .shade { background: linear-gradient(0deg, #071b12 44%, transparent 62%); }
-  .copy { left: 24px; right: 24px; bottom: 134px; width: auto; }
-  .eyebrow { margin-bottom: 12px; font-size: 8px; }
+  .copy { left: 24px; right: 24px; top: auto; bottom: 130px; translate: none; width: auto; }
   .title { font-size: clamp(23px, 5.5vw, 36px); line-height: 1.4; letter-spacing: -1px; margin-bottom: 12px; }
   .subtitle { font-size: 14px; margin: -2px 0 8px; }
-  .description { max-width: 500px; font-size: 16px; line-height: 1.7; margin-bottom: 6px; }
-  .platform { font-size: 12px; margin-bottom: 20px; }
+  .description { max-width: 500px; font-size: 16px; line-height: 1.7; margin-bottom: 22px; }
+  .platform { margin: -10px 0 18px; }
   .actions { gap: 16px; }
   .start { min-height: 46px; padding: 12px 17px; font-size: 9px; }
   .navigation { left: 24px; right: 24px; bottom: 35px; gap: 8px; padding-top: 13px; }
@@ -101,13 +89,11 @@
   .stationPicker { flex-direction: column; gap: 2px; }
   .station { padding: 8px; min-width: 32px; }
   .station span { width: 6px; height: 6px; }
-  .count { font-size: 7px; }
   .gesture { bottom: 9px; font-size: 11px; }
   .fallback { padding: 55px 0 0; background: radial-gradient(ellipse at 50% 65%, color-mix(in srgb, var(--arc-accent) 16%, #080914), #080914 70%); }
   .cabinet { width: 175px; height: 315px; padding: 12px; }
   .marquee { font-size: 7px; margin-bottom: 16px; }
   .screen { height: 105px; border-width: 6px; padding: 5px; }
-  .coin { font-size: 5px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .copy { animation: none; }
