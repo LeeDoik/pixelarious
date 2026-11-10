@@ -21,6 +21,7 @@
   padding: 18px var(--room-pad);
   font-family: var(--font-display); font-size: 8px; line-height: 1.8; letter-spacing: .6px; color: var(--arc-dim);
 }
+.header > * { background: var(--room-bg); box-shadow: 0 0 18px 9px var(--room-bg); }
 .stage { position: absolute; inset: 0; touch-action: none; cursor: grab; user-select: none; }
 .stage:active { cursor: grabbing; }
 .render { width: 100%; height: 100%; }
